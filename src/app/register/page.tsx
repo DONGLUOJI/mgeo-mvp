@@ -11,9 +11,9 @@ const REGISTER_NAV_ITEMS = [
 ];
 
 const benefits = [
-  "注册后可保存检测记录与历史报告，方便持续跟踪品牌表现。",
-  "统一管理客户、任务和品牌信息，减少重复录入成本。",
-  "后续可直接承接套餐升级、监测任务与交付流程。",
+  "保留品牌基础信息与咨询记录",
+  "统一管理免费检测与服务沟通",
+  "后续可扩展工作台、报告和案例查看",
 ];
 
 export default function RegisterPage() {
@@ -22,9 +22,9 @@ export default function RegisterPage() {
       <main style={styles.page}>
         <section style={styles.shell}>
           <section style={styles.copyCard}>
-            <h1 style={styles.copyTitle}>注册 MGEO 账号，开始保存你的品牌检测与增长线索</h1>
+            <h1 style={styles.copyTitle}>注册账号，开始建立您的 MGEO 增长流程</h1>
             <p style={styles.copyText}>
-              这一步主要是把原先静态页面里的注册入口补回站点，让导航和路径与你之前的版本保持一致。后续我们可以继续把注册流程接成真实可用的账号创建流程。
+              注册后，您可以继续使用免费检测、提交咨询、查看服务方案，并为后续的品牌增长协作建立统一入口。
             </p>
             <ul style={styles.benefitList}>
               {benefits.map((item) => (
@@ -37,7 +37,7 @@ export default function RegisterPage() {
 
           <section style={styles.formCard}>
             <h2 style={styles.formTitle}>创建账号</h2>
-            <p style={styles.formText}>当前先恢复原始导航入口与页面壳，注册提交链路下一步可以继续接真实后端。</p>
+            <p style={styles.formText}>填写基础信息并完成邮箱验证后即可注册，后续可继续完善品牌资料与合作需求。</p>
 
             <form style={styles.formGrid}>
               <label style={styles.field}>
@@ -48,32 +48,49 @@ export default function RegisterPage() {
                 <span style={styles.label}>公司 / 品牌</span>
                 <input style={styles.input} placeholder="请输入公司或品牌名称" />
               </label>
-              <label style={styles.field}>
-                <span style={styles.label}>手机号</span>
-                <input style={styles.input} placeholder="请输入手机号" />
-              </label>
-              <label style={styles.field}>
-                <span style={styles.label}>邮箱</span>
-                <input style={styles.input} placeholder="请输入邮箱地址" />
-              </label>
               <label style={{ ...styles.field, gridColumn: "1 / -1" }}>
-                <span style={styles.label}>验证码</span>
+                <span style={styles.label}>邮箱</span>
                 <div style={styles.inlineAction}>
-                  <input style={styles.input} placeholder="请输入验证码" />
+                  <input style={styles.input} placeholder="请输入邮箱" />
                   <button type="button" style={styles.codeButton}>
                     发送验证码
                   </button>
                 </div>
               </label>
+              <label style={{ ...styles.field, gridColumn: "1 / -1" }}>
+                <span style={styles.label}>邮箱验证码</span>
+                <input style={styles.input} placeholder="请输入邮箱验证码" />
+              </label>
+              <label style={{ ...styles.field, gridColumn: "1 / -1" }}>
+                <span style={styles.label}>设置密码</span>
+                <input style={styles.input} placeholder="请设置登录密码" type="password" />
+              </label>
+              <label style={styles.checkbox}>
+                <input type="checkbox" />
+                <span>
+                  我已阅读并同意
+                  <Link href="#" style={styles.inlineLink}>
+                    《用户协议》
+                  </Link>
+                  与
+                  <Link href="#" style={styles.inlineLink}>
+                    《隐私政策》
+                  </Link>
+                </span>
+              </label>
               <button type="button" style={styles.submitButton}>
-                创建账号
+                立即注册
               </button>
             </form>
 
+            <div style={styles.helper}>
+              当前页面采用邮箱验证码注册逻辑，后续可继续接入真实发信服务、验证码校验与邀请机制。
+            </div>
+
             <div style={styles.loginHint}>
-              已经有账号？
+              已有账号？
               <Link href="/login" style={styles.loginLink}>
-                直接登录
+                立即登录
               </Link>
             </div>
           </section>
@@ -177,30 +194,58 @@ const styles: Record<string, React.CSSProperties> = {
   },
   codeButton: {
     flexShrink: 0,
-    border: "1px solid #d2d2d7",
+    border: "none",
     borderRadius: 16,
     padding: "0 18px",
-    background: "#f5f5f7",
-    color: "#1d1d1f",
+    background: "#1f1f22",
+    color: "#ffffff",
+    fontSize: 14,
     fontWeight: 600,
     cursor: "pointer",
+  },
+  checkbox: {
+    gridColumn: "1 / -1",
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 10,
+    margin: "2px 0 4px",
+    color: "#4b5563",
+    fontSize: 14,
+    lineHeight: 1.6,
+  },
+  inlineLink: {
+    color: "#0a7c66",
+    textDecoration: "none",
+    fontWeight: 600,
+    margin: "0 2px",
   },
   submitButton: {
     gridColumn: "1 / -1",
     marginTop: 8,
-    height: 56,
-    borderRadius: 16,
+    height: 58,
+    borderRadius: 18,
     border: "none",
     background: "#0a7c66",
     color: "#ffffff",
     fontSize: 18,
-    fontWeight: 700,
+    fontWeight: 600,
     cursor: "pointer",
   },
+  helper: {
+    marginTop: 18,
+    padding: "16px 18px",
+    borderRadius: 18,
+    background: "#f8fbfa",
+    border: "1px solid #e4f1ec",
+    color: "#4b5563",
+    fontSize: 14,
+    lineHeight: 1.7,
+  },
   loginHint: {
-    marginTop: 20,
+    marginTop: 22,
     color: "#6e6e73",
     fontSize: 15,
+    textAlign: "center",
   },
   loginLink: {
     marginLeft: 8,
