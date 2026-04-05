@@ -20,151 +20,107 @@ export default async function RankingPage({
   const latestDate = rows[0]?.snapshotDate || "2026-04-05";
 
   return (
-    <SiteShell current="/ranking">
+    <SiteShell current="/ranking" ctaHref="/register" ctaLabel="注册" hideFooter>
       <main style={styles.page}>
         <section style={styles.hero}>
-          <span style={styles.badge}>公开排名</span>
-          <h1 style={styles.title}>行业品牌 AI 可见性排名</h1>
-          <p style={styles.text}>
-            基于 TCA 综合分、平台覆盖数和阶段变化，展示不同行业品牌在 AI 搜索场景中的当前表现。
-          </p>
-          <div style={styles.meta}>统计窗口：最近 {currentDays} 天 | 最近快照：{latestDate}</div>
-        </section>
-
-        <section style={styles.summaryGrid}>
-          <article style={styles.summaryCard}>
-            <div style={styles.summaryLabel}>榜首品牌</div>
-            <div style={styles.summaryValue}>{topThree[0]?.brandName || "-"}</div>
-            <div style={styles.summaryHint}>
-              TCA {topThree[0]?.tcaTotal ?? "-"} / 平台覆盖 {topThree[0]?.platformCoverage ?? "-"} / 6
+          <div style={styles.heroPanel}>
+            <h1 style={styles.heroTitle}>排名</h1>
+            <p style={styles.heroText}>查看不同行业品牌在 AI 搜索中的当前表现，并用更接近你原始 HTML 的结构统一承接排名、筛选与免费检测转化。</p>
+            <div style={styles.heroActions}>
+              <Link href="/#detector" style={styles.primaryButton}>
+                免费检测
+              </Link>
+              <Link href="/pricing" style={styles.secondaryButton}>
+                查看服务方案
+              </Link>
             </div>
-          </article>
-          <article style={styles.summaryCard}>
-            <div style={styles.summaryLabel}>行业均分</div>
-            <div style={styles.summaryValue}>
-              {rows.length ? Math.round(rows.reduce((sum, row) => sum + row.tcaTotal, 0) / rows.length) : 0}
-            </div>
-            <div style={styles.summaryHint}>基于当前筛选条件下的榜单样本</div>
-          </article>
-          <article style={styles.summaryCard}>
-            <div style={styles.summaryLabel}>平均平台覆盖</div>
-            <div style={styles.summaryValue}>
-              {rows.length ? (rows.reduce((sum, row) => sum + row.platformCoverage, 0) / rows.length).toFixed(1) : "0.0"}
-            </div>
-            <div style={styles.summaryHint}>反映品牌被稳定提及的平台广度</div>
-          </article>
-        </section>
-
-        <section style={styles.controlsCard}>
-          <div style={styles.filters}>
-            {industries.map((industry) => {
-              const active = industry === currentIndustry;
-              const href =
-                industry === "全部"
-                  ? `/ranking?days=${currentDays}`
-                  : `/ranking?industry=${encodeURIComponent(industry)}&days=${currentDays}`;
-              return (
-                <Link
-                  key={industry}
-                  href={href}
-                  style={{
-                    ...styles.filterChip,
-                    ...(active ? styles.filterChipActive : {}),
-                  }}
-                >
-                  {industry}
-                </Link>
-              );
-            })}
-          </div>
-          <div style={styles.filters}>
-            {[7, 30, 90].map((days) => {
-              const active = days === currentDays;
-              const href =
-                currentIndustry === "全部"
-                  ? `/ranking?days=${days}`
-                  : `/ranking?industry=${encodeURIComponent(currentIndustry)}&days=${days}`;
-              return (
-                <Link
-                  key={days}
-                  href={href}
-                  style={{
-                    ...styles.filterChip,
-                    ...(active ? styles.filterChipActive : {}),
-                  }}
-                >
-                  最近{days}天
-                </Link>
-              );
-            })}
           </div>
         </section>
 
-        <section style={styles.methodGrid}>
-          <article style={styles.methodCard}>
-            <div style={styles.methodTitle}>排名依据</div>
-            <p style={styles.methodText}>榜单按照 TCA 综合分优先排序，并参考平台覆盖数与 7 天变化，反映品牌当前在 AI 搜索场景中的综合表现。</p>
-          </article>
-          <article style={styles.methodCard}>
-            <div style={styles.methodTitle}>TCA 三支柱</div>
-            <p style={styles.methodText}>Consistency 评估品牌描述一致性，Coverage 评估平台覆盖广度，Authority 评估品牌被引用的可信程度。</p>
-          </article>
-          <article style={styles.methodCard}>
-            <div style={styles.methodTitle}>使用建议</div>
-            <p style={styles.methodText}>适合先看行业平均水位，再结合免费检测报告判断自己品牌当前处于哪个阶段、下一步该优先补哪一项。</p>
-          </article>
-        </section>
+        <section style={styles.section}>
+          <div style={styles.sectionCard}>
+            <div style={styles.sectionHeader}>
+              <h2 style={styles.sectionTitle}>行业品牌 AI 可见性排名</h2>
+              <p style={styles.sectionText}>统计窗口：最近 {currentDays} 天 | 最近快照：{latestDate}</p>
+            </div>
 
-        <section style={styles.tableCard}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>排名</th>
-                <th style={styles.th}>品牌</th>
-                <th style={styles.th}>行业</th>
-                <th style={styles.th}>TCA 综合分</th>
-                <th style={styles.th}>Consistency</th>
-                <th style={styles.th}>Coverage</th>
-                <th style={styles.th}>Authority</th>
-                <th style={styles.th}>覆盖平台数</th>
-                <th style={styles.th}>7 天变化</th>
-                <th style={styles.th}>快照日期</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, index) => (
-                <tr key={`${row.brandName}-${row.snapshotDate}`}>
-                  <td style={styles.td}>{index + 1}</td>
-                  <td style={styles.tdStrong}>{row.brandName}</td>
-                  <td style={styles.td}>{row.industry}</td>
-                  <td style={styles.tdStrong}>{row.tcaTotal}</td>
-                  <td style={styles.td}>{row.tcaConsistency}</td>
-                  <td style={styles.td}>{row.tcaCoverage}</td>
-                  <td style={styles.td}>{row.tcaAuthority}</td>
-                  <td style={styles.td}>
-                    {row.platformCoverage} / 6
-                  </td>
-                  <td
-                    style={{
-                      ...styles.td,
-                      color: row.delta7d >= 0 ? "#0f8b7f" : "#b42318",
-                    }}
-                  >
-                    {row.delta7d >= 0 ? "↑" : "↓"} {Math.abs(row.delta7d).toFixed(1)}
-                  </td>
-                  <td style={styles.td}>{row.snapshotDate}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+            <div style={styles.infoGrid}>
+              <article style={styles.infoCard}>
+                <h3 style={styles.infoTitle}>榜首品牌</h3>
+                <p style={styles.infoText}>{topThree[0]?.brandName || "-"}</p>
+              </article>
+              <article style={styles.infoCard}>
+                <h3 style={styles.infoTitle}>行业均分</h3>
+                <p style={styles.infoText}>{rows.length ? Math.round(rows.reduce((sum, row) => sum + row.tcaTotal, 0) / rows.length) : 0}</p>
+              </article>
+              <article style={styles.infoCard}>
+                <h3 style={styles.infoTitle}>平均平台覆盖</h3>
+                <p style={styles.infoText}>{rows.length ? (rows.reduce((sum, row) => sum + row.platformCoverage, 0) / rows.length).toFixed(1) : "0.0"}</p>
+              </article>
+            </div>
 
-        <section style={styles.ctaCard}>
-          <h2 style={styles.ctaTitle}>想知道你的品牌目前排在哪？</h2>
-          <p style={styles.ctaText}>先做一次免费检测，快速获得一份围绕 TCA 三支柱的品牌可见性报告。</p>
-          <Link href="/detect" style={styles.ctaButton}>
-            免费检测你的品牌
-          </Link>
+            <div style={styles.controls}>
+              <div style={styles.filters}>
+                {industries.map((industry) => {
+                  const active = industry === currentIndustry;
+                  const href =
+                    industry === "全部"
+                      ? `/ranking?days=${currentDays}`
+                      : `/ranking?industry=${encodeURIComponent(industry)}&days=${currentDays}`;
+                  return (
+                    <Link key={industry} href={href} style={{ ...styles.filterChip, ...(active ? styles.filterChipActive : {}) }}>
+                      {industry}
+                    </Link>
+                  );
+                })}
+              </div>
+              <div style={styles.filters}>
+                {[7, 30, 90].map((days) => {
+                  const active = days === currentDays;
+                  const href =
+                    currentIndustry === "全部"
+                      ? `/ranking?days=${days}`
+                      : `/ranking?industry=${encodeURIComponent(currentIndustry)}&days=${days}`;
+                  return (
+                    <Link key={days} href={href} style={{ ...styles.filterChip, ...(active ? styles.filterChipActive : {}) }}>
+                      最近{days}天
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={styles.tableWrap}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>排名</th>
+                    <th style={styles.th}>品牌</th>
+                    <th style={styles.th}>行业</th>
+                    <th style={styles.th}>TCA 综合分</th>
+                    <th style={styles.th}>平台覆盖</th>
+                    <th style={styles.th}>7 天变化</th>
+                    <th style={styles.th}>快照日期</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, index) => (
+                    <tr key={`${row.brandName}-${row.snapshotDate}`}>
+                      <td style={styles.td}>{index + 1}</td>
+                      <td style={styles.tdStrong}>{row.brandName}</td>
+                      <td style={styles.td}>{row.industry}</td>
+                      <td style={styles.tdStrong}>{row.tcaTotal}</td>
+                      <td style={styles.td}>{row.platformCoverage} / 6</td>
+                      <td style={{ ...styles.td, color: row.delta7d >= 0 ? "#0a7c66" : "#b42318" }}>
+                        {row.delta7d >= 0 ? "↑" : "↓"} {Math.abs(row.delta7d).toFixed(1)}
+                      </td>
+                      <td style={styles.td}>{row.snapshotDate}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </section>
       </main>
     </SiteShell>
@@ -173,199 +129,176 @@ export default async function RankingPage({
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
-    maxWidth: 1240,
-    margin: "0 auto",
-    padding: "64px 24px 0",
+    paddingTop: 52,
+    background: "#f5f5f7",
   },
   hero: {
-    display: "grid",
-    gap: 16,
-    justifyItems: "center",
-    textAlign: "center",
-    marginBottom: 32,
+    maxWidth: 1240,
+    margin: "34px auto 28px",
+    padding: "0 24px",
   },
-  badge: {
-    display: "inline-flex",
-    height: 34,
-    padding: "0 14px",
-    alignItems: "center",
-    borderRadius: 999,
-    background: "#edf8f6",
-    color: "#0f8b7f",
-    fontSize: 14,
-    fontWeight: 700,
+  heroPanel: {
+    borderRadius: 38,
+    padding: "52px 56px",
+    color: "#ffffff",
+    background: "linear-gradient(135deg, #0d1117 0%, #17382f 100%)",
+    boxShadow: "0 20px 48px rgba(15, 23, 42, 0.14)",
   },
-  title: {
+  heroTitle: {
     margin: 0,
-    fontSize: 48,
-    lineHeight: 1.12,
+    fontSize: 58,
+    lineHeight: 1.1,
     letterSpacing: "-0.04em",
   },
-  text: {
-    margin: 0,
+  heroText: {
     maxWidth: 860,
-    color: "#667085",
+    fontSize: 19,
+    lineHeight: 1.75,
+    color: "rgba(255,255,255,0.82)",
+    margin: "20px 0 30px",
+  },
+  heroActions: {
+    display: "flex",
+    gap: 16,
+    flexWrap: "wrap",
+  },
+  primaryButton: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 180,
+    padding: "18px 28px",
+    borderRadius: 20,
+    textDecoration: "none",
     fontSize: 18,
-    lineHeight: 1.8,
-  },
-  meta: {
-    color: "#98a2b3",
-    fontSize: 14,
     fontWeight: 600,
+    background: "#1f1f22",
+    color: "#ffffff",
   },
-  summaryGrid: {
+  secondaryButton: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 180,
+    padding: "18px 28px",
+    borderRadius: 20,
+    textDecoration: "none",
+    fontSize: 18,
+    fontWeight: 600,
+    background: "rgba(255,255,255,0.08)",
+    border: "1px solid rgba(255,255,255,0.16)",
+    color: "#ffffff",
+  },
+  section: {
+    maxWidth: 1240,
+    margin: "0 auto 28px",
+    padding: "0 24px",
+  },
+  sectionCard: {
+    background: "#ffffff",
+    borderRadius: 32,
+    padding: 46,
+    boxShadow: "0 12px 36px rgba(15, 23, 42, 0.06)",
+  },
+  sectionHeader: {
+    maxWidth: 860,
+    marginBottom: 28,
+  },
+  sectionTitle: {
+    margin: 0,
+    fontSize: 40,
+    lineHeight: 1.15,
+    letterSpacing: "-0.03em",
+  },
+  sectionText: {
+    margin: "12px 0 0",
+    fontSize: 18,
+    lineHeight: 1.7,
+    color: "#6e6e73",
+  },
+  infoGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
     gap: 18,
-    marginBottom: 20,
+    marginBottom: 24,
   },
-  summaryCard: {
-    background: "#ffffff",
-    border: "1px solid #e7ebf0",
+  infoCard: {
+    background: "#fbfbfc",
+    border: "1px solid #ececf0",
     borderRadius: 24,
-    padding: 24,
-    display: "grid",
-    gap: 10,
+    padding: 28,
   },
-  summaryLabel: {
-    fontSize: 14,
-    color: "#667085",
-    fontWeight: 700,
+  infoTitle: {
+    margin: 0,
+    fontSize: 28,
   },
-  summaryValue: {
-    fontSize: 30,
-    lineHeight: 1.15,
-    fontWeight: 800,
-    color: "#101828",
-  },
-  summaryHint: {
-    fontSize: 14,
+  infoText: {
+    margin: "12px 0 0",
+    color: "#6e6e73",
+    fontSize: 16,
     lineHeight: 1.7,
-    color: "#98a2b3",
   },
-  controlsCard: {
-    background: "#ffffff",
-    border: "1px solid #e7ebf0",
-    borderRadius: 24,
-    padding: 18,
+  controls: {
     display: "grid",
     gap: 14,
-    marginBottom: 20,
+    marginBottom: 24,
   },
   filters: {
     display: "flex",
     gap: 12,
     flexWrap: "wrap",
-    justifyContent: "center",
-  },
-  methodGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 18,
-    marginBottom: 20,
-  },
-  methodCard: {
-    background: "#ffffff",
-    border: "1px solid #e7ebf0",
-    borderRadius: 24,
-    padding: 24,
-    display: "grid",
-    gap: 10,
-  },
-  methodTitle: {
-    fontSize: 18,
-    fontWeight: 800,
-    color: "#101828",
-  },
-  methodText: {
-    margin: 0,
-    color: "#667085",
-    fontSize: 15,
-    lineHeight: 1.85,
   },
   filterChip: {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    height: 40,
+    minHeight: 42,
     padding: "0 16px",
     borderRadius: 999,
-    background: "#ffffff",
-    border: "1px solid #dbe3eb",
     textDecoration: "none",
-    color: "#344054",
+    background: "#fbfbfc",
+    border: "1px solid #ececf0",
+    color: "#1d1d1f",
+    fontSize: 15,
     fontWeight: 600,
   },
   filterChipActive: {
-    background: "#0f8b7f",
-    border: "1px solid #0f8b7f",
+    background: "#0a7c66",
+    border: "1px solid #0a7c66",
     color: "#ffffff",
   },
-  tableCard: {
+  tableWrap: {
+    overflowX: "auto",
+    border: "1px solid #ececf0",
+    borderRadius: 20,
     background: "#ffffff",
-    border: "1px solid #e7ebf0",
-    borderRadius: 28,
-    padding: 12,
-    overflow: "hidden",
   },
   table: {
     width: "100%",
     borderCollapse: "collapse",
   },
   th: {
-    textAlign: "left",
     padding: "16px 18px",
-    fontSize: 14,
-    color: "#667085",
-    fontWeight: 700,
-    borderBottom: "1px solid #e7ebf0",
+    textAlign: "left",
+    borderBottom: "1px solid #f0f0f2",
+    fontSize: 15,
+    color: "#6e6e73",
+    fontWeight: 600,
+    background: "#f8f8fa",
   },
   td: {
-    padding: "18px",
-    fontSize: 16,
-    color: "#475467",
-    borderBottom: "1px solid #f0f2f5",
+    padding: "16px 18px",
+    textAlign: "left",
+    borderBottom: "1px solid #f0f0f2",
+    fontSize: 15,
+    color: "#1d1d1f",
   },
   tdStrong: {
-    padding: "18px",
-    fontSize: 16,
-    color: "#101828",
+    padding: "16px 18px",
+    textAlign: "left",
+    borderBottom: "1px solid #f0f0f2",
+    fontSize: 15,
+    color: "#1d1d1f",
     fontWeight: 700,
-    borderBottom: "1px solid #f0f2f5",
-  },
-  ctaCard: {
-    marginTop: 28,
-    background: "#111827",
-    borderRadius: 28,
-    padding: 34,
-    color: "#ffffff",
-    display: "grid",
-    justifyItems: "center",
-    textAlign: "center",
-    gap: 12,
-  },
-  ctaTitle: {
-    margin: 0,
-    fontSize: 34,
-  },
-  ctaText: {
-    margin: 0,
-    maxWidth: 720,
-    color: "rgba(255,255,255,0.72)",
-    fontSize: 18,
-    lineHeight: 1.8,
-  },
-  ctaButton: {
-    marginTop: 8,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 52,
-    padding: "0 22px",
-    borderRadius: 999,
-    background: "#ffffff",
-    color: "#101828",
-    textDecoration: "none",
-    fontWeight: 800,
   },
 };

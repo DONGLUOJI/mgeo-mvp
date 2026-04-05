@@ -1,362 +1,303 @@
 import Link from "next/link";
-import { getServerSession } from "next-auth";
 import { SiteShell } from "@/components/marketing/SiteShell";
-import { PlanStatusCard } from "@/app/pricing/plan-status-card";
-import { authOptions } from "@/lib/auth/auth-options";
-import { getDetectQuotaStatus, getUserById } from "@/lib/db/repository";
 
 const plans = [
   {
-    name: "免费版",
+    name: "免费检测版",
     price: "0",
     period: "/月",
-    features: ["每月 3 次检测", "TCA 基础评分", "HTML/PDF 报告导出"],
+    desc: "适合先验证品牌在 AI 搜索中是否被提及、被理解、被推荐。",
+    features: ["每月 3 次检测", "TCA 基础评分", "基础报告导出"],
     action: "先做免费检测",
-    href: "/detect",
-    muted: true,
+    href: "/#detector",
   },
   {
-    name: "基础版",
-    price: "299",
+    name: "标准服务版",
+    price: "2999",
     period: "/月",
-    features: ["每月 50 次检测", "5 个关键词监控", "月度 TCA 报告", "1 个竞品对比", "周报邮件"],
-    action: "升级到基础版",
-    href: "/api/billing/checkout?plan=basic",
+    desc: "适合已经确认要持续优化品牌可见性，并需要完整交付闭环的团队。",
+    features: ["月度诊断与内容建议", "重点问题池整理", "平台适配与发布节奏建议"],
+    action: "进入服务沟通",
+    href: "/#contact",
   },
   {
-    name: "专业版",
-    price: "999",
+    name: "深度增长版",
+    price: "8999",
     period: "/月",
-    features: ["无限检测", "30 个关键词监控", "TCA 深度诊断", "异常预警", "90 天历史回溯"],
-    action: "升级到专业版",
-    href: "/api/billing/checkout?plan=pro",
+    desc: "适合需要长期监测、多平台内容适配与阶段复盘的品牌。",
+    features: ["完整 30 天交付闭环", "多平台持续监测", "复盘报告与下一轮策略建议"],
+    action: "预约深度方案",
+    href: "/#contact",
   },
 ];
 
-export default async function PricingPage() {
-  const session = await getServerSession(authOptions);
-  const currentUser = session?.user?.id ? await getUserById(session.user.id) : null;
-  const quota = currentUser ? await getDetectQuotaStatus(currentUser.id) : null;
-  const currentPlan = currentUser?.plan || "free";
+const steps = [
+  { index: "01", title: "先免费检测", text: "先确认当前品牌是否被提及、是否被理解、是否具备推荐基础。" },
+  { index: "02", title: "看 TCA 诊断", text: "明确当前最需要优先处理的是一致性、覆盖度还是权威性。" },
+  { index: "03", title: "匹配服务方案", text: "根据品牌阶段，选择轻量验证、标准交付或深度增长方案。" },
+  { index: "04", title: "进入执行闭环", text: "从内容适配、平台分发、效果监测到复盘建议形成长期机制。" },
+];
 
+export default function PricingPage() {
   return (
-    <SiteShell current="/pricing">
+    <SiteShell current="/pricing" ctaHref="/register" ctaLabel="注册" hideFooter>
       <main style={styles.page}>
         <section style={styles.hero}>
-          <span style={styles.badge}>服务方案</span>
-          <h1 style={styles.title}>根据品牌阶段选择适合的 MGEO 服务方式</h1>
-          <p style={styles.text}>
-            从免费检测到持续监控，先用轻量方案验证，再进入更完整的品牌增长服务闭环。
-          </p>
+          <div style={styles.heroPanel}>
+            <h1 style={styles.heroTitle}>服务方案</h1>
+            <p style={styles.heroText}>用更接近你本地 `subscription.html` 的版式，把免费检测、诊断、交付与长期增长方案整理成一条清晰路径。</p>
+            <div style={styles.heroActions}>
+              <Link href="/#detector" style={styles.primaryButton}>
+                先做免费检测
+              </Link>
+              <Link href="/#contact" style={styles.secondaryButton}>
+                联系我们
+              </Link>
+            </div>
+          </div>
         </section>
 
-        {currentUser ? (
-          <PlanStatusCard
-            initialData={{
-              email: currentUser.email,
-              plan: currentUser.plan,
-              quota: quota
-                ? {
-                    limit: quota.limit,
-                    used: quota.used,
-                    remaining: quota.remaining,
-                  }
-                : null,
-              updatedAt: currentUser.updatedAt,
-            }}
-          />
-        ) : null}
-
-        {currentUser ? (
-          <section style={styles.manageEntry}>
-            <div>
-              <div style={styles.manageTitle}>需要统一查看套餐能力、额度和后续动作？</div>
-              <div style={styles.manageText}>
-                你可以进入订阅管理页，从账号、套餐、检测额度和下一步升级建议的角度统一查看当前状态。
-              </div>
+        <section style={styles.section}>
+          <div style={styles.sectionCard}>
+            <div style={styles.sectionHeader}>
+              <h2 style={styles.sectionTitle}>从检测到交付的服务路径</h2>
+              <p style={styles.sectionText}>不是先卖方案，而是先用检测结果建立判断，再进入适合当前品牌阶段的执行方式。</p>
             </div>
-            <Link href="/billing/manage" style={styles.manageButton}>
-              进入订阅管理
-            </Link>
-          </section>
-        ) : null}
 
-        <section style={styles.grid}>
-          {plans.map((plan) => (
-            <article
-              key={plan.name}
-              style={{
-                ...styles.card,
-                ...(plan.muted ? styles.cardMuted : {}),
-                ...(getPlanKey(plan.name) === currentPlan ? styles.cardCurrent : {}),
-                ...(isRecommendedPlan(currentPlan, getPlanKey(plan.name)) ? styles.cardRecommended : {}),
-              }}
-            >
-              <div style={styles.cardTop}>
-                <div style={styles.planName}>{plan.name}</div>
-                {getPlanKey(plan.name) === currentPlan ? (
-                  <span style={styles.currentBadge}>当前方案</span>
-                ) : isRecommendedPlan(currentPlan, getPlanKey(plan.name)) ? (
-                  <span style={styles.recommendedBadge}>推荐升级</span>
-                ) : null}
-              </div>
-              <div style={styles.priceRow}>
-                <span style={styles.priceSymbol}>¥</span>
-                <span style={styles.priceValue}>{plan.price}</span>
-                <span style={styles.pricePeriod}>{plan.period}</span>
-              </div>
-              <ul style={styles.featureList}>
-                {plan.features.map((feature) => (
-                  <li key={feature} style={styles.featureItem}>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <div style={styles.planFooter}>
-                <Link
-                  href={plan.href}
-                  aria-disabled={isLockedPlan(currentPlan, getPlanKey(plan.name))}
-                  style={{
-                    ...styles.button,
-                    ...(getPlanKey(plan.name) === currentPlan ? styles.buttonMuted : {}),
-                    ...(isLockedPlan(currentPlan, getPlanKey(plan.name)) ? styles.buttonDisabled : {}),
-                  }}
-                >
-                  {getPlanButtonText(currentPlan, getPlanKey(plan.name), plan.action)}
-                </Link>
-                <div style={styles.planHint}>
-                  {getPlanHint(currentPlan, getPlanKey(plan.name))}
-                </div>
-              </div>
-            </article>
-          ))}
+            <div style={styles.steps}>
+              {steps.map((step) => (
+                <article key={step.index} style={styles.stepCard}>
+                  <div style={styles.stepIndex}>{step.index}</div>
+                  <h3 style={styles.stepTitle}>{step.title}</h3>
+                  <p style={styles.stepText}>{step.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section style={styles.section}>
+          <div style={styles.sectionCard}>
+            <div style={styles.sectionHeader}>
+              <h2 style={styles.sectionTitle}>当前可选择的方案</h2>
+              <p style={styles.sectionText}>先做免费验证，再按品牌阶段进入标准服务或深度增长闭环。</p>
+            </div>
+
+            <div style={styles.planGrid}>
+              {plans.map((plan) => (
+                <article key={plan.name} style={styles.planCard}>
+                  <h3 style={styles.planTitle}>{plan.name}</h3>
+                  <div style={styles.priceRow}>
+                    <span style={styles.priceSymbol}>¥</span>
+                    <span style={styles.priceValue}>{plan.price}</span>
+                    <span style={styles.pricePeriod}>{plan.period}</span>
+                  </div>
+                  <p style={styles.planDesc}>{plan.desc}</p>
+                  <ul style={styles.featureList}>
+                    {plan.features.map((feature) => (
+                      <li key={feature} style={styles.featureItem}>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href={plan.href} style={styles.planButton}>
+                    {plan.action}
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </div>
         </section>
       </main>
     </SiteShell>
   );
 }
 
-function getPlanKey(name: string) {
-  if (name === "免费版") return "free";
-  if (name === "基础版") return "basic";
-  if (name === "专业版") return "pro";
-  return "free";
-}
-
-function isRecommendedPlan(currentPlan: string, targetPlan: string) {
-  return (currentPlan === "free" && targetPlan === "basic") || (currentPlan === "basic" && targetPlan === "pro");
-}
-
-function isLockedPlan(currentPlan: string, targetPlan: string) {
-  return (currentPlan === "basic" && targetPlan === "free") || (currentPlan === "pro" && (targetPlan === "free" || targetPlan === "basic"));
-}
-
-function getPlanButtonText(currentPlan: string, targetPlan: string, fallback: string) {
-  if (currentPlan === targetPlan) return "当前方案";
-  if (isLockedPlan(currentPlan, targetPlan)) return "当前页不支持降级";
-  return fallback;
-}
-
-function getPlanHint(currentPlan: string, targetPlan: string) {
-  if (currentPlan === targetPlan) {
-    return "你当前正在使用这一档套餐，可以先看上方状态卡中的额度与能力。";
-  }
-  if (isLockedPlan(currentPlan, targetPlan)) {
-    return "如果需要降级或切换套餐，建议后续补一个订阅管理页统一处理。";
-  }
-  if (isRecommendedPlan(currentPlan, targetPlan)) {
-    return "这是你当前阶段最适合的下一步升级方向，能直接解锁更多检测与监控能力。";
-  }
-  return "如果你的品牌已经进入长期优化阶段，可以直接从这一档开始。";
-}
-
 const styles: Record<string, React.CSSProperties> = {
   page: {
-    maxWidth: 1240,
-    margin: "0 auto",
-    padding: "64px 24px 0",
+    paddingTop: 52,
+    background: "#f5f5f7",
   },
   hero: {
-    display: "grid",
-    gap: 16,
-    justifyItems: "center",
-    textAlign: "center",
-    marginBottom: 36,
+    maxWidth: 1240,
+    margin: "34px auto 28px",
+    padding: "0 24px",
   },
-  badge: {
-    display: "inline-flex",
-    height: 34,
-    padding: "0 14px",
-    alignItems: "center",
-    borderRadius: 999,
-    background: "#edf8f6",
-    color: "#0f8b7f",
-    fontSize: 14,
-    fontWeight: 700,
+  heroPanel: {
+    borderRadius: 38,
+    padding: "52px 56px",
+    color: "#ffffff",
+    background: "linear-gradient(135deg, #0d1117 0%, #17382f 100%)",
+    boxShadow: "0 20px 48px rgba(15, 23, 42, 0.14)",
   },
-  title: {
+  heroTitle: {
     margin: 0,
-    fontSize: 48,
-    lineHeight: 1.12,
+    fontSize: 58,
+    lineHeight: 1.1,
     letterSpacing: "-0.04em",
   },
-  text: {
-    margin: 0,
+  heroText: {
     maxWidth: 860,
-    color: "#667085",
-    fontSize: 18,
-    lineHeight: 1.8,
+    fontSize: 19,
+    lineHeight: 1.75,
+    color: "rgba(255,255,255,0.82)",
+    margin: "20px 0 30px",
   },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 20,
-  },
-  manageEntry: {
-    marginBottom: 24,
-    background: "#ffffff",
-    border: "1px solid #e7ebf0",
-    borderRadius: 24,
-    padding: 22,
+  heroActions: {
     display: "flex",
-    justifyContent: "space-between",
-    gap: 18,
-    alignItems: "center",
+    gap: 16,
     flexWrap: "wrap",
   },
-  manageTitle: {
-    fontSize: 20,
-    fontWeight: 800,
-    color: "#111827",
-  },
-  manageText: {
-    marginTop: 8,
-    fontSize: 15,
-    lineHeight: 1.8,
-    color: "#667085",
-    maxWidth: 760,
-  },
-  manageButton: {
+  primaryButton: {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    height: 46,
-    padding: "0 18px",
-    borderRadius: 14,
-    background: "#111827",
-    color: "#fff",
+    minWidth: 180,
+    padding: "18px 28px",
+    borderRadius: 20,
     textDecoration: "none",
-    fontWeight: 700,
+    fontSize: 18,
+    fontWeight: 600,
+    background: "#1f1f22",
+    color: "#ffffff",
   },
-  card: {
+  secondaryButton: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 180,
+    padding: "18px 28px",
+    borderRadius: 20,
+    textDecoration: "none",
+    fontSize: 18,
+    fontWeight: 600,
+    background: "rgba(255,255,255,0.08)",
+    border: "1px solid rgba(255,255,255,0.16)",
+    color: "#ffffff",
+  },
+  section: {
+    maxWidth: 1240,
+    margin: "0 auto 28px",
+    padding: "0 24px",
+  },
+  sectionCard: {
     background: "#ffffff",
-    border: "1px solid #e7ebf0",
-    borderRadius: 28,
+    borderRadius: 32,
+    padding: 46,
+    boxShadow: "0 12px 36px rgba(15, 23, 42, 0.06)",
+  },
+  sectionHeader: {
+    maxWidth: 860,
+    marginBottom: 28,
+  },
+  sectionTitle: {
+    margin: 0,
+    fontSize: 40,
+    lineHeight: 1.15,
+    letterSpacing: "-0.03em",
+  },
+  sectionText: {
+    margin: "12px 0 0",
+    fontSize: 18,
+    lineHeight: 1.7,
+    color: "#6e6e73",
+  },
+  steps: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+    gap: 18,
+  },
+  stepCard: {
+    background: "#fbfbfc",
+    border: "1px solid #ececf0",
+    borderRadius: 24,
+    padding: 26,
+  },
+  stepIndex: {
+    display: "inline-flex",
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    background: "#0a7c66",
+    color: "#ffffff",
+    fontWeight: 700,
+    marginBottom: 16,
+  },
+  stepTitle: {
+    margin: 0,
+    fontSize: 24,
+  },
+  stepText: {
+    margin: "10px 0 0",
+    color: "#6e6e73",
+    fontSize: 16,
+    lineHeight: 1.7,
+  },
+  planGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 18,
+  },
+  planCard: {
+    background: "#fbfbfc",
+    border: "1px solid #ececf0",
+    borderRadius: 24,
     padding: 28,
     display: "grid",
     alignContent: "start",
-    gap: 18,
+    gap: 16,
   },
-  cardMuted: {
-    background: "#fafbfd",
-  },
-  cardCurrent: {
-    border: "1px solid rgba(15, 139, 127, 0.24)",
-    boxShadow: "0 10px 30px rgba(15, 139, 127, 0.08)",
-  },
-  cardRecommended: {
-    border: "1px solid rgba(17, 24, 39, 0.16)",
-  },
-  cardTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 12,
-    alignItems: "center",
-    flexWrap: "wrap",
-  },
-  planName: {
+  planTitle: {
+    margin: 0,
     fontSize: 28,
-    fontWeight: 800,
-  },
-  currentBadge: {
-    display: "inline-flex",
-    alignItems: "center",
-    height: 30,
-    padding: "0 10px",
-    borderRadius: 999,
-    background: "#edf8f6",
-    color: "#0f8b7f",
-    fontSize: 12,
-    fontWeight: 800,
-  },
-  recommendedBadge: {
-    display: "inline-flex",
-    alignItems: "center",
-    height: 30,
-    padding: "0 10px",
-    borderRadius: 999,
-    background: "#111827",
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: 800,
   },
   priceRow: {
     display: "flex",
-    alignItems: "flex-end",
-    gap: 4,
+    alignItems: "baseline",
+    gap: 6,
   },
   priceSymbol: {
     fontSize: 20,
-    marginBottom: 10,
+    fontWeight: 700,
   },
   priceValue: {
-    fontSize: 58,
+    fontSize: 40,
     lineHeight: 1,
-    fontWeight: 800,
-    letterSpacing: "-0.04em",
+    fontWeight: 700,
   },
   pricePeriod: {
-    fontSize: 18,
-    marginBottom: 10,
-    color: "#667085",
+    color: "#6e6e73",
+    fontSize: 16,
+  },
+  planDesc: {
+    margin: 0,
+    color: "#6e6e73",
+    fontSize: 16,
+    lineHeight: 1.7,
   },
   featureList: {
+    listStyle: "none",
     margin: 0,
-    paddingLeft: 20,
-    display: "grid",
-    gap: 12,
-    color: "#475467",
-    fontSize: 16,
-    lineHeight: 1.8,
+    padding: 0,
   },
-  featureItem: {},
-  planFooter: {
-    display: "grid",
-    gap: 10,
+  featureItem: {
+    fontSize: 15,
+    lineHeight: 1.6,
+    padding: "12px 0",
+    borderTop: "1px solid #ececf0",
   },
-  button: {
+  planButton: {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    height: 50,
-    borderRadius: 14,
-    background: "#111827",
+    minHeight: 52,
+    borderRadius: 16,
+    background: "#1f1f22",
     color: "#ffffff",
     textDecoration: "none",
     fontWeight: 700,
-  },
-  buttonMuted: {
-    background: "#98a2b3",
-  },
-  buttonDisabled: {
-    background: "#eaecf0",
-    color: "#98a2b3",
-    pointerEvents: "none",
-  },
-  planHint: {
-    minHeight: 52,
-    fontSize: 14,
-    lineHeight: 1.75,
-    color: "#667085",
+    marginTop: 6,
   },
 };
