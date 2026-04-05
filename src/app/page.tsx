@@ -162,7 +162,10 @@ export default function MarketingHomePage() {
         <section style={styles.hero}>
           <div style={styles.heroInner}>
             <div style={styles.heroBadge}>
-              <span style={styles.heroBadgeDot} />
+              <span style={styles.heroBadgeDotWrap}>
+                <span style={styles.heroBadgePulse} />
+                <span style={styles.heroBadgeDot} />
+              </span>
               <span>多模式生成式引擎</span>
             </div>
             <h1 style={styles.heroTitle}>帮助品牌在AI搜索中被看见</h1>
@@ -449,8 +452,27 @@ const styles: Record<string, React.CSSProperties> = {
     height: 12,
     borderRadius: 999,
     background: "#14d7c0",
-    boxShadow: "0 0 0 6px rgba(20, 215, 192, 0.16), 0 0 18px rgba(20, 215, 192, 0.9)",
-    animation: "heroBadgePulse 1.8s ease-in-out infinite",
+    boxShadow: "0 0 12px rgba(20, 215, 192, 0.95)",
+    position: "relative",
+    zIndex: 2,
+  },
+  heroBadgeDotWrap: {
+    width: 24,
+    height: 24,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    flexShrink: 0,
+  },
+  heroBadgePulse: {
+    position: "absolute",
+    width: 24,
+    height: 24,
+    borderRadius: 999,
+    background: "rgba(20, 215, 192, 0.18)",
+    boxShadow: "0 0 18px rgba(20, 215, 192, 0.5)",
+    animation: "heroBadgePulse 1.5s ease-out infinite",
   },
   heroTitle: {
     margin: "56px 0 0",
