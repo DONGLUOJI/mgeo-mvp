@@ -140,6 +140,25 @@ export default function MarketingHomePage() {
       hideFooter
     >
       <main style={styles.page}>
+        <style>{`
+          @keyframes heroBadgePulse {
+            0% {
+              transform: scale(0.92);
+              opacity: 0.72;
+              box-shadow: 0 0 0 0 rgba(20, 215, 192, 0.24), 0 0 10px rgba(20, 215, 192, 0.42);
+            }
+            50% {
+              transform: scale(1);
+              opacity: 1;
+              box-shadow: 0 0 0 10px rgba(20, 215, 192, 0.08), 0 0 22px rgba(20, 215, 192, 0.88);
+            }
+            100% {
+              transform: scale(0.92);
+              opacity: 0.72;
+              box-shadow: 0 0 0 0 rgba(20, 215, 192, 0.24), 0 0 10px rgba(20, 215, 192, 0.42);
+            }
+          }
+        `}</style>
         <section style={styles.hero}>
           <div style={styles.heroInner}>
             <div style={styles.heroBadge}>
@@ -431,6 +450,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 999,
     background: "#14d7c0",
     boxShadow: "0 0 0 6px rgba(20, 215, 192, 0.16), 0 0 18px rgba(20, 215, 192, 0.9)",
+    animation: "heroBadgePulse 1.8s ease-in-out infinite",
   },
   heroTitle: {
     margin: "56px 0 0",
