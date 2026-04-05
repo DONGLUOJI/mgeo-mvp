@@ -1,15 +1,6 @@
 import Link from "next/link";
 import { SiteShell } from "@/components/marketing/SiteShell";
 
-const REGISTER_NAV_ITEMS = [
-  { href: "/#detector", label: "免费检测" },
-  { href: "/ranking", label: "排名" },
-  { href: "/pricing", label: "服务方案" },
-  { href: "/cases", label: "案例成果" },
-  { href: "/#contact", label: "联系我们" },
-  { href: "/whitepaper", label: "MGEO白皮书" },
-];
-
 const benefits = [
   "保留品牌基础信息与咨询记录",
   "统一管理免费检测与服务沟通",
@@ -18,7 +9,7 @@ const benefits = [
 
 export default function RegisterPage() {
   return (
-    <SiteShell navItems={REGISTER_NAV_ITEMS} ctaHref="/register" ctaLabel="注册" hideFooter>
+    <SiteShell ctaHref="/register" ctaLabel="注册" hideFooter>
       <main style={styles.page}>
         <section style={styles.shell}>
           <section style={styles.copyCard}>

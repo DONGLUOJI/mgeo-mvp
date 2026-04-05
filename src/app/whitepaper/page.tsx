@@ -1,15 +1,6 @@
 import Link from "next/link";
 import { SiteShell } from "@/components/marketing/SiteShell";
 
-const WHITEPAPER_NAV_ITEMS = [
-  { href: "/#detector", label: "免费检测" },
-  { href: "/ranking", label: "排名" },
-  { href: "/pricing", label: "服务方案" },
-  { href: "/cases", label: "案例成果" },
-  { href: "/#contact", label: "联系我们" },
-  { href: "/whitepaper", label: "MGEO白皮书" },
-];
-
 const toc = [
   { id: "ch1", title: "第一章：前言与背景" },
   { id: "ch2", title: "第二章：MGEO基础理论" },
@@ -21,7 +12,7 @@ const toc = [
 
 export default function WhitepaperPage() {
   return (
-    <SiteShell current="/whitepaper" navItems={WHITEPAPER_NAV_ITEMS} ctaHref="/register" ctaLabel="注册" hideFooter>
+    <SiteShell current="/whitepaper" ctaHref="/register" ctaLabel="注册" hideFooter>
       <main style={styles.page}>
         <section style={styles.hero}>
           <h1 style={styles.heroTitle}>MGEO标准白皮书</h1>

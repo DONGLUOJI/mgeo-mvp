@@ -1,11 +1,13 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-const DEFAULT_NAV_ITEMS = [
-  { href: "/detect", label: "免费检测" },
+export const MARKETING_NAV_ITEMS = [
+  { href: "/#detector", label: "免费检测" },
   { href: "/ranking", label: "排名" },
   { href: "/pricing", label: "服务方案" },
   { href: "/cases", label: "案例成果" },
+  { href: "/#contact", label: "联系我们" },
+  { href: "/whitepaper", label: "MGEO白皮书" },
 ];
 
 type SiteShellProps = {
@@ -20,9 +22,9 @@ type SiteShellProps = {
 export function SiteShell({
   children,
   current,
-  navItems = DEFAULT_NAV_ITEMS,
-  ctaHref = "/detect",
-  ctaLabel = "免费检测",
+  navItems = MARKETING_NAV_ITEMS,
+  ctaHref = "/register",
+  ctaLabel = "注册",
   hideFooter = false,
 }: SiteShellProps) {
   return (
@@ -40,10 +42,8 @@ export function SiteShell({
                 <Link
                   key={item.href}
                   href={item.href}
-                  style={{
-                    ...styles.navLink,
-                    ...(active ? styles.navLinkActive : {}),
-                  }}
+                  aria-current={active ? "page" : undefined}
+                  style={styles.navLink}
                 >
                   {item.label}
                 </Link>
@@ -83,7 +83,7 @@ export function SiteShell({
               <Link href="/ranking" style={styles.footerLink}>
                 排名
               </Link>
-              <Link href="/detect" style={styles.footerLink}>
+              <Link href="/#detector" style={styles.footerLink}>
                 免费检测
               </Link>
             </div>
@@ -138,10 +138,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 18,
     fontWeight: 500,
     opacity: 0.8,
-  },
-  navLinkActive: {
-    color: "#0a7c66",
-    opacity: 1,
   },
   auth: {
     display: "flex",
