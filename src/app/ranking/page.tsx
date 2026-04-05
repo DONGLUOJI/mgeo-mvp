@@ -147,12 +147,7 @@ export default async function RankingPage({
                   currentIndustry={currentIndustry}
                   currentDays={currentDays}
                   focusBrand={focusBrand}
-                  overview={{
-                    brandCount: industryData.overview.brandCount,
-                    industryCount: industryData.overview.industryCount,
-                    averageScore: industryData.overview.averageScore,
-                    snapshotDate: industryData.snapshotDate,
-                  }}
+                  overview={industryData.overview}
                 />
               ) : null}
 
@@ -238,7 +233,7 @@ export default async function RankingPage({
               <>
                 <div>
                   <div style={styles.ctaTitle}>不想排名下跌？</div>
-                  <div style={styles.ctaText}>先注册建立监控节奏，后续你给 API 和自动化需求后，我再帮你把通知链路接完整。</div>
+                  <div style={styles.ctaText}>先建立监控节奏，再把排名波动、竞品对比和周度复盘串起来。</div>
                 </div>
                 <div style={styles.ctaActions}>
                   <Link href="/register" style={styles.ctaPrimary}>

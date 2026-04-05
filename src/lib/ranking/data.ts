@@ -216,29 +216,74 @@ const TRENDING_SEEDS = [
   },
 ];
 
+const INDUSTRY_AVERAGE_TARGETS = {
+  新茶饮: 68,
+  餐饮连锁: 72,
+  教培: 60,
+  家政服务: 48,
+  美妆护肤: 65,
+  企业服务: 63,
+} as const;
+
+const PLATFORM_PREFERENCES: Record<string, PlatformKey[]> = {
+  新茶饮: ["doubao", "yuanbao", "qianwen", "wenxin", "deepseek", "kimi"],
+  餐饮连锁: ["doubao", "wenxin", "yuanbao", "qianwen", "deepseek", "kimi"],
+  教培: ["deepseek", "kimi", "doubao", "qianwen", "wenxin", "yuanbao"],
+  家政服务: ["doubao", "wenxin", "qianwen", "yuanbao", "deepseek", "kimi"],
+  美妆护肤: ["yuanbao", "doubao", "wenxin", "qianwen", "deepseek", "kimi"],
+  企业服务: ["deepseek", "kimi", "qianwen", "doubao", "wenxin", "yuanbao"],
+};
+
 function brandHash(input: string) {
   return Array.from(input).reduce((sum, char) => sum + char.charCodeAt(0), 0);
 }
 
-function buildPlatformDetail(row: RankingSnapshotBase) {
-  const start = brandHash(row.brandName) % PLATFORM_OPTIONS.length;
-  const activeKeys = new Set<PlatformKey>();
+function rotateValues<T>(values: readonly T[], offset: number) {
+  const normalized = ((offset % values.length) + values.length) % values.length;
+  return values.slice(normalized).concat(values.slice(0, normalized));
+}
 
-  for (let index = 0; index < row.platformCoverage; index += 1) {
-    activeKeys.add(PLATFORM_OPTIONS[(start + index) % PLATFORM_OPTIONS.length].key);
-  }
+function getPositionRange(score: number) {
+  if (score >= 90) return [1, 3] as const;
+  if (score >= 80) return [1, 4] as const;
+  if (score >= 70) return [2, 6] as const;
+  if (score >= 60) return [3, 7] as const;
+  if (score >= 50) return [4, 8] as const;
+  if (score >= 40) return [6, 9] as const;
+  return [7, 10] as const;
+}
+
+function buildPlatformDetail(row: RankingSnapshotBase) {
+  const hash = brandHash(`${row.industry}-${row.brandName}`);
+  const preferences = PLATFORM_PREFERENCES[row.industry] || PLATFORM_OPTIONS.map((item) => item.key);
+  const orderedPlatforms = rotateValues(preferences, hash % preferences.length);
+  const activeKeys = new Set<PlatformKey>(orderedPlatforms.slice(0, row.platformCoverage));
+  const [minPosition, maxPosition] = getPositionRange(row.tcaTotal);
+  const span = maxPosition - minPosition + 1;
 
   return Object.fromEntries(
     PLATFORM_OPTIONS.map((platform, index) => {
       const mentioned = activeKeys.has(platform.key);
-      const sentimentIndex = (brandHash(`${row.brandName}-${platform.key}`) + index) % 3;
-      const sentiment = mentioned ? (["positive", "neutral", "negative"][sentimentIndex] as PlatformDetail["sentiment"]) : null;
+      const preferenceIndex = orderedPlatforms.indexOf(platform.key);
+      const positionSeed = brandHash(`${row.brandName}-${platform.key}-${row.tcaTotal}`) + index * 3;
+      const position = mentioned ? Math.min(10, minPosition + (positionSeed % span) + Math.max(0, preferenceIndex - 1)) : null;
+
+      let sentiment: PlatformDetail["sentiment"] = null;
+      if (mentioned) {
+        if (position !== null && (position <= 3 || (row.tcaTotal >= 82 && preferenceIndex <= 1))) {
+          sentiment = "positive";
+        } else if (position !== null && (position >= 8 || row.tcaTotal < 45)) {
+          sentiment = "negative";
+        } else {
+          sentiment = "neutral";
+        }
+      }
 
       return [
         platform.key,
         {
           mentioned,
-          position: mentioned ? ((brandHash(platform.key + row.brandName) % 5) + 1) : null,
+          position,
           sentiment,
         },
       ];
@@ -303,11 +348,25 @@ export async function getIndustryRankingData(options?: {
     total: brands.length,
     snapshotDate: brands[0]?.snapshotDate || "2026-04-05",
     overview: {
-      brandCount: brands.length,
-      industryCount: new Set(snapshots.map((row) => row.industry)).size,
-      averageScore: brands.length
-        ? Math.round(brands.reduce((sum, row) => sum + row.tcaTotal, 0) / brands.length)
-        : 0,
+      topRiser: brands[0]
+        ? [...brands].sort((left, right) => right.change7d - left.change7d)[0]
+        : null,
+      topFaller: brands[0]
+        ? [...brands].sort((left, right) => left.change7d - right.change7d)[0]
+        : null,
+      averageScore: {
+        current: brands.length ? Number((brands.reduce((sum, row) => sum + row.tcaTotal, 0) / brands.length).toFixed(1)) : 0,
+        change: brands.length
+          ? Number(
+              (
+                brands.reduce((sum, row) => sum + row.tcaTotal, 0) / brands.length -
+                brands.reduce((sum, row) => sum + row.prevTcaTotal, 0) / brands.length
+              ).toFixed(1)
+            )
+          : 0,
+        totalBrands: brands.length,
+        totalIndustries: new Set(filtered.map((row) => row.industry)).size || new Set(snapshots.map((row) => row.industry)).size,
+      },
     },
     brands: paged,
   };
@@ -418,13 +477,21 @@ export async function getMoversData(options?: {
       currentScore: brand.tcaTotal,
     }));
 
-  const industryTrends = INDUSTRY_OPTIONS.filter((item) => item !== "全部").map((industryName, industryIndex) => ({
-    industry: industryName,
-    data: Array.from({ length: 12 }, (_, index) => ({
-      week: `W${index + 1}`,
-      avgScore: 58 + industryIndex * 4 + index + ((index + industryIndex) % 3),
-    })),
-  }));
+  const industryTrends = INDUSTRY_OPTIONS.filter((item) => item !== "全部").map((industryName) => {
+    const target = INDUSTRY_AVERAGE_TARGETS[industryName as keyof typeof INDUSTRY_AVERAGE_TARGETS] || 60;
+
+    return {
+      industry: industryName,
+      data: Array.from({ length: 12 }, (_, index) => {
+        const swing = ((index % 4) - 1.5) * 1.4;
+        const recovery = index > 7 ? (index - 7) * 0.6 : 0;
+        return {
+          week: `W${index + 1}`,
+          avgScore: Number((target - 4 + swing + recovery).toFixed(1)),
+        };
+      }),
+    };
+  });
 
   return { risers, fallers, industryTrends };
 }

@@ -117,59 +117,111 @@ type DetectQuotaRecord = {
 const rankingSeedCatalog = [
   {
     industry: "新茶饮",
-    baseScore: 88,
-    brands: ["喜茶", "霸王茶姬", "茶百道", "沪上阿姨", "奈雪的茶", "蜜雪冰城", "古茗", "CoCo都可", "书亦烧仙草", "益禾堂", "茶颜悦色", "七分甜", "阿水大杯茶", "乐乐茶", "1點點", "爷爷不泡茶", "悸动烧仙草", "新时沏", "茉酸奶", "柠季"],
+    brands: ["喜茶", "霸王茶姬", "茶百道", "奈雪的茶", "蜜雪冰城", "古茗", "沪上阿姨", "益禾堂", "七分甜", "一点点"],
+    scores: [92, 86, 80, 77, 72, 68, 63, 57, 47, 38],
+    coverages: [6, 6, 5, 5, 5, 4, 3, 2, 2, 1],
+    changes: [12.5, 5.6, 3.4, 1.8, 0.4, -0.2, -2.1, -3.4, -1.7, -7.2],
   },
   {
     industry: "餐饮连锁",
-    baseScore: 90,
-    brands: ["海底捞", "西贝", "巴奴火锅", "外婆家", "绿茶餐厅", "太二酸菜鱼", "九毛九", "费大厨", "老乡鸡", "大米先生", "和府捞面", "乡村基", "南城香", "呷哺呷哺", "鱼你在一起", "杨国福", "张亮麻辣烫", "小菜园", "陶陶居", "半天妖"],
+    brands: ["海底捞", "西贝", "巴奴火锅", "外婆家", "绿茶餐厅", "太二酸菜鱼", "九毛九", "和府捞面", "老乡鸡", "杨国福"],
+    scores: [94, 87, 82, 78, 74, 71, 68, 61, 55, 50],
+    coverages: [6, 6, 5, 5, 4, 4, 3, 3, 2, 2],
+    changes: [9.3, 4.2, 2.8, 1.6, 0.3, -0.4, -2.5, -3.1, -1.8, 3.7],
   },
   {
     industry: "教培",
-    baseScore: 91,
-    brands: ["新东方", "学而思", "火花思维", "猿辅导", "高途", "作业帮", "斑马", "核桃编程", "编程猫", "小叶子", "豌豆思维", "VIPKID", "51Talk", "掌门教育", "粉笔", "中公教育", "华图教育", "洋葱学园", "有道精品课", "希望学"],
+    brands: ["新东方", "学而思", "猿辅导", "火花思维", "高途", "作业帮", "VIPKID", "粉笔", "中公教育", "掌门教育"],
+    scores: [91, 82, 74, 68, 62, 58, 53, 47, 40, 25],
+    coverages: [6, 5, 4, 4, 3, 3, 2, 2, 1, 0],
+    changes: [3.4, 2.2, 1.1, 0.5, -0.1, -1.6, -2.8, -4.2, 0, -8.3],
   },
   {
     industry: "家政服务",
-    baseScore: 83,
-    brands: ["天鹅到家", "好慷在家", "58到家", "轻喜到家", "阿姨来了", "无忧保姆", "爱君家政", "e家洁", "到位", "管家帮", "阿姨帮", "好孕妈妈", "洁妹子", "叮当找阿姨", "宅翻新家政", "三替家政", "乐家庭服务", "家事无忧", "优侍家政", "家邻家政"],
+    brands: ["天鹅到家", "好慷在家", "58到家", "轻喜到家", "阿姨来了", "无忧保姆", "洁妹子", "邻家家政", "悦享到家", "安馨家政"],
+    scores: [76, 68, 60, 55, 49, 44, 38, 33, 29, 28],
+    coverages: [4, 4, 3, 3, 2, 2, 1, 1, 0, 0],
+    changes: [1.9, 0.2, -0.3, -1.2, -2.7, 3.2, -4.6, 0, 0, -0.1],
   },
   {
     industry: "美妆护肤",
-    baseScore: 89,
-    brands: ["珀莱雅", "薇诺娜", "花西子", "可复美", "橘朵", "HBN", "韩束", "自然堂", "完美日记", "毛戈平", "润百颜", "玉泽", "夸迪", "丸美", "欧诗漫", "百雀羚", "花知晓", "谷雨", "瑷尔博士", "酵色"],
+    brands: ["珀莱雅", "薇诺娜", "花西子", "可复美", "橘朵", "HBN", "韩束", "自然堂", "完美日记", "毛戈平"],
+    scores: [86, 80, 74, 70, 67, 63, 58, 54, 51, 47],
+    coverages: [6, 5, 5, 4, 4, 3, 3, 2, 2, 1],
+    changes: [4.4, 2.9, 1.5, 0.2, -0.4, -1.1, -2.2, 3.6, -0.2, -6.4],
   },
   {
     industry: "企业服务",
-    baseScore: 90,
-    brands: ["飞书", "钉钉", "销售易", "纷享销客", "金蝶云星空", "用友BIP", "北森", "石墨文档", "Teambition", "明道云", "伙伴云", "简道云", "道一云", "有赞", "微盟", "网易数帆", "腾讯会议", "企微管家", "泛微", "致远互联"],
+    brands: ["飞书", "钉钉", "销售易", "纷享销客", "金蝶云星空", "用友BIP", "北森", "石墨文档", "简道云", "伙伴云"],
+    scores: [92, 83, 74, 68, 63, 59, 54, 49, 44, 44],
+    coverages: [6, 5, 4, 4, 3, 3, 2, 2, 1, 1],
+    changes: [4.8, 2.6, 1.3, 0.1, -0.5, -1.8, -3.3, 2.1, -0.1, -2.4],
   },
 ] as const;
 
-const mockRankingSeeds: RankingSeed[] = rankingSeedCatalog.flatMap((group, groupIndex) =>
+const scorePatterns = [
+  { consistency: 10, coverage: -8, authority: 4 },
+  { consistency: -8, coverage: 12, authority: -2 },
+  { consistency: 6, coverage: -10, authority: 9 },
+  { consistency: -10, coverage: 7, authority: 11 },
+  { consistency: 8, coverage: 3, authority: -6 },
+  { consistency: -6, coverage: 9, authority: 5 },
+  { consistency: 12, coverage: -5, authority: -8 },
+  { consistency: -4, coverage: 5, authority: 10 },
+] as const;
+
+function clampScore(value: number) {
+  return Math.max(18, Math.min(98, Math.round(value)));
+}
+
+function buildScoreBreakdown(seed: RankingSeed, index: number) {
+  const pattern = scorePatterns[index % scorePatterns.length];
+  const livingIndustry = seed.industry === "新茶饮" || seed.industry === "餐饮连锁" || seed.industry === "家政服务";
+  const industryShift =
+    seed.industry === "企业服务"
+      ? { consistency: 2, coverage: -3, authority: 4 }
+      : seed.industry === "教培"
+        ? { consistency: 3, coverage: -2, authority: 2 }
+        : seed.industry === "家政服务"
+          ? { consistency: -1, coverage: -4, authority: 0 }
+          : livingIndustry
+            ? { consistency: 0, coverage: 2, authority: 1 }
+            : { consistency: 1, coverage: 0, authority: 3 };
+
+  return {
+    tcaConsistency: clampScore(seed.tcaTotal + pattern.consistency + industryShift.consistency),
+    tcaCoverage: clampScore(seed.tcaTotal + pattern.coverage + industryShift.coverage),
+    tcaAuthority: clampScore(seed.tcaTotal + pattern.authority + industryShift.authority),
+  };
+}
+
+const mockRankingSeeds: RankingSeed[] = rankingSeedCatalog.flatMap((group) =>
   group.brands.map((brandName, brandIndex) => ({
     industry: group.industry,
     brandName,
-    tcaTotal: Math.max(52, group.baseScore - brandIndex * 2 + ((brandIndex + groupIndex) % 3)),
-    platformCoverage: Math.max(2, Math.min(6, 6 - Math.floor(brandIndex / 4) + ((brandIndex + groupIndex) % 2))),
-    delta7d: Number((((groupIndex % 2 === 0 ? 1 : -1) * ((brandIndex % 7) - 3)) + (brandIndex % 3) * 0.6).toFixed(1)),
+    tcaTotal: group.scores[brandIndex],
+    platformCoverage: group.coverages[brandIndex],
+    delta7d: group.changes[brandIndex],
   }))
 );
 
-const mockRankingSnapshots: RankingSnapshotRecord[] = mockRankingSeeds.map((seed, index) => ({
-  id: `rank_${index + 1}`,
-  industry: seed.industry,
-  brandName: seed.brandName,
-  tcaTotal: seed.tcaTotal,
-  tcaConsistency: Math.max(52, Math.min(98, seed.tcaTotal + (index % 3 === 0 ? 2 : -1))),
-  tcaCoverage: Math.max(50, Math.min(98, seed.tcaTotal - 3 + (index % 4))),
-  tcaAuthority: Math.max(51, Math.min(98, seed.tcaTotal + (index % 5) - 2)),
-  platformCoverage: seed.platformCoverage,
-  delta7d: seed.delta7d,
-  snapshotDate: "2026-04-05",
-  createdAt: "2026-04-05T09:00:00.000Z",
-}));
+const mockRankingSnapshots: RankingSnapshotRecord[] = mockRankingSeeds.map((seed, index) => {
+  const breakdown = buildScoreBreakdown(seed, index);
+
+  return {
+    id: `rank_${index + 1}`,
+    industry: seed.industry,
+    brandName: seed.brandName,
+    tcaTotal: seed.tcaTotal,
+    tcaConsistency: breakdown.tcaConsistency,
+    tcaCoverage: breakdown.tcaCoverage,
+    tcaAuthority: breakdown.tcaAuthority,
+    platformCoverage: seed.platformCoverage,
+    delta7d: seed.delta7d,
+    snapshotDate: "2026-04-06",
+    createdAt: "2026-04-06T09:00:00.000Z",
+  };
+});
 
 function buildCustomerId(brandName: string) {
   const normalized = brandName

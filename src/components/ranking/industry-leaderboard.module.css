@@ -1,0 +1,20 @@
+.rowState .summaryState {
+  transition: background 0.15s ease;
+}
+
+.odd .summaryState {
+  background: #fafaf8;
+}
+
+.even .summaryState {
+  background: #ffffff;
+}
+
+.rowState .summaryState:hover {
+  background: #f0f0ee;
+}
+
+.focused .summaryState {
+  background: #ecfdf3;
+  box-shadow: inset 0 0 0 1px #86efac;
+}
