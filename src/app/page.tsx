@@ -78,12 +78,12 @@ const diagnosisCards = [
 ];
 
 const reportRows = [
-  ["DeepSeek", "有", "描述偏差", "已有提及，但推荐位置不稳定"],
-  ["字节豆包", "有", "定位混乱", "被识别，但品牌定位仍然混乱"],
-  ["阿里千问", "有", "表述偏泛", "已有基础提及，但品牌特征仍不清晰"],
-  ["Kimi", "无", "-", "尚未形成稳定提及"],
-  ["腾讯元宝", "无", "-", "仍需补足品牌信息覆盖"],
-  ["百度文心", "无", "-", "品牌内容仍未进入稳定推荐场景"],
+  ["DeepSeek", "positive", "描述偏差", "已有提及，但推荐位置不稳定"],
+  ["字节豆包", "positive", "定位混乱", "被识别，但品牌定位仍然混乱"],
+  ["阿里千问", "positive", "表述偏泛", "已有基础提及，但品牌特征仍不清晰"],
+  ["Kimi", "negative", "-", "尚未形成稳定提及"],
+  ["腾讯元宝", "negative", "-", "仍需补足品牌信息覆盖"],
+  ["百度文心", "negative", "-", "品牌内容仍未进入稳定推荐场景"],
 ];
 
 const deliveryCards = [
@@ -251,8 +251,20 @@ export default function MarketingHomePage() {
                   {reportRows.map(([model, mentioned, consistency, status]) => (
                     <tr key={model}>
                       <td style={styles.td}>{model}</td>
-                      <td style={styles.td}>{mentioned}</td>
-                      <td style={styles.td}>{consistency}</td>
+                      <td style={styles.td}>
+                        {mentioned === "positive" ? (
+                          <span style={styles.positiveStatus}>✅ 有</span>
+                        ) : (
+                          <span style={styles.negativeStatus}>❌ 无</span>
+                        )}
+                      </td>
+                      <td style={styles.td}>
+                        {consistency === "-" ? (
+                          "-"
+                        ) : (
+                          <span style={styles.warningStatus}>❌ {consistency}</span>
+                        )}
+                      </td>
                       <td style={styles.td}>{status}</td>
                     </tr>
                   ))}
@@ -598,7 +610,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
     border: "1px solid #e1e6ed",
     borderRadius: 34,
-    padding: "34px 36px 30px",
+    padding: "30px 30px 28px",
     boxShadow: "0 26px 60px rgba(15, 23, 42, 0.06)",
   },
   reportTop: {
@@ -609,7 +621,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   reportTitle: {
     margin: "8px 0 0",
-    fontSize: 50,
+    fontSize: 36,
     lineHeight: 1.14,
     color: "#202226",
     letterSpacing: "-0.04em",
@@ -617,14 +629,14 @@ const styles: Record<string, React.CSSProperties> = {
   reportSummary: {
     margin: "18px 0 0",
     color: "#6e7380",
-    fontSize: 16,
+    fontSize: 14,
     lineHeight: 1.8,
   },
   scoreCard: {
     justifySelf: "end",
-    width: 188,
-    height: 142,
-    borderRadius: 24,
+    width: 170,
+    height: 126,
+    borderRadius: 22,
     background: "#121212",
     color: "#ffffff",
     display: "grid",
@@ -632,13 +644,13 @@ const styles: Record<string, React.CSSProperties> = {
     alignContent: "center",
   },
   scoreValue: {
-    fontSize: 64,
+    fontSize: 56,
     lineHeight: 1,
     fontWeight: 800,
   },
   scoreLabel: {
     marginTop: 10,
-    fontSize: 16,
+    fontSize: 14,
     opacity: 0.9,
   },
   diagnosisGrid: {
@@ -651,7 +663,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: "#ffffff",
     border: "1px solid #e5e8ee",
     borderRadius: 24,
-    padding: 24,
+    padding: 26,
   },
   redFlag: {
     color: "#ff3b30",
@@ -660,7 +672,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   diagnosisTitle: {
     margin: "18px 0 0",
-    fontSize: 22,
+    fontSize: 26,
     lineHeight: 1.35,
     color: "#202226",
     fontWeight: 800,
@@ -668,7 +680,7 @@ const styles: Record<string, React.CSSProperties> = {
   diagnosisText: {
     margin: "16px 0 0",
     color: "#6a6f7b",
-    fontSize: 15,
+    fontSize: 16,
     lineHeight: 1.8,
   },
   tableWrap: {
@@ -694,6 +706,18 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 15,
     color: "#202226",
     borderTop: "1px solid #edf0f4",
+  },
+  positiveStatus: {
+    color: "#202226",
+    fontWeight: 500,
+  },
+  negativeStatus: {
+    color: "#202226",
+    fontWeight: 500,
+  },
+  warningStatus: {
+    color: "#202226",
+    fontWeight: 500,
   },
   deliverySection: {
     maxWidth: 1180,
