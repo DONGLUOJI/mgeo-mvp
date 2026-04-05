@@ -3,12 +3,12 @@ import { DetectForm } from "@/components/detect/DetectForm";
 import { SiteShell } from "@/components/marketing/SiteShell";
 
 const HOME_NAV_ITEMS = [
-  { href: "/#detect", label: "免费检测" },
+  { href: "/#detector", label: "免费检测" },
   { href: "/ranking", label: "排名" },
   { href: "/pricing", label: "服务方案" },
   { href: "/cases", label: "案例成果" },
   { href: "/#contact", label: "联系我们" },
-  { href: "/#whitepaper", label: "MGEO白皮书" },
+  { href: "/whitepaper", label: "MGEO白皮书" },
 ];
 
 const workflowCards = [
@@ -185,7 +185,7 @@ export default function MarketingHomePage() {
           </div>
         </section>
 
-        <section id="detect" style={styles.detectSection}>
+        <section id="detector" style={styles.detectSection}>
           <div style={styles.detectShell}>
             <DetectForm embedded />
           </div>
