@@ -8,6 +8,12 @@ type IndustryLeaderboardProps = {
   industries: readonly string[];
   currentIndustry: string;
   currentDays: number;
+  overview: {
+    brandCount: number;
+    industryCount: number;
+    averageScore: number;
+    snapshotDate: string;
+  };
 };
 
 export function IndustryLeaderboard({
@@ -15,9 +21,25 @@ export function IndustryLeaderboard({
   industries,
   currentIndustry,
   currentDays,
+  overview,
 }: IndustryLeaderboardProps) {
   return (
     <section style={styles.section}>
+      <div style={styles.overviewGrid}>
+        <article style={styles.overviewCard}>
+          <div style={styles.overviewLabel}>收录品牌总数</div>
+          <div style={styles.overviewValue}>{overview.brandCount} 个</div>
+        </article>
+        <article style={styles.overviewCard}>
+          <div style={styles.overviewLabel}>覆盖行业数</div>
+          <div style={styles.overviewValue}>{overview.industryCount} 个</div>
+        </article>
+        <article style={styles.overviewCard}>
+          <div style={styles.overviewLabel}>数据更新时间</div>
+          <div style={styles.overviewValue}>{overview.snapshotDate}</div>
+        </article>
+      </div>
+
       <div style={styles.sectionHead}>
         <div>
           <h2 style={styles.title}>行业 AI 可见性排行榜</h2>
@@ -32,6 +54,18 @@ export function IndustryLeaderboard({
           return (
             <Link key={industry} href={href} style={{ ...styles.chip, ...(active ? styles.chipActive : {}) }}>
               {industry}
+            </Link>
+          );
+        })}
+      </div>
+
+      <div style={styles.filters}>
+        {[7, 30, 90].map((days) => {
+          const active = currentDays === days;
+          const href = currentIndustry === "全部" ? `/ranking?tab=industry&days=${days}` : `/ranking?tab=industry&industry=${encodeURIComponent(currentIndustry)}&days=${days}`;
+          return (
+            <Link key={days} href={href} style={{ ...styles.chip, ...(active ? styles.chipActive : {}) }}>
+              最近 {days} 天
             </Link>
           );
         })}
@@ -123,6 +157,30 @@ const styles: Record<string, React.CSSProperties> = {
   section: {
     display: "grid",
     gap: 20,
+  },
+  overviewGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 16,
+  },
+  overviewCard: {
+    background: "#ffffff",
+    borderRadius: 22,
+    border: "1px solid #e5e7eb",
+    padding: "18px 20px",
+  },
+  overviewLabel: {
+    fontSize: 13,
+    color: "#6b7280",
+    fontWeight: 700,
+  },
+  overviewValue: {
+    marginTop: 10,
+    fontSize: 26,
+    lineHeight: 1.1,
+    letterSpacing: "-0.03em",
+    color: "#111827",
+    fontWeight: 800,
   },
   sectionHead: {
     display: "flex",

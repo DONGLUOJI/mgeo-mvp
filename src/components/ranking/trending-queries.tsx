@@ -29,18 +29,24 @@ export function TrendingQueries({ queries, industries, currentIndustry }: Trendi
       </div>
 
       <div style={styles.list}>
+        <div style={styles.headerRow}>
+          <span>排名</span>
+          <span>搜索问题</span>
+          <span>行业</span>
+          <span>热度</span>
+          <span>推荐品牌数</span>
+          <span>趋势</span>
+        </div>
         {queries.map((query) => (
           <details key={query.queryText} style={styles.item}>
             <summary style={styles.summary}>
               <div style={styles.rank}>{query.rank}</div>
               <div style={styles.main}>
                 <div style={styles.question}>{query.queryText}</div>
-                <div style={styles.meta}>
-                  <span>{query.industry}</span>
-                  <span>推荐品牌数 {query.brandCount}</span>
-                </div>
               </div>
+              <div style={styles.industry}>{query.industry}</div>
               <div style={styles.heat}>{"🔥".repeat(Math.max(1, Math.min(3, Math.round(query.heatScore / 35))))}</div>
+              <div style={styles.brandCount}>{query.brandCount} 个品牌</div>
               <div style={styles.trend}>
                 {query.trendDirection === "up" ? "↑" : query.trendDirection === "down" ? "↓" : "→"}
               </div>
@@ -117,6 +123,15 @@ const styles: Record<string, React.CSSProperties> = {
     display: "grid",
     gap: 12,
   },
+  headerRow: {
+    display: "grid",
+    gridTemplateColumns: "48px 1.8fr 0.9fr 0.8fr 1fr 0.5fr",
+    gap: 18,
+    padding: "0 22px",
+    fontSize: 13,
+    fontWeight: 800,
+    color: "#6b7280",
+  },
   item: {
     border: "1px solid #e5e7eb",
     borderRadius: 24,
@@ -128,7 +143,7 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: "pointer",
     padding: "20px 22px",
     display: "grid",
-    gridTemplateColumns: "48px 1fr auto 40px",
+    gridTemplateColumns: "48px 1.8fr 0.9fr 0.8fr 1fr 0.5fr",
     gap: 18,
     alignItems: "center",
   },
@@ -139,19 +154,22 @@ const styles: Record<string, React.CSSProperties> = {
   },
   main: {
     display: "grid",
-    gap: 8,
+    gap: 4,
   },
   question: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 800,
     color: "#111827",
   },
-  meta: {
-    display: "flex",
-    gap: 16,
-    flexWrap: "wrap",
+  industry: {
     fontSize: 14,
-    color: "#6b7280",
+    color: "#4b5563",
+    fontWeight: 700,
+  },
+  brandCount: {
+    fontSize: 14,
+    color: "#4b5563",
+    fontWeight: 700,
   },
   heat: {
     fontSize: 18,

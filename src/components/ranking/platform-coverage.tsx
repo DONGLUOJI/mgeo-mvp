@@ -66,6 +66,7 @@ export function PlatformCoverage({
 
       <div style={styles.statsCard}>
         <div style={styles.statsHead}>六大平台品牌平均覆盖率</div>
+        <div style={styles.statsText}>品牌方最在意的不是抽象分数，而是“我的竞品在多少个平台被提及，我漏了哪些平台”。</div>
         <div style={styles.barList}>
           {PLATFORM_OPTIONS.map((platform) => {
             const stat = platformStats[platform.key];
@@ -144,6 +145,12 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 18,
     fontWeight: 800,
     color: "#111827",
+    marginBottom: 8,
+  },
+  statsText: {
+    fontSize: 14,
+    lineHeight: 1.7,
+    color: "#6b7280",
     marginBottom: 16,
   },
   barList: {
