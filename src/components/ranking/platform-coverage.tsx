@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { PLATFORM_LABELS, PLATFORM_OPTIONS, type PlatformKey } from "@/lib/ranking/data";
+import { getIndustryTheme } from "@/lib/ranking/shared";
 
 import { PlatformMatrix } from "./platform-matrix";
 import { PlatformCoverageChart } from "./platform-coverage-chart";
@@ -59,9 +60,26 @@ export function PlatformCoverage({
         <div style={styles.filters}>
           {industries.map((industry) => {
             const active = currentIndustry === industry;
+            const theme = getIndustryTheme(industry);
             const href = industry === "全部" ? "/ranking?tab=platform" : `/ranking?tab=platform&industry=${encodeURIComponent(industry)}`;
             return (
-              <Link key={industry} href={href} style={{ ...styles.chip, ...(active ? styles.chipActive : {}) }}>
+              <Link
+                key={industry}
+                href={href}
+                style={{
+                  ...styles.chip,
+                  color: theme.text,
+                  background: theme.background,
+                  borderColor: theme.border,
+                  ...(active
+                    ? {
+                        color: "#ffffff",
+                        background: theme.text,
+                        borderColor: theme.text,
+                      }
+                    : {}),
+                }}
+              >
                 {industry}
               </Link>
             );
@@ -189,11 +207,6 @@ const styles: Record<string, React.CSSProperties> = {
     background: "#ffffff",
     fontSize: 14,
     fontWeight: 700,
-  },
-  chipActive: {
-    background: "#111827",
-    borderColor: "#111827",
-    color: "#ffffff",
   },
   statsCard: {
     borderRadius: 24,

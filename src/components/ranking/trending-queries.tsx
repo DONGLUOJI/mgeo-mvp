@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type { TrendingQueryRow } from "@/lib/ranking/data";
+import { getIndustryTheme } from "@/lib/ranking/shared";
 
 type TrendingQueriesProps = {
   queries: TrendingQueryRow[];
@@ -39,9 +40,26 @@ export function TrendingQueries({ queries, industries, currentIndustry, overview
       <div style={styles.filters}>
         {industries.map((industry) => {
           const active = currentIndustry === industry;
+          const theme = getIndustryTheme(industry);
           const href = industry === "全部" ? "/ranking?tab=trending" : `/ranking?tab=trending&industry=${encodeURIComponent(industry)}`;
           return (
-            <Link key={industry} href={href} style={{ ...styles.chip, ...(active ? styles.chipActive : {}) }}>
+            <Link
+              key={industry}
+              href={href}
+              style={{
+                ...styles.chip,
+                color: theme.text,
+                background: theme.background,
+                borderColor: theme.border,
+                ...(active
+                  ? {
+                      color: "#ffffff",
+                      background: theme.text,
+                      borderColor: theme.text,
+                    }
+                  : {}),
+              }}
+            >
               {industry}
             </Link>
           );
@@ -64,7 +82,16 @@ export function TrendingQueries({ queries, industries, currentIndustry, overview
               <div style={styles.main}>
                 <div style={styles.question}>{query.queryText}</div>
               </div>
-              <div style={styles.industry}>{query.industry}</div>
+              <div
+                style={{
+                  ...styles.industryPill,
+                  color: getIndustryTheme(query.industry).text,
+                  background: getIndustryTheme(query.industry).background,
+                  borderColor: getIndustryTheme(query.industry).border,
+                }}
+              >
+                {query.industry}
+              </div>
               <div style={styles.heat}>{"🔥".repeat(Math.max(1, Math.min(3, Math.round(query.heatScore / 35))))}</div>
               <div style={styles.brandCount}>{query.brandCount} 个品牌</div>
               <div style={styles.trend}>
@@ -165,11 +192,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 14,
     fontWeight: 700,
   },
-  chipActive: {
-    background: "#111827",
-    borderColor: "#111827",
-    color: "#ffffff",
-  },
   list: {
     display: "grid",
     gap: 12,
@@ -212,10 +234,16 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 800,
     color: "#111827",
   },
-  industry: {
-    fontSize: 14,
-    color: "#4b5563",
-    fontWeight: 700,
+  industryPill: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "fit-content",
+    padding: "6px 10px",
+    borderRadius: 999,
+    border: "1px solid transparent",
+    fontSize: 13,
+    fontWeight: 800,
   },
   brandCount: {
     fontSize: 14,

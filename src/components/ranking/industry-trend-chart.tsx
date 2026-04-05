@@ -11,7 +11,7 @@ import {
   YAxis,
 } from "recharts";
 
-const SERIES_COLORS = ["#111827", "#0a7c66", "#dc6803", "#7c3aed", "#2563eb", "#be123c"];
+import { getIndustryTheme } from "@/lib/ranking/shared";
 
 type IndustryTrendChartProps = {
   series: Array<{
@@ -54,7 +54,7 @@ export function IndustryTrendChart({ series }: IndustryTrendChartProps) {
                 key={item.industry}
                 type="monotone"
                 dataKey={item.industry}
-                stroke={SERIES_COLORS[index % SERIES_COLORS.length]}
+                stroke={getIndustryTheme(item.industry).line}
                 strokeWidth={3}
                 dot={{ r: 3, strokeWidth: 0 }}
                 activeDot={{ r: 5 }}

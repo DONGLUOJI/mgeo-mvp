@@ -1,4 +1,5 @@
 import { PLATFORM_OPTIONS, type PlatformKey } from "@/lib/ranking/data";
+import { getIndustryTheme } from "@/lib/ranking/shared";
 
 type PlatformMatrixRow = {
   brandName: string;
@@ -27,7 +28,16 @@ export function PlatformMatrix({ brands }: { brands: PlatformMatrixRow[] }) {
             <tr key={brand.brandName}>
               <td style={styles.tdLeft}>
                 <div style={styles.brandName}>{brand.brandName}</div>
-                <div style={styles.industry}>{brand.industry}</div>
+                <div
+                  style={{
+                    ...styles.industryPill,
+                    color: getIndustryTheme(brand.industry).text,
+                    background: getIndustryTheme(brand.industry).background,
+                    borderColor: getIndustryTheme(brand.industry).border,
+                  }}
+                >
+                  {brand.industry}
+                </div>
               </td>
               {PLATFORM_OPTIONS.map((platform) => (
                 <td key={platform.key} style={styles.tdCenter}>
@@ -97,10 +107,17 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 800,
     color: "#111827",
   },
-  industry: {
-    marginTop: 4,
-    fontSize: 13,
-    color: "#6b7280",
+  industryPill: {
+    marginTop: 8,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "fit-content",
+    padding: "5px 9px",
+    borderRadius: 999,
+    border: "1px solid transparent",
+    fontSize: 12,
+    fontWeight: 800,
   },
   hit: {
     fontSize: 18,

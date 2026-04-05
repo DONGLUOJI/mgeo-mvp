@@ -30,6 +30,57 @@ export const PLATFORM_LABELS = Object.fromEntries(
   PLATFORM_OPTIONS.map((item) => [item.key, item.label])
 ) as Record<(typeof PLATFORM_OPTIONS)[number]["key"], string>;
 
+export const INDUSTRY_THEMES = {
+  全部: {
+    text: "#5F5E5A",
+    background: "#F1EFE8",
+    border: "#E2DED2",
+    line: "#7A766E",
+  },
+  新茶饮: {
+    text: "#993C1D",
+    background: "#FAECE7",
+    border: "#F2D1C6",
+    line: "#B85834",
+  },
+  餐饮连锁: {
+    text: "#993C1D",
+    background: "#FAECE7",
+    border: "#F2D1C6",
+    line: "#B85834",
+  },
+  教培: {
+    text: "#0C447C",
+    background: "#E6F1FB",
+    border: "#C8DDF3",
+    line: "#2D6AA8",
+  },
+  家政服务: {
+    text: "#085041",
+    background: "#E1F5EE",
+    border: "#BEE7D8",
+    line: "#157960",
+  },
+  美妆护肤: {
+    text: "#72243E",
+    background: "#FBEAF0",
+    border: "#F0C8D6",
+    line: "#A3476A",
+  },
+  企业服务: {
+    text: "#3C3489",
+    background: "#EEEDFE",
+    border: "#D8D5FA",
+    line: "#5E57B0",
+  },
+  营销咨询: {
+    text: "#5F5E5A",
+    background: "#F1EFE8",
+    border: "#E2DED2",
+    line: "#7A766E",
+  },
+} as const;
+
 export type PlatformKey = (typeof PLATFORM_OPTIONS)[number]["key"];
 
 export type PlatformDetail = {
@@ -70,4 +121,8 @@ export type TrendingQueryRow = {
 
 export function getBrandAnchorId(brandName: string) {
   return `brand-${encodeURIComponent(brandName).replace(/%/g, "").toLowerCase()}`;
+}
+
+export function getIndustryTheme(industry: string) {
+  return INDUSTRY_THEMES[industry as keyof typeof INDUSTRY_THEMES] || INDUSTRY_THEMES.全部;
 }

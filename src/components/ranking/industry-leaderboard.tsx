@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { PLATFORM_OPTIONS, type RankedBrand } from "@/lib/ranking/data";
-import { getBrandAnchorId } from "@/lib/ranking/shared";
+import { getBrandAnchorId, getIndustryTheme } from "@/lib/ranking/shared";
 
 type IndustryLeaderboardProps = {
   brands: RankedBrand[];
@@ -51,9 +51,26 @@ export function IndustryLeaderboard({
       <div style={styles.filters}>
         {industries.map((industry) => {
           const active = industry === currentIndustry;
+          const theme = getIndustryTheme(industry);
           const href = industry === "全部" ? `/ranking?tab=industry&days=${currentDays}` : `/ranking?tab=industry&industry=${encodeURIComponent(industry)}&days=${currentDays}`;
           return (
-            <Link key={industry} href={href} style={{ ...styles.chip, ...(active ? styles.chipActive : {}) }}>
+            <Link
+              key={industry}
+              href={href}
+              style={{
+                ...styles.chip,
+                color: theme.text,
+                background: theme.background,
+                borderColor: theme.border,
+                ...(active
+                  ? {
+                      color: "#ffffff",
+                      background: theme.text,
+                      borderColor: theme.text,
+                    }
+                  : {}),
+              }}
+            >
               {industry}
             </Link>
           );
@@ -99,7 +116,16 @@ export function IndustryLeaderboard({
               >
                 <span style={styles.rank}>{brand.rank}</span>
                 <span style={styles.brandName}>{brand.brandName}</span>
-                <span style={styles.industry}>{brand.industry}</span>
+                <span
+                  style={{
+                    ...styles.industryPill,
+                    color: getIndustryTheme(brand.industry).text,
+                    background: getIndustryTheme(brand.industry).background,
+                    borderColor: getIndustryTheme(brand.industry).border,
+                  }}
+                >
+                  {brand.industry}
+                </span>
                 <span style={styles.score}>{brand.tcaTotal}</span>
                 <span style={styles.coverage}>
                   {brand.platformCoverage}/{brand.platformTotal}
@@ -224,11 +250,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 14,
     fontWeight: 700,
   },
-  chipActive: {
-    background: "#111827",
-    borderColor: "#111827",
-    color: "#ffffff",
-  },
   tableCard: {
     border: "1px solid #e5e7eb",
     borderRadius: 24,
@@ -272,9 +293,16 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 800,
     color: "#111827",
   },
-  industry: {
-    fontSize: 15,
-    color: "#4b5563",
+  industryPill: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "fit-content",
+    padding: "6px 10px",
+    borderRadius: 999,
+    border: "1px solid transparent",
+    fontSize: 13,
+    fontWeight: 800,
   },
   score: {
     fontSize: 16,
