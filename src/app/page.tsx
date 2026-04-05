@@ -2,67 +2,151 @@ import Link from "next/link";
 import { DetectForm } from "@/components/detect/DetectForm";
 import { SiteShell } from "@/components/marketing/SiteShell";
 
-const platformList = ["豆包", "DeepSeek", "阿里千问", "Kimi", "腾讯元宝", "文心一言"];
+const HOME_NAV_ITEMS = [
+  { href: "/#detect", label: "免费检测" },
+  { href: "/ranking", label: "排名" },
+  { href: "/pricing", label: "服务方案" },
+  { href: "/cases", label: "案例成果" },
+  { href: "/#contact", label: "联系我们" },
+  { href: "/#whitepaper", label: "MGEO白皮书" },
+];
 
-const featureCards = [
+const workflowCards = [
   {
-    title: "多平台统一检测",
-    text: "统一输入品牌问题，快速查看不同 AI 平台是否提及、如何理解以及是否具备推荐信号。",
+    id: "01",
+    title: "免费检测",
+    lines: [
+      "用户输入品牌名、问题词，勾选 6 大 AI 平台",
+      "快速展示品牌当前是否被提及、是否被正确理解",
+      "建立后续诊断与优化的决策基础",
+    ],
   },
   {
-    title: "TCA 三支柱诊断",
-    text: "围绕 Consistency、Coverage、Authority 三个维度输出可执行的品牌可见性诊断结果。",
+    id: "02",
+    title: "TCA 诊断",
+    lines: [
+      "Consistency：不同模型对品牌定位是否一致",
+      "Coverage：品牌是否覆盖足够多的平台场景",
+      "Authority：被引用的信息源是否权威可信",
+    ],
   },
   {
-    title: "30 天闭环优化",
-    text: "从检测、诊断、执行到复盘，形成品牌在 AI 搜索场景中的持续增长闭环。",
+    id: "03",
+    title: "服务转化",
+    lines: [
+      "清晰呈现品牌当前存在的关键问题",
+      "帮助判断当前需要优先优化的方向",
+      "建立后续服务与执行的决策基础",
+    ],
   },
   {
-    title: "竞品对标分析",
-    text: "结合行业场景和平台回答差异，辅助判断品牌当前的相对位置与优化优先级。",
+    id: "04",
+    title: "交付执行",
+    lines: [
+      "品牌信息统一后，生成阶段性问题池",
+      "按平台特征生产内容并分发到不同生态",
+      "持续修正模型对品牌的理解与推荐路径",
+    ],
+  },
+  {
+    id: "05",
+    title: "效果监测",
+    lines: [
+      "跟踪 6 平台提及率、推荐位、融合场景排名",
+      "实时查看品牌描述偏差和平台表现变化",
+      "根据表现自动回流到下一轮优化",
+    ],
+  },
+  {
+    id: "06",
+    title: "复盘迭代",
+    lines: [
+      "每周给出 TCA 变化、平台覆盖、排名提升",
+      "每月输出复盘会议和下一轮策略建议",
+      "沉淀为案例资产与长期品牌内容资产",
+    ],
   },
 ];
 
-const pillars = [
+const diagnosisCards = [
   {
-    title: "Consistency",
-    text: "统一品牌定位与业务叙事，减少不同模型对同一品牌的偏差理解。",
+    tag: "RED FLAG",
+    title: "Consistency 一致性差",
+    text: "6 个平台对品牌的描述并不统一，信息冲突率达到 35%，说明品牌叙事仍需进一步标准化。",
   },
   {
-    title: "Coverage",
-    text: "提升品牌在更多问答、推荐和搜索场景中的稳定出现率。",
+    tag: "RED FLAG",
+    title: "Coverage 覆盖度低",
+    text: "目前仅有 3 个平台可以稳定提及品牌，说明仍有大量关键问答与推荐场景尚未覆盖。",
   },
   {
-    title: "Authority",
-    text: "补强可信内容与外部支撑，让模型更愿意引用并推荐品牌。",
+    tag: "RED FLAG",
+    title: "Authority 权威性弱",
+    text: "当前被引用的外部信源质量偏弱，品牌在搜索与模型抓取中的可信支撑仍需补强。",
   },
 ];
+
+const reportRows = [
+  ["DeepSeek", "有", "描述偏差", "已有提及，但推荐位置不稳定"],
+  ["字节豆包", "有", "定位混乱", "被识别，但品牌定位仍然混乱"],
+  ["阿里千问", "有", "表述偏泛", "已有基础提及，但品牌特征仍不清晰"],
+  ["Kimi", "无", "-", "尚未形成稳定提及"],
+  ["腾讯元宝", "无", "-", "仍需补足品牌信息覆盖"],
+  ["百度文心", "无", "-", "品牌内容仍未进入稳定推荐场景"],
+];
+
+const deliveryCards = [
+  {
+    day: "DAY 1-3",
+    title: "审计阶段",
+    lines: [
+      "先完成品牌现状抓取与基准评分，明确多模型环境中的核心偏差与优化重点。",
+      "抓取 6 大平台现有品牌信息",
+      "计算一致性、覆盖度、权威性基准",
+      "生成统一品牌叙事框架",
+    ],
+  },
+  {
+    day: "DAY 4-15",
+    title: "内容适配阶段",
+    lines: [
+      "将问题训练、内容训练与平台分发联动，为不同模型准备更适配的内容形态。",
+      "DeepSeek：长文深度内容",
+      "豆包：短视频与图文表达",
+      "Kimi / 元宝 / 千问 / 文心：按生态特征分别适配",
+    ],
+  },
+  {
+    day: "DAY 16-30",
+    title: "持续优化阶段",
+    lines: [
+      "进入持续监测阶段，追踪可见性变化、内容效果与平台反馈，并推动下一轮优化。",
+      "跟踪 6 平台 TCA 指标变化",
+      "对比不同内容方向的展示效果",
+      "每周输出效果周报，每月做策略复盘",
+    ],
+  },
+];
+
+const legalLinks = ["隐私政策", "用户协议", "退款政策", "网站地图"];
 
 export default function MarketingHomePage() {
   return (
-    <SiteShell current="/">
-      <main>
+    <SiteShell
+      current="/#detect"
+      navItems={HOME_NAV_ITEMS}
+      ctaHref="/register"
+      ctaLabel="注册"
+      hideFooter
+    >
+      <main style={styles.page}>
         <section style={styles.hero}>
           <div style={styles.heroInner}>
             <div style={styles.heroBadge}>多模式生成式引擎</div>
-            <h1 style={styles.heroTitle}>让品牌在 AI 搜索中被看见</h1>
-            <p style={styles.heroText}>
-              覆盖豆包、DeepSeek、Kimi 等多个 AI 平台，以 TCA 三支柱诊断体系为基础，帮助品牌在 30
-              天内完成从检测到优化的闭环增长。
-            </p>
-
-            <div style={styles.heroActions}>
-              <Link href="/detect" style={styles.primaryButton}>
-                立即免费检测
-              </Link>
-              <Link href="/pricing" style={styles.secondaryButton}>
-                查看服务方案
-              </Link>
-            </div>
-
+            <h1 style={styles.heroTitle}>帮助品牌在AI搜索中被看见</h1>
             <div style={styles.metricRow}>
               <div style={styles.metricItem}>
-                <strong style={styles.metricValue}>6 大</strong>
+                <strong style={styles.metricValue}>6大</strong>
                 <span style={styles.metricLabel}>AI 平台覆盖</span>
               </div>
               <div style={styles.metricDivider} />
@@ -72,7 +156,7 @@ export default function MarketingHomePage() {
               </div>
               <div style={styles.metricDivider} />
               <div style={styles.metricItem}>
-                <strong style={styles.metricValue}>30 天</strong>
+                <strong style={styles.metricValue}>30天</strong>
                 <span style={styles.metricLabel}>闭环见效周期</span>
               </div>
               <div style={styles.metricDivider} />
@@ -84,102 +168,241 @@ export default function MarketingHomePage() {
           </div>
         </section>
 
-        <section style={styles.detectSection}>
-          <div style={styles.sectionInner}>
-            <DetectForm
-              embedded
-              title="先做一次免费检测，再决定是否进入服务"
-              description="用真实检测结果作为服务沟通起点。填写品牌名、行业、业务描述与检测问题，即可快速生成一份 MGEO 检测报告。"
-            />
+        <section id="detect" style={styles.detectSection}>
+          <div style={styles.detectShell}>
+            <DetectForm embedded />
           </div>
         </section>
 
-        <section style={styles.platformSection}>
-          <div style={styles.sectionInner}>
-            <div style={styles.sectionIntro}>
-              <span style={styles.sectionBadge}>平台覆盖</span>
-              <h2 style={styles.sectionTitle}>一次输入，统一查看多模型结果</h2>
-            </div>
-            <div style={styles.platformWrap}>
-              {platformList.map((item) => (
-                <div key={item} style={styles.platformPill}>
-                  {item}
-                </div>
-              ))}
-            </div>
+        <section style={styles.workflowSection}>
+          <div style={styles.sectionHead}>
+            <h2 style={styles.sectionTitle}>用流程驱动品牌在 AI 场景中的持续增长</h2>
+            <div style={styles.sectionAccent}>董逻辑 MGEO 的核心不是单点功能，而是完整闭环</div>
+            <p style={styles.sectionText}>
+              围绕公司信息、问题训练、文章训练、发布系统、效果监测和数据统计六大环节，构建从诊断到优化的完整运营链路。
+            </p>
+          </div>
+          <div style={styles.workflowGrid}>
+            {workflowCards.map((item) => (
+              <article key={item.id} style={styles.workflowCard}>
+                <div style={styles.workflowId}>{item.id}</div>
+                <h3 style={styles.workflowTitle}>{item.title}</h3>
+                {item.lines.map((line) => (
+                  <p key={line} style={styles.workflowLine}>
+                    {line}
+                  </p>
+                ))}
+              </article>
+            ))}
           </div>
         </section>
 
-        <section style={styles.featureSection}>
-          <div style={styles.sectionInner}>
-            <div style={styles.sectionIntro}>
-              <span style={styles.sectionBadge}>核心能力</span>
-              <h2 style={styles.sectionTitle}>从检测入口到交付闭环的完整产品壳</h2>
-            </div>
-            <div style={styles.featureGrid}>
-              {featureCards.map((item) => (
-                <article key={item.title} style={styles.featureCard}>
-                  <h3 style={styles.featureTitle}>{item.title}</h3>
-                  <p style={styles.featureText}>{item.text}</p>
-                </article>
-              ))}
-            </div>
+        <section style={styles.reportSection}>
+          <div style={styles.sectionHead}>
+            <div style={styles.sectionAccent}>检测之后，核心输出是一份清晰的品牌诊断报告</div>
+            <p style={styles.sectionTextWide}>
+              报告聚焦品牌在多模型环境中的真实问题，帮助客户快速理解风险、判断优先级，并进入下一步优化流程。
+            </p>
           </div>
-        </section>
 
-        <section style={styles.opsSection}>
-          <div style={styles.sectionInner}>
-            <div style={styles.opsCard}>
-              <div style={styles.sectionIntro}>
-                <span style={styles.sectionBadge}>内部运维</span>
-                <h2 style={styles.sectionTitle}>部署准备、环境变量、联调检查与健康状态已经整合成统一入口</h2>
-                <p style={styles.opsText}>
-                  站点进入试运营前后，可以直接从运维入口查看上线阻塞项、支付联调状态、cron 配置和系统健康结果，减少来回切页的成本。
+          <div style={styles.reportCard}>
+            <div style={styles.reportTop}>
+              <div>
+                <h2 style={styles.reportTitle}>您的品牌 MGEO 健康度：42 分</h2>
+                <p style={styles.reportSummary}>
+                  L1 基础级。当前品牌在多模型场景中的描述一致性不足，影响推荐稳定性与可见性表现。
                 </p>
               </div>
-              <div style={styles.opsActions}>
-                <Link href="/ops" style={styles.primaryButton}>
-                  进入运维入口
-                </Link>
-                <Link href="/deployment/health" style={styles.secondaryButton}>
-                  查看健康检查
-                </Link>
+              <div style={styles.scoreCard}>
+                <div style={styles.scoreValue}>42</div>
+                <div style={styles.scoreLabel}>MGEO Score / L1</div>
               </div>
             </div>
-          </div>
-        </section>
 
-        <section style={styles.pillarSection}>
-          <div style={styles.sectionInner}>
-            <div style={styles.sectionIntro}>
-              <span style={styles.sectionBadge}>TCA 方法论</span>
-              <h2 style={styles.sectionTitle}>围绕品牌一致性、覆盖度与权威性持续优化</h2>
-            </div>
-            <div style={styles.pillarGrid}>
-              {pillars.map((item) => (
-                <article key={item.title} style={styles.pillarCard}>
-                  <div style={styles.pillarName}>{item.title}</div>
-                  <p style={styles.pillarText}>{item.text}</p>
+            <div style={styles.diagnosisGrid}>
+              {diagnosisCards.map((item) => (
+                <article key={item.title} style={styles.diagnosisCard}>
+                  <div style={styles.redFlag}>{item.tag}</div>
+                  <h3 style={styles.diagnosisTitle}>{item.title}</h3>
+                  <p style={styles.diagnosisText}>{item.text}</p>
                 </article>
               ))}
             </div>
+
+            <div style={styles.tableWrap}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>模型</th>
+                    <th style={styles.th}>是否提及</th>
+                    <th style={styles.th}>描述一致性</th>
+                    <th style={styles.th}>当前状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reportRows.map(([model, mentioned, consistency, status]) => (
+                    <tr key={model}>
+                      <td style={styles.td}>{model}</td>
+                      <td style={styles.td}>{mentioned}</td>
+                      <td style={styles.td}>{consistency}</td>
+                      <td style={styles.td}>{status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
+        <section style={styles.deliverySection}>
+          <div style={styles.sectionHead}>
+            <h2 style={styles.sectionTitle}>30天完成一轮可追踪、可复盘的 MGEO 交付闭环</h2>
+            <div style={styles.sectionAccent}>以标准化交付路径支撑品牌持续增长</div>
+            <p style={styles.sectionTextWide}>
+              董逻辑 MGEO 将诊断、内容适配与持续优化拆解为清晰阶段，帮助品牌在 AI 场景中稳定提升可见性与理解一致性。
+            </p>
+          </div>
+
+          <div style={styles.deliveryGrid}>
+            {deliveryCards.map((item) => (
+              <article key={item.day} style={styles.deliveryCard}>
+                <div style={styles.deliveryDay}>{item.day}</div>
+                <h3 style={styles.deliveryTitle}>{item.title}</h3>
+                {item.lines.map((line) => (
+                  <p key={line} style={styles.deliveryText}>
+                    {line}
+                  </p>
+                ))}
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="whitepaper" style={styles.ctaSection}>
+          <div style={styles.ctaCard}>
+            <h2 style={styles.ctaTitle}>从一次检测开始，建立品牌在 AI 场景中的长期增长能力</h2>
+            <p style={styles.ctaText}>
+              董逻辑 MGEO 以清晰的检测入口建立认知，以标准化交付完成优化，以持续监测与复盘推动长期增长，让每一步都可理解、可执行、可追踪。
+            </p>
+            <div style={styles.ctaActions}>
+              <Link href="/detect" style={styles.ctaPrimary}>
+                立即开始检测
+              </Link>
+              <Link href="/pricing" style={styles.ctaSecondary}>
+                查看服务方案
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section id="contact" style={styles.contactSection}>
+          <div style={styles.sectionHead}>
+            <h2 style={styles.contactHeading}>联系我们</h2>
+            <div style={styles.sectionAccent}>
+              如果您是品牌负责人，希望系统学习董逻辑MGEO增长方法，欢迎联系我们；如果您希望由我们协助运营、制定方案并推进执行，也欢迎直接沟通。
+            </div>
+            <p style={styles.sectionTextWide}>
+              您可以通过产品咨询、服务沟通或合作洽谈与我们取得联系，我们会根据品牌当前阶段，为您提供相应建议。
+            </p>
+          </div>
+
+          <div style={styles.contactGrid}>
+            <article style={styles.contactCard}>
+              <h3 style={styles.contactCardTitle}>直接沟通</h3>
+              <p style={styles.contactIntro}>
+                如果您已经有明确需求，建议直接留下联系方式或通过微信、电话、邮箱与我们联系，我们会尽快安排沟通。
+              </p>
+
+              <div style={styles.contactLineBlock}>
+                <div style={styles.contactLabel}>微信咨询</div>
+                <div style={styles.contactValue}>19925969089</div>
+              </div>
+              <div style={styles.contactLineBlock}>
+                <div style={styles.contactLabel}>联系电话</div>
+                <div style={styles.contactValue}>199 2596 9089</div>
+              </div>
+              <div style={styles.contactLineBlock}>
+                <div style={styles.contactLabel}>小红书</div>
+                <div style={styles.contactValue}>董逻辑</div>
+              </div>
+              <div style={styles.contactLineBlockLast}>
+                <div style={styles.contactLabel}>商务邮箱</div>
+                <div style={styles.contactValue}>19925969089@163.com</div>
+              </div>
+            </article>
+
+            <article style={styles.contactCard}>
+              <h3 style={styles.contactCardTitle}>提交咨询</h3>
+              <p style={styles.contactIntro}>
+                留下您的品牌信息与当前需求，我们会根据业务阶段给出相应建议。
+              </p>
+
+              <form style={styles.consultForm}>
+                <div style={styles.consultRow}>
+                  <label style={styles.consultField}>
+                    <span style={styles.consultLabel}>姓名</span>
+                    <input style={styles.consultInput} placeholder="请输入您的姓名" />
+                  </label>
+                  <label style={styles.consultField}>
+                    <span style={styles.consultLabel}>公司 / 品牌</span>
+                    <input style={styles.consultInput} placeholder="请输入公司或品牌名称" />
+                  </label>
+                </div>
+                <div style={styles.consultRow}>
+                  <label style={styles.consultField}>
+                    <span style={styles.consultLabel}>联系电话</span>
+                    <input style={styles.consultInput} placeholder="请输入手机号或微信号" />
+                  </label>
+                  <label style={styles.consultField}>
+                    <span style={styles.consultLabel}>所属行业</span>
+                    <input style={styles.consultInput} placeholder="例如：企业服务 / 本地生活" />
+                  </label>
+                </div>
+                <label style={styles.consultField}>
+                  <span style={styles.consultLabel}>需求描述</span>
+                  <textarea
+                    style={styles.consultTextarea}
+                    placeholder="请简单描述当前遇到的问题、目标或者希望了解的服务内容"
+                    rows={5}
+                  />
+                </label>
+                <button type="button" style={styles.consultButton}>
+                  提交咨询
+                </button>
+              </form>
+            </article>
+          </div>
+        </section>
       </main>
+
+      <footer style={styles.footer}>
+        <div style={styles.footerLinks}>
+          {legalLinks.map((item) => (
+            <span key={item} style={styles.footerLink}>
+              {item}
+            </span>
+          ))}
+        </div>
+        <div style={styles.footerCopyright}>Copyright © 2026 董逻辑MGEO. 保留所有权利。</div>
+      </footer>
     </SiteShell>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
+  page: {
+    background: "#f5f6fa",
+  },
   hero: {
     background:
-      "radial-gradient(circle at top, rgba(15,139,127,0.18), transparent 32%), linear-gradient(180deg, #0b1020 0%, #0d121e 55%, #111827 100%)",
-    color: "#fff",
-    padding: "56px 24px 92px",
+      "radial-gradient(circle at top, rgba(14, 148, 136, 0.18), transparent 22%), linear-gradient(180deg, #0b0d13 0%, #131419 58%, #232326 100%)",
+    padding: "120px 24px 200px",
+    color: "#ffffff",
+    position: "relative",
+    overflow: "hidden",
   },
   heroInner: {
-    maxWidth: 1240,
+    maxWidth: 1180,
     margin: "0 auto",
     display: "grid",
     justifyItems: "center",
@@ -189,79 +412,34 @@ const styles: Record<string, React.CSSProperties> = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    height: 40,
-    padding: "0 18px",
+    height: 64,
+    padding: "0 28px",
     borderRadius: 999,
-    background: "rgba(16, 185, 129, 0.14)",
-    border: "1px solid rgba(16, 185, 129, 0.45)",
+    background: "rgba(8, 83, 72, 0.4)",
+    border: "1px solid rgba(22, 163, 148, 0.7)",
     color: "#2dd4bf",
-    fontSize: 15,
+    fontSize: 20,
     fontWeight: 700,
   },
   heroTitle: {
-    margin: "22px 0 0",
-    fontSize: 64,
-    lineHeight: 1.08,
+    margin: "56px 0 0",
+    fontSize: 62,
+    lineHeight: 1.14,
     letterSpacing: "-0.04em",
-    maxWidth: 980,
-  },
-  heroText: {
-    margin: "20px 0 0",
-    fontSize: 22,
-    lineHeight: 1.8,
-    color: "rgba(255,255,255,0.72)",
-    maxWidth: 980,
-  },
-  heroActions: {
-    display: "flex",
-    gap: 16,
-    marginTop: 32,
-    flexWrap: "wrap",
-    justifyContent: "center",
-  },
-  primaryButton: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 180,
-    height: 54,
-    padding: "0 24px",
-    borderRadius: 999,
-    background: "#ffffff",
-    color: "#111827",
-    textDecoration: "none",
-    fontSize: 16,
-    fontWeight: 800,
-  },
-  secondaryButton: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 180,
-    height: 54,
-    padding: "0 24px",
-    borderRadius: 999,
-    border: "1px solid rgba(255,255,255,0.22)",
-    background: "rgba(255,255,255,0.06)",
-    color: "#ffffff",
-    textDecoration: "none",
-    fontSize: 16,
     fontWeight: 800,
   },
   metricRow: {
-    width: "100%",
-    maxWidth: 1100,
     display: "grid",
     gridTemplateColumns: "repeat(7, auto)",
     justifyContent: "center",
+    gap: 30,
     alignItems: "center",
-    gap: 28,
-    marginTop: 46,
+    marginTop: 56,
   },
   metricItem: {
     display: "grid",
-    gap: 8,
     justifyItems: "center",
+    gap: 8,
     minWidth: 150,
   },
   metricValue: {
@@ -272,142 +450,428 @@ const styles: Record<string, React.CSSProperties> = {
   },
   metricLabel: {
     fontSize: 16,
-    color: "rgba(255,255,255,0.7)",
+    color: "rgba(255,255,255,0.74)",
   },
   metricDivider: {
     width: 1,
-    height: 64,
-    background: "rgba(255,255,255,0.16)",
-  },
-  platformSection: {
-    padding: "62px 24px 0",
-  },
-  featureSection: {
-    padding: "62px 24px 0",
-  },
-  opsSection: {
-    padding: "24px 24px 0",
-  },
-  pillarSection: {
-    padding: "62px 24px 0",
+    height: 70,
+    background: "rgba(255,255,255,0.12)",
   },
   detectSection: {
-    padding: "28px 24px 0",
+    marginTop: -116,
+    padding: "0 24px",
+    position: "relative",
+    zIndex: 2,
   },
-  sectionInner: {
-    maxWidth: 1240,
+  detectShell: {
+    maxWidth: 1040,
     margin: "0 auto",
   },
-  sectionIntro: {
+  workflowSection: {
+    maxWidth: 1180,
+    margin: "84px auto 0",
+    padding: "0 24px",
+  },
+  sectionHead: {
     display: "grid",
-    gap: 16,
     justifyItems: "center",
     textAlign: "center",
-    marginBottom: 28,
-  },
-  sectionBadge: {
-    display: "inline-flex",
-    height: 34,
-    padding: "0 14px",
-    alignItems: "center",
-    borderRadius: 999,
-    background: "#edf8f6",
-    color: "#0f8b7f",
-    fontSize: 14,
-    fontWeight: 700,
+    gap: 18,
   },
   sectionTitle: {
     margin: 0,
-    fontSize: 42,
-    lineHeight: 1.15,
-    letterSpacing: "-0.03em",
-    color: "#101828",
-    maxWidth: 880,
-  },
-  platformWrap: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 14,
-    justifyContent: "center",
-  },
-  platformPill: {
-    height: 50,
-    padding: "0 18px",
-    borderRadius: 999,
-    background: "#ffffff",
-    border: "1px solid #dbe3eb",
-    display: "inline-flex",
-    alignItems: "center",
-    fontSize: 16,
-    fontWeight: 700,
-    color: "#344054",
-  },
-  featureGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 20,
-  },
-  opsCard: {
-    background: "#ffffff",
-    border: "1px solid #e7ebf0",
-    borderRadius: 24,
-    padding: 28,
-    display: "grid",
-    gap: 18,
-  },
-  opsText: {
-    margin: 0,
-    fontSize: 16,
-    lineHeight: 1.85,
-    color: "#667085",
-    maxWidth: 860,
-  },
-  opsActions: {
-    display: "flex",
-    gap: 14,
-    flexWrap: "wrap",
-    justifyContent: "center",
-  },
-  featureCard: {
-    background: "#ffffff",
-    border: "1px solid #e7ebf0",
-    borderRadius: 24,
-    padding: 28,
-    minHeight: 180,
-  },
-  featureTitle: {
-    margin: 0,
-    fontSize: 28,
+    color: "#202226",
+    fontSize: 48,
     lineHeight: 1.2,
-    color: "#101828",
+    letterSpacing: "-0.04em",
+    fontWeight: 800,
   },
-  featureText: {
-    margin: "14px 0 0",
-    fontSize: 17,
-    lineHeight: 1.9,
-    color: "#667085",
+  sectionAccent: {
+    color: "#0f8b7f",
+    fontSize: 20,
+    fontWeight: 700,
+    lineHeight: 1.7,
+    maxWidth: 1240,
   },
-  pillarGrid: {
+  sectionText: {
+    margin: 0,
+    maxWidth: 980,
+    color: "#787d89",
+    fontSize: 18,
+    lineHeight: 1.8,
+  },
+  sectionTextWide: {
+    margin: 0,
+    maxWidth: 1040,
+    color: "#787d89",
+    fontSize: 18,
+    lineHeight: 1.8,
+  },
+  workflowGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 20,
+    gap: 22,
+    marginTop: 42,
   },
-  pillarCard: {
-    background: "#0f172a",
-    borderRadius: 24,
-    padding: 28,
-    minHeight: 210,
+  workflowCard: {
+    background: "#ffffff",
+    border: "1px solid #dfe4ec",
+    borderRadius: 28,
+    padding: 30,
+    minHeight: 328,
+    boxShadow: "0 20px 50px rgba(15, 23, 42, 0.05)",
   },
-  pillarName: {
+  workflowId: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    background: "#0f8b7f",
     color: "#ffffff",
-    fontSize: 34,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 28,
     fontWeight: 800,
-    letterSpacing: "-0.03em",
   },
-  pillarText: {
-    margin: "14px 0 0",
-    color: "rgba(255,255,255,0.72)",
-    fontSize: 17,
+  workflowTitle: {
+    margin: "24px 0 0",
+    fontSize: 34,
+    lineHeight: 1.2,
+    color: "#202226",
+    fontWeight: 800,
+  },
+  workflowLine: {
+    margin: "18px 0 0",
+    fontSize: 16,
     lineHeight: 1.9,
+    color: "#4f5562",
+    paddingTop: 18,
+    borderTop: "1px solid #edf0f4",
+  },
+  reportSection: {
+    maxWidth: 1180,
+    margin: "72px auto 0",
+    padding: "0 24px",
+  },
+  reportCard: {
+    marginTop: 34,
+    background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
+    border: "1px solid #e1e6ed",
+    borderRadius: 34,
+    padding: 34,
+    boxShadow: "0 26px 60px rgba(15, 23, 42, 0.06)",
+  },
+  reportTop: {
+    display: "grid",
+    gridTemplateColumns: "1.6fr 0.7fr",
+    gap: 24,
+    alignItems: "start",
+  },
+  reportTitle: {
+    margin: "8px 0 0",
+    fontSize: 56,
+    lineHeight: 1.12,
+    color: "#202226",
+    letterSpacing: "-0.04em",
+  },
+  reportSummary: {
+    margin: "18px 0 0",
+    color: "#6e7380",
+    fontSize: 17,
+    lineHeight: 1.8,
+  },
+  scoreCard: {
+    justifySelf: "end",
+    width: 194,
+    height: 140,
+    borderRadius: 26,
+    background: "#121212",
+    color: "#ffffff",
+    display: "grid",
+    justifyItems: "center",
+    alignContent: "center",
+  },
+  scoreValue: {
+    fontSize: 64,
+    lineHeight: 1,
+    fontWeight: 800,
+  },
+  scoreLabel: {
+    marginTop: 10,
+    fontSize: 16,
+    opacity: 0.9,
+  },
+  diagnosisGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 18,
+    marginTop: 30,
+  },
+  diagnosisCard: {
+    background: "#ffffff",
+    border: "1px solid #e5e8ee",
+    borderRadius: 24,
+    padding: 24,
+  },
+  redFlag: {
+    color: "#ff3b30",
+    fontSize: 14,
+    fontWeight: 800,
+  },
+  diagnosisTitle: {
+    margin: "18px 0 0",
+    fontSize: 24,
+    lineHeight: 1.35,
+    color: "#202226",
+    fontWeight: 800,
+  },
+  diagnosisText: {
+    margin: "16px 0 0",
+    color: "#6a6f7b",
+    fontSize: 16,
+    lineHeight: 1.8,
+  },
+  tableWrap: {
+    overflowX: "auto",
+    marginTop: 28,
+    borderRadius: 24,
+    border: "1px solid #edf0f4",
+    background: "#ffffff",
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+  },
+  th: {
+    textAlign: "left",
+    padding: "18px 20px",
+    fontSize: 16,
+    color: "#6c7280",
+    background: "#f7f8fb",
+  },
+  td: {
+    padding: "18px 20px",
+    fontSize: 16,
+    color: "#202226",
+    borderTop: "1px solid #edf0f4",
+  },
+  deliverySection: {
+    maxWidth: 1180,
+    margin: "84px auto 0",
+    padding: "0 24px",
+  },
+  deliveryGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 22,
+    marginTop: 38,
+  },
+  deliveryCard: {
+    background: "linear-gradient(135deg, #111317 0%, #0f1518 45%, #0f3b31 100%)",
+    borderRadius: 28,
+    padding: 30,
+    minHeight: 360,
+    color: "#ffffff",
+  },
+  deliveryDay: {
+    color: "#54e0c1",
+    fontSize: 16,
+    fontWeight: 800,
+  },
+  deliveryTitle: {
+    margin: "24px 0 0",
+    fontSize: 30,
+    lineHeight: 1.2,
+    fontWeight: 800,
+  },
+  deliveryText: {
+    margin: "18px 0 0",
+    color: "rgba(255,255,255,0.82)",
+    fontSize: 16,
+    lineHeight: 1.85,
+    paddingTop: 18,
+    borderTop: "1px solid rgba(255,255,255,0.12)",
+  },
+  ctaSection: {
+    maxWidth: 1180,
+    margin: "82px auto 0",
+    padding: "0 24px",
+  },
+  ctaCard: {
+    borderRadius: 34,
+    padding: "58px 48px",
+    background: "linear-gradient(135deg, #0f1217 0%, #111a1e 42%, #0f4a38 100%)",
+    color: "#ffffff",
+  },
+  ctaTitle: {
+    margin: 0,
+    fontSize: 58,
+    lineHeight: 1.16,
+    letterSpacing: "-0.04em",
+    maxWidth: 960,
+  },
+  ctaText: {
+    margin: "22px 0 0",
+    maxWidth: 980,
+    color: "rgba(255,255,255,0.72)",
+    fontSize: 18,
+    lineHeight: 1.85,
+  },
+  ctaActions: {
+    display: "flex",
+    gap: 16,
+    marginTop: 34,
+    flexWrap: "wrap",
+  },
+  ctaPrimary: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: 68,
+    padding: "0 28px",
+    borderRadius: 16,
+    background: "#231f1f",
+    color: "#ffffff",
+    textDecoration: "none",
+    fontSize: 18,
+    fontWeight: 700,
+  },
+  ctaSecondary: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: 68,
+    padding: "0 28px",
+    borderRadius: 16,
+    border: "1px solid rgba(255,255,255,0.28)",
+    color: "#ffffff",
+    textDecoration: "none",
+    fontSize: 18,
+    fontWeight: 700,
+  },
+  contactSection: {
+    maxWidth: 1180,
+    margin: "82px auto 0",
+    padding: "0 24px 48px",
+  },
+  contactHeading: {
+    margin: 0,
+    color: "#202226",
+    fontSize: 56,
+    lineHeight: 1.18,
+    fontWeight: 800,
+  },
+  contactGrid: {
+    display: "grid",
+    gridTemplateColumns: "0.9fr 1.1fr",
+    gap: 26,
+    marginTop: 38,
+  },
+  contactCard: {
+    background: "#ffffff",
+    border: "1px solid #dfe4ec",
+    borderRadius: 30,
+    padding: 34,
+    minHeight: 620,
+  },
+  contactCardTitle: {
+    margin: 0,
+    fontSize: 34,
+    lineHeight: 1.2,
+    color: "#202226",
+    fontWeight: 800,
+  },
+  contactIntro: {
+    margin: "22px 0 0",
+    color: "#6f7582",
+    fontSize: 16,
+    lineHeight: 1.9,
+  },
+  contactLineBlock: {
+    padding: "24px 0",
+    borderBottom: "1px solid #edf0f4",
+  },
+  contactLineBlockLast: {
+    padding: "24px 0 0",
+  },
+  contactLabel: {
+    color: "#8a909d",
+    fontSize: 15,
+    marginBottom: 10,
+  },
+  contactValue: {
+    color: "#202226",
+    fontSize: 26,
+    fontWeight: 800,
+    lineHeight: 1.4,
+  },
+  consultForm: {
+    display: "grid",
+    gap: 20,
+    marginTop: 24,
+  },
+  consultRow: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 16,
+  },
+  consultField: {
+    display: "grid",
+    gap: 10,
+  },
+  consultLabel: {
+    color: "#202226",
+    fontSize: 16,
+    fontWeight: 700,
+  },
+  consultInput: {
+    height: 54,
+    borderRadius: 18,
+    border: "1px solid #d7dde7",
+    padding: "0 18px",
+    fontSize: 16,
+    outline: "none",
+  },
+  consultTextarea: {
+    borderRadius: 18,
+    border: "1px solid #d7dde7",
+    padding: "16px 18px",
+    fontSize: 16,
+    lineHeight: 1.75,
+    outline: "none",
+    resize: "vertical",
+  },
+  consultButton: {
+    width: 256,
+    height: 68,
+    borderRadius: 18,
+    border: "none",
+    background: "#232123",
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: 700,
+    cursor: "pointer",
+    marginTop: 10,
+  },
+  footer: {
+    padding: "26px 24px 42px",
+    borderTop: "1px solid #e4e8ef",
+    textAlign: "center",
+  },
+  footerLinks: {
+    display: "flex",
+    justifyContent: "center",
+    gap: 28,
+    flexWrap: "wrap",
+    color: "#6d7380",
+    fontSize: 14,
+  },
+  footerLink: {
+    color: "#6d7380",
+  },
+  footerCopyright: {
+    marginTop: 24,
+    color: "#8d93a0",
+    fontSize: 14,
   },
 };

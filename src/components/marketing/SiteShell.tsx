@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-const NAV_ITEMS = [
+const DEFAULT_NAV_ITEMS = [
   { href: "/detect", label: "免费检测" },
   { href: "/ranking", label: "排名" },
   { href: "/pricing", label: "服务方案" },
@@ -11,9 +11,20 @@ const NAV_ITEMS = [
 type SiteShellProps = {
   children: ReactNode;
   current?: string;
+  navItems?: Array<{ href: string; label: string }>;
+  ctaHref?: string;
+  ctaLabel?: string;
+  hideFooter?: boolean;
 };
 
-export function SiteShell({ children, current }: SiteShellProps) {
+export function SiteShell({
+  children,
+  current,
+  navItems = DEFAULT_NAV_ITEMS,
+  ctaHref = "/detect",
+  ctaLabel = "免费检测",
+  hideFooter = false,
+}: SiteShellProps) {
   return (
     <div style={styles.page}>
       <header style={styles.header}>
@@ -23,7 +34,7 @@ export function SiteShell({ children, current }: SiteShellProps) {
           </Link>
 
           <nav style={styles.nav}>
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const active = current === item.href;
               return (
                 <Link
@@ -44,8 +55,8 @@ export function SiteShell({ children, current }: SiteShellProps) {
             <Link href="/login" style={styles.login}>
               登录
             </Link>
-            <Link href="/detect" style={styles.cta}>
-              免费检测
+            <Link href={ctaHref} style={styles.cta}>
+              {ctaLabel}
             </Link>
           </div>
         </div>
@@ -53,30 +64,32 @@ export function SiteShell({ children, current }: SiteShellProps) {
 
       <div>{children}</div>
 
-      <footer style={styles.footer}>
-        <div style={styles.footerInner}>
-          <div>
-            <div style={styles.footerBrand}>董逻辑MGEO</div>
-            <p style={styles.footerText}>
-              面向 AI 搜索场景的多模型品牌可见性检测与增长系统。
-            </p>
+      {hideFooter ? null : (
+        <footer style={styles.footer}>
+          <div style={styles.footerInner}>
+            <div>
+              <div style={styles.footerBrand}>董逻辑MGEO</div>
+              <p style={styles.footerText}>
+                面向 AI 搜索场景的多模型品牌可见性检测与增长系统。
+              </p>
+            </div>
+            <div style={styles.footerLinks}>
+              <Link href="/pricing" style={styles.footerLink}>
+                服务方案
+              </Link>
+              <Link href="/cases" style={styles.footerLink}>
+                案例成果
+              </Link>
+              <Link href="/ranking" style={styles.footerLink}>
+                排名
+              </Link>
+              <Link href="/detect" style={styles.footerLink}>
+                免费检测
+              </Link>
+            </div>
           </div>
-          <div style={styles.footerLinks}>
-            <Link href="/pricing" style={styles.footerLink}>
-              服务方案
-            </Link>
-            <Link href="/cases" style={styles.footerLink}>
-              案例成果
-            </Link>
-            <Link href="/ranking" style={styles.footerLink}>
-              排名
-            </Link>
-            <Link href="/detect" style={styles.footerLink}>
-              免费检测
-            </Link>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 }
