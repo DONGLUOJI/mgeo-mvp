@@ -142,20 +142,15 @@ export default function MarketingHomePage() {
       <main style={styles.page}>
         <style>{`
           @keyframes heroBadgePulse {
-            0% {
+            0%, 100% {
+              opacity: 0.6;
               transform: scale(0.92);
-              opacity: 0.72;
-              box-shadow: 0 0 0 0 rgba(20, 215, 192, 0.24), 0 0 10px rgba(20, 215, 192, 0.42);
+              box-shadow: 0 0 0 4px rgba(16, 202, 168, 0.08);
             }
             50% {
               transform: scale(1);
               opacity: 1;
-              box-shadow: 0 0 0 10px rgba(20, 215, 192, 0.08), 0 0 22px rgba(20, 215, 192, 0.88);
-            }
-            100% {
-              transform: scale(0.92);
-              opacity: 0.72;
-              box-shadow: 0 0 0 0 rgba(20, 215, 192, 0.24), 0 0 10px rgba(20, 215, 192, 0.42);
+              box-shadow: 0 0 0 8px rgba(16, 202, 168, 0.18);
             }
           }
         `}</style>
@@ -170,21 +165,18 @@ export default function MarketingHomePage() {
             </div>
             <h1 style={styles.heroTitle}>帮助品牌在AI搜索中被看见</h1>
             <div style={styles.metricRow}>
-              <div style={styles.metricItem}>
+              <div style={{ ...styles.metricItem, borderLeft: "none" }}>
                 <strong style={styles.metricValue}>多平台</strong>
                 <span style={styles.metricLabel}>AI 平台覆盖</span>
               </div>
-              <div style={styles.metricDivider} />
               <div style={styles.metricItem}>
                 <strong style={styles.metricValue}>TCA</strong>
                 <span style={styles.metricLabel}>三支柱诊断体系</span>
               </div>
-              <div style={styles.metricDivider} />
               <div style={styles.metricItem}>
                 <strong style={styles.metricValue}>30天</strong>
                 <span style={styles.metricLabel}>闭环见效周期</span>
               </div>
-              <div style={styles.metricDivider} />
               <div style={styles.metricItem}>
                 <strong style={styles.metricValue}>500+</strong>
                 <span style={styles.metricLabel}>品牌已接入</span>
@@ -416,18 +408,18 @@ export default function MarketingHomePage() {
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
-    background: "#f5f6fa",
+    background: "#f5f5f7",
   },
   hero: {
     background:
-      "radial-gradient(circle at top, rgba(14, 148, 136, 0.18), transparent 22%), linear-gradient(180deg, #0b0d13 0%, #131419 58%, #232326 100%)",
-    padding: "124px 24px 170px",
+      "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.3), transparent), linear-gradient(180deg, #000000 0%, #1d1d1f 100%)",
+    padding: "120px 24px 180px",
     color: "#ffffff",
     position: "relative",
     overflow: "hidden",
   },
   heroInner: {
-    maxWidth: 1180,
+    maxWidth: 1200,
     margin: "0 auto",
     display: "grid",
     justifyItems: "center",
@@ -440,25 +432,27 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 12,
     height: 58,
     padding: "0 28px",
+    margin: "-8px auto 22px",
     borderRadius: 999,
-    background: "rgba(7, 54, 48, 0.44)",
-    border: "1px solid rgba(12, 148, 131, 0.65)",
-    color: "#13c6b2",
-    fontSize: 18,
+    border: "1px solid rgba(9, 140, 116, 0.42)",
+    background: "rgba(9, 140, 116, 0.12)",
+    color: "#0f9b84",
+    fontSize: 16,
     fontWeight: 700,
+    letterSpacing: "-0.01em",
+    lineHeight: 1,
   },
   heroBadgeDot: {
     width: 12,
     height: 12,
     borderRadius: 999,
-    background: "#14d7c0",
-    boxShadow: "0 0 12px rgba(20, 215, 192, 0.95)",
+    background: "#10caa8",
     position: "relative",
     zIndex: 2,
   },
   heroBadgeDotWrap: {
-    width: 24,
-    height: 24,
+    width: 20,
+    height: 20,
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
@@ -467,57 +461,59 @@ const styles: Record<string, React.CSSProperties> = {
   },
   heroBadgePulse: {
     position: "absolute",
-    width: 24,
-    height: 24,
+    width: 12,
+    height: 12,
     borderRadius: 999,
-    background: "rgba(20, 215, 192, 0.18)",
-    boxShadow: "0 0 18px rgba(20, 215, 192, 0.5)",
-    animation: "heroBadgePulse 1.5s ease-out infinite",
+    background: "#10caa8",
+    boxShadow: "0 0 0 4px rgba(16, 202, 168, 0.12)",
+    animation: "heroBadgePulse 1.8s ease-in-out infinite",
   },
   heroTitle: {
-    margin: "56px 0 0",
-    fontSize: 62,
-    lineHeight: 1.14,
-    letterSpacing: "-0.04em",
+    margin: 0,
+    fontSize: 42,
+    lineHeight: 1.3,
+    letterSpacing: "-0.03em",
     fontWeight: 800,
+    color: "#f5f5f7",
   },
   metricRow: {
+    width: "min(920px, 100%)",
+    margin: "24px auto 0",
     display: "grid",
-    gridTemplateColumns: "repeat(7, auto)",
-    justifyContent: "center",
-    gap: 30,
+    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
     alignItems: "center",
-    marginTop: 56,
   },
   metricItem: {
     display: "grid",
     justifyItems: "center",
     gap: 8,
-    minWidth: 168,
+    padding: "0 18px",
+    textAlign: "center",
+    borderLeft: "1px solid rgba(255,255,255,0.12)",
   },
   metricValue: {
-    fontSize: 36,
+    fontSize: 32,
     lineHeight: 1,
-    fontWeight: 800,
+    fontWeight: 700,
     color: "#ffffff",
+    letterSpacing: "-0.03em",
   },
   metricLabel: {
-    fontSize: 16,
-    color: "rgba(255,255,255,0.74)",
+    fontSize: 14,
+    color: "rgba(255,255,255,0.68)",
+    lineHeight: 1.5,
   },
   metricDivider: {
-    width: 1,
-    height: 70,
-    background: "rgba(255,255,255,0.12)",
+    display: "none",
   },
   detectSection: {
-    marginTop: -106,
+    marginTop: -100,
     padding: "0 24px",
     position: "relative",
     zIndex: 2,
   },
   detectShell: {
-    maxWidth: 1040,
+    maxWidth: 1000,
     margin: "0 auto",
   },
   workflowSection: {
