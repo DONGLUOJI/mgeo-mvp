@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { getBrandAnchorId } from "@/lib/ranking/shared";
@@ -21,9 +22,18 @@ type SearchResult =
     }
   | null;
 
-export function BrandSearchBox() {
-  const [query, setQuery] = useState("");
-  const [result, setResult] = useState<SearchResult>(null);
+export function BrandSearchBox({
+  initialQuery = "",
+  initialResult = null,
+}: {
+  initialQuery?: string;
+  initialResult?: SearchResult;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(initialQuery);
+  const [result, setResult] = useState<SearchResult>(initialResult);
   const [loading, setLoading] = useState(false);
 
   async function handleSearch(event: React.FormEvent<HTMLFormElement>) {
@@ -40,12 +50,22 @@ export function BrandSearchBox() {
       const firstBrand = data?.brands?.[0];
 
       if (firstBrand) {
-        setResult({
+        const nextResult = {
           found: true,
           brand: firstBrand,
-        });
+        } as const;
+        setResult(nextResult);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("tab", "industry");
+        params.set("industry", firstBrand.industry);
+        params.set("focusBrand", firstBrand.brand_name);
+        router.push(`${pathname}?${params.toString()}#${getBrandAnchorId(firstBrand.brand_name)}`);
       } else {
-        setResult({ found: false, query: keyword });
+        const nextResult = { found: false, query: keyword } as const;
+        setResult(nextResult);
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("focusBrand");
+        router.replace(`${pathname}?${params.toString()}`);
       }
     } catch {
       setResult({ found: false, query: keyword });

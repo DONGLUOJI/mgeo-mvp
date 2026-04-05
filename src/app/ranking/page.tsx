@@ -12,19 +12,26 @@ import {
   getPlatformCoverageData,
   getTrendingQueriesData,
 } from "@/lib/ranking/data";
-import { INDUSTRY_OPTIONS, RANKING_TABS, type PlatformKey, type RankingTabKey } from "@/lib/ranking/shared";
+import { INDUSTRY_OPTIONS, PLATFORM_LABELS, RANKING_TABS, type PlatformKey, type RankingTabKey } from "@/lib/ranking/shared";
 
 function isTab(value?: string): value is RankingTabKey {
   return RANKING_TABS.some((tab) => tab.key === value);
 }
 
-function getTabHref(tab: RankingTabKey, currentIndustry: string, currentDays: number, currentPlatform?: string) {
+function getTabHref(
+  tab: RankingTabKey,
+  currentIndustry: string,
+  currentDays: number,
+  currentPlatform?: string,
+  currentCoverage?: string
+) {
   const params = new URLSearchParams();
   params.set("tab", tab);
 
   if (currentIndustry !== "全部") params.set("industry", currentIndustry);
   if (currentDays !== 30) params.set("days", String(currentDays));
   if (currentPlatform && tab === "platform") params.set("platform", currentPlatform);
+  if (currentCoverage && tab === "platform") params.set("coverage", currentCoverage);
 
   return `/ranking?${params.toString()}`;
 }
@@ -37,6 +44,8 @@ export default async function RankingPage({
     industry?: string;
     days?: string;
     platform?: string;
+    coverage?: string;
+    focusBrand?: string;
   }>;
 }) {
   const params = (await searchParams) || {};
@@ -46,6 +55,8 @@ export default async function RankingPage({
     : "全部";
   const currentDays = [7, 30, 90].includes(Number(params.days)) ? Number(params.days) : 30;
   const currentPlatform = params.platform as PlatformKey | undefined;
+  const currentCoverage = params.coverage as "low" | "medium" | "high" | undefined;
+  const focusBrand = params.focusBrand || "";
 
   const [industryData, platformData, trendingData, moversData] = await Promise.all([
     getIndustryRankingData({
@@ -56,6 +67,7 @@ export default async function RankingPage({
     getPlatformCoverageData({
       industry: currentIndustry,
       platform: currentPlatform,
+      coverage: currentCoverage,
       limit: 40,
     }),
     getTrendingQueriesData({
@@ -70,23 +82,13 @@ export default async function RankingPage({
   ]);
 
   const strongestPlatformEntry = Object.entries(platformData.platformStats).sort((a, b) => b[1].rate - a[1].rate)[0];
+  const focusedBrand = focusBrand ? industryData.brands.find((brand) => brand.brandName === focusBrand) || null : null;
   const platformOverview = {
     trackedBrands: platformData.brands.length,
     averageCoverageRate: platformData.brands.length
       ? Math.round((platformData.brands.reduce((sum, brand) => sum + brand.coverageRate, 0) / platformData.brands.length) * 100)
       : 0,
-    strongestPlatform:
-      strongestPlatformEntry?.[0] === "doubao"
-        ? "豆包"
-        : strongestPlatformEntry?.[0] === "deepseek"
-          ? "DeepSeek"
-          : strongestPlatformEntry?.[0] === "kimi"
-            ? "Kimi"
-            : strongestPlatformEntry?.[0] === "qianwen"
-              ? "千问"
-              : strongestPlatformEntry?.[0] === "yuanbao"
-                ? "元宝"
-                : "文心",
+    strongestPlatform: strongestPlatformEntry ? PLATFORM_LABELS[strongestPlatformEntry[0] as PlatformKey] : "豆包",
   };
   const hottestQuery = [...trendingData.queries].sort((a, b) => b.heatScore - a.heatScore)[0];
   const trendingOverview = {
@@ -104,7 +106,22 @@ export default async function RankingPage({
     <SiteShell current="/ranking" ctaHref="/register" ctaLabel="注册">
       <main style={styles.page}>
         <div style={styles.wrap}>
-          <BrandSearchBox />
+          <BrandSearchBox
+            initialQuery={focusBrand}
+            initialResult={
+              focusedBrand
+                ? {
+                    found: true,
+                    brand: {
+                      rank: focusedBrand.rank,
+                      brand_name: focusedBrand.brandName,
+                      tca_total: focusedBrand.tcaTotal,
+                      industry: focusedBrand.industry,
+                    },
+                  }
+                : null
+            }
+          />
 
           <section style={styles.tabCard}>
             <div style={styles.tabBar}>
@@ -113,7 +130,7 @@ export default async function RankingPage({
                 return (
                   <Link
                     key={tab.key}
-                    href={getTabHref(tab.key, currentIndustry, currentDays, currentPlatform)}
+                    href={getTabHref(tab.key, currentIndustry, currentDays, currentPlatform, currentCoverage)}
                     style={{ ...styles.tabLink, ...(active ? styles.tabLinkActive : {}) }}
                   >
                     {tab.label}
@@ -129,6 +146,7 @@ export default async function RankingPage({
                   industries={INDUSTRY_OPTIONS}
                   currentIndustry={currentIndustry}
                   currentDays={currentDays}
+                  focusBrand={focusBrand}
                   overview={{
                     brandCount: industryData.overview.brandCount,
                     industryCount: industryData.overview.industryCount,
@@ -142,6 +160,7 @@ export default async function RankingPage({
                 <PlatformCoverage
                   currentIndustry={currentIndustry}
                   currentPlatform={currentPlatform}
+                  currentCoverage={currentCoverage}
                   industries={INDUSTRY_OPTIONS}
                   overview={platformOverview}
                   platformStats={platformData.platformStats}

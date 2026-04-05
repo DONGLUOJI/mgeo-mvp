@@ -8,6 +8,7 @@ type IndustryLeaderboardProps = {
   industries: readonly string[];
   currentIndustry: string;
   currentDays: number;
+  focusBrand?: string;
   overview: {
     brandCount: number;
     industryCount: number;
@@ -21,6 +22,7 @@ export function IndustryLeaderboard({
   industries,
   currentIndustry,
   currentDays,
+  focusBrand,
   overview,
 }: IndustryLeaderboardProps) {
   return (
@@ -83,8 +85,18 @@ export function IndustryLeaderboard({
 
         <div>
           {brands.map((brand) => (
-            <details key={brand.brandName} id={getBrandAnchorId(brand.brandName)} style={styles.row}>
-              <summary style={styles.summary}>
+            <details
+              key={brand.brandName}
+              id={getBrandAnchorId(brand.brandName)}
+              style={styles.row}
+              open={focusBrand === brand.brandName}
+            >
+              <summary
+                style={{
+                  ...styles.summary,
+                  ...(focusBrand === brand.brandName ? styles.summaryFocused : {}),
+                }}
+              >
                 <span style={styles.rank}>{brand.rank}</span>
                 <span style={styles.brandName}>{brand.brandName}</span>
                 <span style={styles.industry}>{brand.industry}</span>
@@ -245,6 +257,10 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 12,
     padding: "20px",
     alignItems: "center",
+  },
+  summaryFocused: {
+    background: "#ecfdf3",
+    boxShadow: "inset 0 0 0 1px #86efac",
   },
   rank: {
     fontSize: 22,

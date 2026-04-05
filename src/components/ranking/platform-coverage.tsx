@@ -1,12 +1,14 @@
 import Link from "next/link";
 
-import { PLATFORM_OPTIONS, type PlatformKey } from "@/lib/ranking/data";
+import { PLATFORM_LABELS, PLATFORM_OPTIONS, type PlatformKey } from "@/lib/ranking/data";
 
 import { PlatformMatrix } from "./platform-matrix";
+import { PlatformCoverageChart } from "./platform-coverage-chart";
 
 type PlatformCoverageProps = {
   currentIndustry: string;
   currentPlatform?: PlatformKey;
+  currentCoverage?: "low" | "medium" | "high";
   industries: readonly string[];
   overview: {
     trackedBrands: number;
@@ -25,6 +27,7 @@ type PlatformCoverageProps = {
 export function PlatformCoverage({
   currentIndustry,
   currentPlatform,
+  currentCoverage,
   industries,
   overview,
   platformStats,
@@ -83,27 +86,39 @@ export function PlatformCoverage({
             );
           })}
         </div>
+
+        <div style={styles.filters}>
+          {[
+            { key: "", label: "全部覆盖率" },
+            { key: "high", label: "高覆盖" },
+            { key: "medium", label: "中覆盖" },
+            { key: "low", label: "低覆盖" },
+          ].map((item) => {
+            const active = (currentCoverage || "") === item.key;
+            const params = new URLSearchParams();
+            params.set("tab", "platform");
+            if (currentIndustry !== "全部") params.set("industry", currentIndustry);
+            if (currentPlatform) params.set("platform", currentPlatform);
+            if (item.key) params.set("coverage", item.key);
+
+            return (
+              <Link key={item.label} href={`/ranking?${params.toString()}`} style={{ ...styles.chip, ...(active ? styles.chipActive : {}) }}>
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       <div style={styles.statsCard}>
         <div style={styles.statsHead}>六大平台品牌平均覆盖率</div>
         <div style={styles.statsText}>品牌方最在意的不是抽象分数，而是“我的竞品在多少个平台被提及，我漏了哪些平台”。</div>
-        <div style={styles.barList}>
-          {PLATFORM_OPTIONS.map((platform) => {
-            const stat = platformStats[platform.key];
-            return (
-              <div key={platform.key} style={styles.barItem}>
-                <div style={styles.barLabelRow}>
-                  <span style={styles.barLabel}>{platform.label}</span>
-                  <span style={styles.barRate}>{Math.round(stat.rate * 100)}%</span>
-                </div>
-                <div style={styles.track}>
-                  <div style={{ ...styles.fill, width: `${Math.round(stat.rate * 100)}%` }} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <PlatformCoverageChart
+          data={PLATFORM_OPTIONS.map((platform) => ({
+            label: PLATFORM_LABELS[platform.key],
+            rate: Math.round(platformStats[platform.key].rate * 100),
+          }))}
+        />
       </div>
 
       <PlatformMatrix brands={brands} />
@@ -197,41 +212,5 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.7,
     color: "#6b7280",
     marginBottom: 16,
-  },
-  barList: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 18,
-  },
-  barItem: {
-    display: "grid",
-    gap: 8,
-  },
-  barLabelRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 12,
-    alignItems: "center",
-  },
-  barLabel: {
-    fontSize: 15,
-    fontWeight: 700,
-    color: "#111827",
-  },
-  barRate: {
-    fontSize: 14,
-    fontWeight: 700,
-    color: "#6b7280",
-  },
-  track: {
-    height: 12,
-    borderRadius: 999,
-    background: "#e5e7eb",
-    overflow: "hidden",
-  },
-  fill: {
-    height: "100%",
-    borderRadius: 999,
-    background: "#111827",
   },
 };

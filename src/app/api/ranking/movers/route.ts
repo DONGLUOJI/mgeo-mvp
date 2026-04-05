@@ -16,8 +16,18 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json({
-      risers: data.risers,
-      fallers: data.fallers,
+      risers: data.risers.map((brand) => ({
+        brand_name: brand.brandName,
+        industry: brand.industry,
+        change: brand.change,
+        current_score: brand.currentScore,
+      })),
+      fallers: data.fallers.map((brand) => ({
+        brand_name: brand.brandName,
+        industry: brand.industry,
+        change: brand.change,
+        current_score: brand.currentScore,
+      })),
       industry_trends: data.industryTrends,
     });
   } catch (error) {

@@ -26,6 +26,10 @@ export const PLATFORM_OPTIONS = [
   { key: "wenxin", label: "文心" },
 ] as const;
 
+export const PLATFORM_LABELS = Object.fromEntries(
+  PLATFORM_OPTIONS.map((item) => [item.key, item.label])
+) as Record<(typeof PLATFORM_OPTIONS)[number]["key"], string>;
+
 export type PlatformKey = (typeof PLATFORM_OPTIONS)[number]["key"];
 
 export type PlatformDetail = {
