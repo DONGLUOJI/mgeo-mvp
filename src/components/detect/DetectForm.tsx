@@ -205,6 +205,7 @@ export function DetectForm({
           >
             {submitting ? "检测中..." : "开始免费检测"}
           </button>
+          <div style={styles.compactTip}>约 30 秒出结果 · 无需注册 · 获取 TCA 评分与平台覆盖报告</div>
         </form>
       ) : (
         <>
@@ -302,7 +303,7 @@ export function DetectForm({
                 {submitting ? "检测中..." : "开始检测"}
               </button>
               <p style={styles.submitTip}>
-                当前默认流程不含 OpenAI，可先优先接入 DeepSeek、Kimi、豆包、文心等模型验证链路。
+                约 30 秒出结果 · 注册后可保存历史记录与后续监测数据
               </p>
             </div>
           </form>
@@ -430,6 +431,12 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     cursor: "pointer",
     marginTop: 6,
+  },
+  compactTip: {
+    marginTop: -8,
+    fontSize: 12,
+    color: "#999999",
+    textAlign: "center",
   },
   heroBadge: {
     display: "inline-flex",

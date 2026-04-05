@@ -18,7 +18,7 @@ export default async function LoginPage() {
           <span style={styles.badge}>邮箱登录</span>
           <h1 style={styles.title}>继续进入 MGEO 内部工作台</h1>
           <p style={styles.text}>
-            当前 MVP 第二阶段先提供最小邮箱登录能力。输入邮箱即可创建账号并进入客户、任务和历史记录管理页。
+            输入邮箱即可登录并进入工作台，继续查看客户、任务、检测历史与服务状态。
           </p>
           <LoginForm />
         </section>

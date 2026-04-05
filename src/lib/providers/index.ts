@@ -63,6 +63,11 @@ export const providers: Record<ModelName, RuntimeProvider> = {
     model: process.env.KIMI_MODEL || "moonshot-v1-8k",
   }),
   doubao: createDoubaoProvider(),
+  qianwen: createProvider("qianwen", {
+    baseUrl: process.env.QIANWEN_BASE_URL || "",
+    apiKey: process.env.QIANWEN_API_KEY,
+    model: process.env.QIANWEN_MODEL || "",
+  }),
   yuanbao: createProvider("yuanbao", {
     baseUrl: process.env.YUANBAO_BASE_URL || "",
     apiKey: process.env.YUANBAO_API_KEY,

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { SiteShell } from "@/components/marketing/SiteShell";
@@ -13,6 +14,11 @@ import {
   getTrendingQueriesData,
 } from "@/lib/ranking/data";
 import { INDUSTRY_OPTIONS, PLATFORM_LABELS, RANKING_TABS, type PlatformKey, type RankingTabKey } from "@/lib/ranking/shared";
+
+export const metadata: Metadata = {
+  title: "AI可见性排名 - 董逻辑MGEO",
+  description: "实时追踪各行业品牌在 6 大 AI 平台的可见性表现与排名变化。",
+};
 
 function isTab(value?: string): value is RankingTabKey {
   return RANKING_TABS.some((tab) => tab.key === value);
@@ -103,7 +109,7 @@ export default async function RankingPage({
   };
 
   return (
-    <SiteShell current="/ranking" ctaHref="/register" ctaLabel="注册">
+    <SiteShell current="/ranking">
       <main style={styles.page}>
         <div style={styles.wrap}>
           <BrandSearchBox

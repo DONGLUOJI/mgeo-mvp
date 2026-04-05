@@ -4,12 +4,12 @@ import { SiteShell } from "@/components/marketing/SiteShell";
 const benefits = [
   "保留品牌基础信息与咨询记录",
   "统一管理免费检测与服务沟通",
-  "后续可扩展工作台、报告和案例查看",
+  "统一查看检测历史、报告与服务入口",
 ];
 
 export default function RegisterPage() {
   return (
-    <SiteShell ctaHref="/register" ctaLabel="注册" hideFooter>
+    <SiteShell hideFooter>
       <main style={styles.page}>
         <section style={styles.shell}>
           <section style={styles.copyCard}>
@@ -28,7 +28,7 @@ export default function RegisterPage() {
 
           <section style={styles.formCard}>
             <h2 style={styles.formTitle}>创建账号</h2>
-            <p style={styles.formText}>填写基础信息并完成邮箱验证后即可注册，后续可继续完善品牌资料与合作需求。</p>
+            <p style={styles.formText}>填写基础信息并完成验证后即可注册，后续可继续完善品牌资料与合作需求。</p>
 
             <form style={styles.formGrid}>
               <label style={styles.field}>
@@ -74,9 +74,7 @@ export default function RegisterPage() {
               </button>
             </form>
 
-            <div style={styles.helper}>
-              当前页面采用邮箱验证码注册逻辑，后续可继续接入真实发信服务、验证码校验与邀请机制。
-            </div>
+            <div style={styles.helper}>注册后可继续保存检测记录、提交咨询并进入后续服务流程。</div>
 
             <div style={styles.loginHint}>
               已有账号？

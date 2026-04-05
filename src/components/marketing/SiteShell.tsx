@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 export const MARKETING_NAV_ITEMS = [
-  { href: "/#detector", label: "免费检测" },
   { href: "/ranking", label: "排名" },
   { href: "/pricing", label: "服务方案" },
   { href: "/cases", label: "案例成果" },
@@ -23,8 +22,8 @@ export function SiteShell({
   children,
   current,
   navItems = MARKETING_NAV_ITEMS,
-  ctaHref = "/register",
-  ctaLabel = "注册",
+  ctaHref = "/#detector",
+  ctaLabel = "免费检测",
   hideFooter = false,
 }: SiteShellProps) {
   return (
@@ -165,12 +164,12 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     justifyContent: "center",
     minWidth: 0,
-    padding: "9px 16px",
-    borderRadius: 999,
-    background: "#0a7c66",
+    padding: "8px 20px",
+    borderRadius: 8,
+    background: "#0fbc8c",
     color: "#fff",
     textDecoration: "none",
-    fontWeight: 700,
+    fontWeight: 600,
     fontSize: 16,
   },
   footer: {

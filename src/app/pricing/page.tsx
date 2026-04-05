@@ -1,22 +1,40 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
 import { SiteShell } from "@/components/marketing/SiteShell";
+
+export const metadata: Metadata = {
+  title: "服务方案 - 董逻辑MGEO",
+  description: "从免费检测到持续监控，再到完整交付闭环，选择适合品牌当前阶段的 MGEO 服务路径。",
+};
 
 const plans = [
   {
     name: "免费检测版",
     price: "0",
     period: "/月",
-    desc: "适合先验证品牌在 AI 搜索中是否被提及、被理解、被推荐。",
+    desc: "适合先验证品牌在 AI 搜索中是否被提及",
     features: ["每月 3 次检测", "TCA 基础评分", "基础报告导出"],
     action: "先做免费检测",
     href: "/#detector",
   },
   {
+    name: "基础监控版",
+    price: "299",
+    period: "/月",
+    annual: "年付 ¥2,388（省 ¥1,200）",
+    desc: "适合持续追踪品牌 AI 可见性变化",
+    features: ["5 个关键词每日自动监控", "排名变化趋势图", "月度 TCA 诊断报告", "1 个竞品对比", "每周邮件通知"],
+    action: "开通基础版",
+    href: "/register",
+    featured: true,
+  },
+  {
     name: "标准服务版",
     price: "2999",
     period: "/月",
-    desc: "适合已经确认要持续优化品牌可见性，并需要完整交付闭环的团队。",
-    features: ["月度诊断与内容建议", "重点问题池整理", "平台适配与发布节奏建议"],
+    desc: "适合需要完整交付闭环的团队",
+    features: ["基础版全部功能", "30 个关键词监控", "无限竞品对比", "月度诊断与内容建议", "重点问题池整理", "平台适配与发布节奏建议"],
     action: "进入服务沟通",
     href: "/#contact",
   },
@@ -24,28 +42,38 @@ const plans = [
     name: "深度增长版",
     price: "8999",
     period: "/月",
-    desc: "适合需要长期监测、多平台内容适配与阶段复盘的品牌。",
-    features: ["完整 30 天交付闭环", "多平台持续监测", "复盘报告与下一轮策略建议"],
+    desc: "适合长期监测与多平台内容适配",
+    features: ["标准版全部功能", "完整 30 天交付闭环", "多平台持续监测", "媒体发布执行", "复盘报告与下一轮策略建议", "专属客户成功经理"],
     action: "预约深度方案",
     href: "/#contact",
   },
-];
+] as Array<{
+  name: string;
+  price: string;
+  period: string;
+  desc: string;
+  features: string[];
+  action: string;
+  href: string;
+  annual?: string;
+  featured?: boolean;
+}>;
 
 const steps = [
-  { index: "01", title: "先免费检测", text: "先确认当前品牌是否被提及、是否被理解、是否具备推荐基础。" },
-  { index: "02", title: "看 TCA 诊断", text: "明确当前最需要优先处理的是一致性、覆盖度还是权威性。" },
-  { index: "03", title: "匹配服务方案", text: "根据品牌阶段，选择轻量验证、标准交付或深度增长方案。" },
-  { index: "04", title: "进入执行闭环", text: "从内容适配、平台分发、效果监测到复盘建议形成长期机制。" },
-];
+  { index: "01", title: "先免费检测", text: "先确认品牌是否被提及、被理解、被推荐。" },
+  { index: "02", title: "看 TCA 诊断", text: "快速识别一致性、覆盖度与权威性缺口。" },
+  { index: "03", title: "匹配服务方案", text: "根据当前阶段选择最合适的服务路径。" },
+  { index: "04", title: "进入执行闭环", text: "围绕平台适配、监测与复盘持续优化。" },
+] as const;
 
 export default function PricingPage() {
   return (
-    <SiteShell current="/pricing" ctaHref="/register" ctaLabel="注册" hideFooter>
+    <SiteShell current="/pricing" hideFooter>
       <main style={styles.page}>
         <section style={styles.hero}>
           <div style={styles.heroPanel}>
             <h1 style={styles.heroTitle}>服务方案</h1>
-            <p style={styles.heroText}>用更接近你本地 `subscription.html` 的版式，把免费检测、诊断、交付与长期增长方案整理成一条清晰路径。</p>
+            <p style={styles.heroText}>从免费检测开始，根据品牌当前阶段选择适合的服务路径。</p>
             <div style={styles.heroActions}>
               <Link href="/#detector" style={styles.primaryButton}>
                 先做免费检测
@@ -80,17 +108,27 @@ export default function PricingPage() {
           <div style={styles.sectionCard}>
             <div style={styles.sectionHeader}>
               <h2 style={styles.sectionTitle}>当前可选择的方案</h2>
-              <p style={styles.sectionText}>先做免费验证，再按品牌阶段进入标准服务或深度增长闭环。</p>
+              <p style={styles.sectionText}>从免费验证、低门槛监控到完整交付闭环，先选最适合你当前阶段的一档。</p>
             </div>
 
             <div style={styles.planGrid}>
               {plans.map((plan) => (
-                <article key={plan.name} style={styles.planCard}>
-                  <h3 style={styles.planTitle}>{plan.name}</h3>
-                  <div style={styles.priceRow}>
-                    <span style={styles.priceSymbol}>¥</span>
-                    <span style={styles.priceValue}>{plan.price}</span>
-                    <span style={styles.pricePeriod}>{plan.period}</span>
+                <article
+                  key={plan.name}
+                  style={{
+                    ...styles.planCard,
+                    ...(plan.featured ? styles.planCardFeatured : {}),
+                  }}
+                >
+                  {plan.featured ? <span style={styles.recommendBadge}>推荐</span> : null}
+                  <div style={styles.planHead}>
+                    <h3 style={styles.planTitle}>{plan.name}</h3>
+                    <div style={styles.priceRow}>
+                      <span style={styles.priceSymbol}>¥</span>
+                      <span style={styles.priceValue}>{plan.price}</span>
+                      <span style={styles.pricePeriod}>{plan.period}</span>
+                    </div>
+                    {"annual" in plan && plan.annual ? <div style={styles.annualNote}>{plan.annual}</div> : <div style={styles.annualSpacer} />}
                   </div>
                   <p style={styles.planDesc}>{plan.desc}</p>
                   <ul style={styles.featureList}>
@@ -100,7 +138,13 @@ export default function PricingPage() {
                       </li>
                     ))}
                   </ul>
-                  <Link href={plan.href} style={styles.planButton}>
+                  <Link
+                    href={plan.href}
+                    style={{
+                      ...styles.planButton,
+                      ...(plan.featured ? styles.planButtonFeatured : {}),
+                    }}
+                  >
                     {plan.action}
                   </Link>
                 </article>
@@ -237,10 +281,11 @@ const styles: Record<string, React.CSSProperties> = {
   },
   planGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
     gap: 18,
   },
   planCard: {
+    position: "relative",
     background: "#fbfbfc",
     border: "1px solid #ececf0",
     borderRadius: 24,
@@ -248,6 +293,29 @@ const styles: Record<string, React.CSSProperties> = {
     display: "grid",
     alignContent: "start",
     gap: 16,
+  },
+  planCardFeatured: {
+    border: "1px solid rgba(15, 188, 140, 0.34)",
+    boxShadow: "0 16px 34px rgba(15, 188, 140, 0.1)",
+  },
+  recommendBadge: {
+    position: "absolute",
+    top: 18,
+    right: 18,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: 28,
+    padding: "0 12px",
+    borderRadius: 999,
+    background: "#0fbc8c",
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: 800,
+  },
+  planHead: {
+    display: "grid",
+    gap: 10,
   },
   planTitle: {
     margin: 0,
@@ -270,6 +338,14 @@ const styles: Record<string, React.CSSProperties> = {
   pricePeriod: {
     color: "#6e6e73",
     fontSize: 16,
+  },
+  annualNote: {
+    fontSize: 13,
+    color: "#0a7c66",
+    fontWeight: 700,
+  },
+  annualSpacer: {
+    minHeight: 18,
   },
   planDesc: {
     margin: 0,
@@ -299,5 +375,8 @@ const styles: Record<string, React.CSSProperties> = {
     textDecoration: "none",
     fontWeight: 700,
     marginTop: 6,
+  },
+  planButtonFeatured: {
+    background: "#0fbc8c",
   },
 };

@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteShell } from "@/components/marketing/SiteShell";
+
+export const metadata: Metadata = {
+  title: "MGEO标准白皮书 - 董逻辑MGEO",
+  description: "查看 MGEO 标准白皮书的核心目录、摘要预览与 TCA 三支柱模型说明。",
+};
 
 const toc = [
   { id: "ch1", title: "第一章：前言与背景" },
@@ -12,7 +18,7 @@ const toc = [
 
 export default function WhitepaperPage() {
   return (
-    <SiteShell current="/whitepaper" ctaHref="/register" ctaLabel="注册" hideFooter>
+    <SiteShell current="/whitepaper" hideFooter>
       <main style={styles.page}>
         <section style={styles.hero}>
           <h1 style={styles.heroTitle}>MGEO标准白皮书</h1>

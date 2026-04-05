@@ -7,7 +7,7 @@ export const mockReports: Record<string, DetectReport> = {
       industry: "营销咨询 / AI搜索优化",
       businessSummary: "帮助品牌在 AI 搜索中提升可见性、推荐稳定性与多模型品牌理解一致性。",
       query: "董逻辑MGEO是什么？是否适合做品牌在AI搜索中的增长？",
-      selectedModels: ["deepseek", "kimi", "doubao", "yuanbao", "wenxin"],
+      selectedModels: ["deepseek", "kimi", "doubao", "qianwen", "yuanbao", "wenxin"],
     },
     score: {
       consistency: 48,
@@ -24,6 +24,7 @@ export const mockReports: Record<string, DetectReport> = {
         { model: "deepseek", source: "mock", success: true, note: "当前使用 mock 数据" },
         { model: "kimi", source: "mock", success: true, note: "当前使用 mock 数据" },
         { model: "doubao", source: "mock", success: true, note: "当前使用 mock 数据" },
+        { model: "qianwen", source: "mock", success: true, note: "当前使用 mock 数据" },
         { model: "yuanbao", source: "mock", success: true, note: "当前使用 mock 数据" },
         { model: "wenxin", source: "mock", success: true, note: "当前使用 mock 数据" },
       ],
@@ -61,6 +62,17 @@ export const mockReports: Record<string, DetectReport> = {
         recommendationSignal: "low",
         rawText:
           "已能提及品牌，但对于业务边界的表达不够稳定，部分描述偏向营销咨询，部分描述偏向工具化服务。",
+      },
+      {
+        model: "qianwen",
+        source: "mock",
+        mentioned: true,
+        positioningMatch: true,
+        descriptionConsistent: true,
+        authoritySignal: false,
+        recommendationSignal: "medium",
+        rawText:
+          "能够识别到董逻辑MGEO与 AI 搜索增长相关，但表达更偏工具和策略结合，说明品牌优势已被看见，仍需继续强化权威支撑。",
       },
       {
         model: "腾讯元宝",

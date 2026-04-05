@@ -1,15 +1,15 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.dongluoji.com";
   const now = new Date();
 
   return [
     "",
-    "/detect",
+    "/ranking",
     "/pricing",
     "/cases",
-    "/ranking",
+    "/whitepaper",
   ].map((path) => ({
     url: `${baseUrl}${path}`,
     lastModified: now,

@@ -1,10 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
 import { SiteShell } from "@/components/marketing/SiteShell";
+
+export const metadata: Metadata = {
+  title: "方法与效果 - 董逻辑MGEO",
+  description: "从问题识别、优化动作到预期效果，查看 MGEO 方法论在不同品牌场景中的典型应用路径。",
+};
 
 const cases = [
   {
     tag: "企业服务",
-    title: "品牌定位混乱的咨询公司",
+    title: "当品牌在不同 AI 平台的描述互相矛盾",
     summary: "30 天内品牌理解一致性明显提升，稳定提及平台增加 3 个。",
     detail: "通过统一品牌叙事、补齐关键内容支撑和诊断报告解读，让多模型对品牌的理解从泛化服务商收敛到明确的 AI 搜索增长服务。",
     metrics: ["Consistency +22%", "覆盖平台 +3", "报告转化率 41%"],
@@ -12,7 +19,7 @@ const cases = [
   },
   {
     tag: "本地生活",
-    title: "区域门店业务的 AI 覆盖不足",
+    title: "当品牌只在 1-2 个平台被提及",
     summary: "重点问题场景覆盖提升 48%，区域推荐出现率进入 Top 3。",
     detail: "围绕本地场景、用户决策问题和门店关键词补齐内容入口，缩短从被识别到被推荐的距离。",
     metrics: ["覆盖场景 +48%", "区域推荐 Top3", "线索成本 -18%"],
@@ -20,32 +27,30 @@ const cases = [
   },
   {
     tag: "品牌增长",
-    title: "已有内容基础但信源偏弱的品牌",
+    title: "当品牌被提及但引用来源不够权威",
     summary: "权威性评分提升 2.1 分，高质量引用入口增加 4 个。",
     detail: "通过补强外部支撑内容和可信引用结构，让模型对品牌给出更稳定、更可信的表达与推荐。",
     metrics: ["Authority +2.1", "外部引用 +4", "推荐稳定性提升"],
     bullets: ["重建可信引用链路", "补足权威内容与案例信源", "把内容分发到更适合的平台生态"],
   },
-];
+] as const;
 
 export default function CasesPage() {
   return (
-    <SiteShell current="/cases" ctaHref="/register" ctaLabel="注册" hideFooter>
+    <SiteShell current="/cases" hideFooter>
       <main style={styles.page}>
         <section style={styles.hero}>
           <div style={styles.heroPanel}>
-            <h1 style={styles.heroTitle}>案例成果</h1>
-            <p style={styles.heroText}>
-              用更接近你原始 HTML 的页面结构，展示品牌在 AI 搜索场景中的问题、动作与结果变化，让案例页同时承担认知与转化作用。
-            </p>
+            <h1 style={styles.heroTitle}>方法与效果</h1>
+            <p style={styles.heroText}>每个行业的品牌都可能面临以下 AI 可见性问题，以下是 MGEO 方法论的典型应用路径。</p>
           </div>
         </section>
 
         <section style={styles.section}>
           <div style={styles.sectionCard}>
             <div style={styles.sectionHeader}>
-              <h2 style={styles.sectionTitle}>结构化案例说明品牌在 AI 搜索中的变化路径</h2>
-              <p style={styles.sectionText}>从问题识别、执行动作到结果变化，案例页用于展示 MGEO 服务的实际交付方式与增长结果。</p>
+              <h2 style={styles.sectionTitle}>方法论不是抽象概念，而是一条可落地的优化路径</h2>
+              <p style={styles.sectionText}>真实品牌在 AI 搜索中的问题识别、优化动作与结果变化。</p>
             </div>
 
             <div style={styles.caseGrid}>
@@ -73,11 +78,30 @@ export default function CasesPage() {
                     ))}
                   </ul>
 
+                  <div style={styles.caseDisclaimer}>以上为 MGEO 方法论的典型应用路径，具体效果因品牌和行业差异而异。</div>
+
                   <Link href="/#detector" style={styles.caseLink}>
                     先检测我的品牌
                   </Link>
                 </article>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <section style={styles.ctaSection}>
+          <div style={styles.ctaCard}>
+            <div>
+              <h2 style={styles.ctaTitle}>想看看你的品牌属于哪种情况？</h2>
+              <p style={styles.ctaText}>先做一次免费检测，再决定更适合从一致性、覆盖度还是权威性开始补。</p>
+            </div>
+            <div style={styles.ctaActions}>
+              <Link href="/#detector" style={styles.ctaPrimary}>
+                免费检测你的品牌
+              </Link>
+              <Link href="/#contact" style={styles.ctaSecondary}>
+                联系我们获取定制方案
+              </Link>
             </div>
           </div>
         </section>
@@ -153,6 +177,8 @@ const styles: Record<string, React.CSSProperties> = {
     border: "1px solid #ececf0",
     borderRadius: 26,
     padding: 26,
+    display: "grid",
+    alignContent: "start",
   },
   caseTag: {
     display: "inline-block",
@@ -163,6 +189,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#0a7c66",
     fontSize: 13,
     fontWeight: 700,
+    width: "fit-content",
   },
   caseTitle: {
     margin: 0,
@@ -210,11 +237,75 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "12px 0",
     borderTop: "1px solid #ececf0",
   },
+  caseDisclaimer: {
+    marginTop: 18,
+    fontSize: 13,
+    lineHeight: 1.7,
+    color: "#8a909d",
+    borderTop: "1px dashed #dfe4ec",
+    paddingTop: 14,
+  },
   caseLink: {
     display: "inline-flex",
     alignItems: "center",
     marginTop: 18,
     color: "#0a7c66",
+    textDecoration: "none",
+    fontWeight: 700,
+  },
+  ctaSection: {
+    maxWidth: 1240,
+    margin: "0 auto 28px",
+    padding: "0 24px",
+  },
+  ctaCard: {
+    borderRadius: 28,
+    padding: "30px 34px",
+    background: "#111827",
+    color: "#ffffff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 20,
+    flexWrap: "wrap",
+  },
+  ctaTitle: {
+    margin: 0,
+    fontSize: 34,
+    lineHeight: 1.15,
+  },
+  ctaText: {
+    margin: "10px 0 0",
+    fontSize: 16,
+    lineHeight: 1.7,
+    color: "rgba(255,255,255,0.72)",
+  },
+  ctaActions: {
+    display: "flex",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+  ctaPrimary: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 54,
+    padding: "0 18px",
+    borderRadius: 14,
+    background: "#ffffff",
+    color: "#111827",
+    textDecoration: "none",
+    fontWeight: 700,
+  },
+  ctaSecondary: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 54,
+    padding: "0 18px",
+    borderRadius: 14,
+    border: "1px solid rgba(255,255,255,0.18)",
+    color: "#ffffff",
     textDecoration: "none",
     fontWeight: 700,
   },

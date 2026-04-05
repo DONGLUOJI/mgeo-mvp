@@ -5,6 +5,7 @@ export const MODEL_META: Record<ModelName, { label: string }> = {
   deepseek: { label: "DeepSeek" },
   kimi: { label: "Kimi" },
   doubao: { label: "豆包" },
+  qianwen: { label: "通义千问" },
   yuanbao: { label: "腾讯元宝" },
   wenxin: { label: "文心一言" },
 };
@@ -13,6 +14,7 @@ export const DEFAULT_MODELS: ModelName[] = [
   "deepseek",
   "kimi",
   "doubao",
+  "qianwen",
   "yuanbao",
   "wenxin",
 ];

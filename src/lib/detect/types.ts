@@ -3,6 +3,7 @@ export type ModelName =
   | "deepseek"
   | "kimi"
   | "doubao"
+  | "qianwen"
   | "yuanbao"
   | "wenxin";
 

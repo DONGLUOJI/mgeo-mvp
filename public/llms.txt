@@ -1,0 +1,7 @@
+# 董逻辑MGEO
+> 多模式生成式引擎优化（MGEO）服务商
+> 帮助品牌在豆包、DeepSeek、Kimi、通义千问、腾讯元宝、文心一言等 AI 搜索平台中提升可见性
+> 核心方法论：TCA 三支柱模型（Consistency 一致性 + Coverage 覆盖度 + Authority 权威性）
+> 官网：https://www.dongluoji.com
+> 免费检测：https://www.dongluoji.com/#detector
+> 排名查询：https://www.dongluoji.com/ranking

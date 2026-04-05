@@ -1,61 +1,44 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
 import { DetectForm } from "@/components/detect/DetectForm";
-import { MARKETING_NAV_ITEMS, SiteShell } from "@/components/marketing/SiteShell";
+import { SiteShell } from "@/components/marketing/SiteShell";
+
+export const metadata: Metadata = {
+  title: "董逻辑MGEO - 帮助品牌在AI搜索中被看见",
+  description: "多模式生成式引擎优化，覆盖豆包、DeepSeek、Kimi、通义千问等 6 大 AI 平台，基于 TCA 三支柱模型做品牌可见性诊断。",
+};
 
 const workflowCards = [
   {
     id: "01",
     title: "免费检测",
-    lines: [
-      "用户输入品牌名、问题词，勾选 6 大 AI 平台",
-      "快速展示品牌当前是否被提及、是否被正确理解",
-      "建立后续诊断与优化的决策基础",
-    ],
+    desc: "快速获取品牌 AI 可见性基准",
   },
   {
     id: "02",
     title: "TCA 诊断",
-    lines: [
-      "Consistency：不同模型对品牌定位是否一致",
-      "Coverage：品牌是否覆盖足够多的平台场景",
-      "Authority：被引用的信息源是否权威可信",
-    ],
+    desc: "一致性、覆盖度、权威性三维评估",
   },
   {
     id: "03",
     title: "服务转化",
-    lines: [
-      "清晰呈现品牌当前存在的关键问题",
-      "帮助判断当前需要优先优化的方向",
-      "建立后续服务与执行的决策基础",
-    ],
+    desc: "明确当前最需要优先处理的问题",
   },
   {
     id: "04",
     title: "交付执行",
-    lines: [
-      "品牌信息统一后，生成阶段性问题池",
-      "按平台特征生产内容并分发到不同生态",
-      "持续修正模型对品牌的理解与推荐路径",
-    ],
+    desc: "按平台特征生产并分发内容",
   },
   {
     id: "05",
     title: "效果监测",
-    lines: [
-      "跟踪 6 平台提及率、推荐位、融合场景排名",
-      "实时查看品牌描述偏差和平台表现变化",
-      "根据表现自动回流到下一轮优化",
-    ],
+    desc: "跟踪 6 平台排名与推荐变化",
   },
   {
     id: "06",
     title: "复盘迭代",
-    lines: [
-      "每周给出 TCA 变化、平台覆盖、排名提升",
-      "每月输出复盘会议和下一轮策略建议",
-      "沉淀为案例资产与长期品牌内容资产",
-    ],
+    desc: "每周输出数据，每月策略复盘",
   },
 ];
 
@@ -80,56 +63,19 @@ const diagnosisCards = [
 const reportRows = [
   ["DeepSeek", "positive", "描述偏差", "已有提及，但推荐位置不稳定"],
   ["字节豆包", "positive", "定位混乱", "被识别，但品牌定位仍然混乱"],
-  ["阿里千问", "positive", "表述偏泛", "已有基础提及，但品牌特征仍不清晰"],
+  ["通义千问", "positive", "表述偏泛", "已有基础提及，但品牌特征仍不清晰"],
   ["Kimi", "negative", "-", "尚未形成稳定提及"],
   ["腾讯元宝", "negative", "-", "仍需补足品牌信息覆盖"],
   ["百度文心", "negative", "-", "品牌内容仍未进入稳定推荐场景"],
 ];
 
-const deliveryCards = [
-  {
-    day: "DAY 1-3",
-    title: "审计阶段",
-    lines: [
-      "先完成品牌现状抓取与基准评分，明确多模型环境中的核心偏差与优化重点。",
-      "抓取 6 大平台现有品牌信息",
-      "计算一致性、覆盖度、权威性基准",
-      "生成统一品牌叙事框架",
-    ],
-  },
-  {
-    day: "DAY 4-15",
-    title: "内容适配阶段",
-    lines: [
-      "将问题训练、内容训练与平台分发联动，为不同模型准备更适配的内容形态。",
-      "DeepSeek：长文深度内容",
-      "豆包：短视频与图文表达",
-      "Kimi / 元宝 / 千问 / 文心：按生态特征分别适配",
-    ],
-  },
-  {
-    day: "DAY 16-30",
-    title: "持续优化阶段",
-    lines: [
-      "进入持续监测阶段，追踪可见性变化、内容效果与平台反馈，并推动下一轮优化。",
-      "跟踪 6 平台 TCA 指标变化",
-      "对比不同内容方向的展示效果",
-      "每周输出效果周报，每月做策略复盘",
-    ],
-  },
-];
+const coveredIndustries = ["新茶饮", "餐饮连锁", "教育培训", "家政服务", "美妆护肤", "企业服务"];
 
 const legalLinks = ["隐私政策", "用户协议", "退款政策", "网站地图"];
 
 export default function MarketingHomePage() {
   return (
-    <SiteShell
-      current="/#detector"
-      navItems={MARKETING_NAV_ITEMS}
-      ctaHref="/register"
-      ctaLabel="注册"
-      hideFooter
-    >
+    <SiteShell current="/#detector" hideFooter>
       <main style={styles.page}>
         <style>{`
           @keyframes heroBadgePulse {
@@ -157,7 +103,7 @@ export default function MarketingHomePage() {
             <h1 style={styles.heroTitle}>帮助品牌在AI搜索中被看见</h1>
             <div style={styles.metricRow}>
               <div style={{ ...styles.metricItem, borderLeft: "none" }}>
-                <strong style={styles.metricValue}>多平台</strong>
+                <strong style={styles.metricValue}>6大</strong>
                 <span style={styles.metricLabel}>AI 平台覆盖</span>
               </div>
               <div style={styles.metricItem}>
@@ -169,8 +115,8 @@ export default function MarketingHomePage() {
                 <span style={styles.metricLabel}>闭环见效周期</span>
               </div>
               <div style={styles.metricItem}>
-                <strong style={styles.metricValue}>500+</strong>
-                <span style={styles.metricLabel}>品牌已接入</span>
+                <strong style={styles.metricValue}>60+</strong>
+                <span style={styles.metricLabel}>行业品牌已收录</span>
               </div>
             </div>
           </div>
@@ -182,25 +128,13 @@ export default function MarketingHomePage() {
           </div>
         </section>
 
-        <section style={styles.workflowSection}>
-          <div style={styles.sectionHead}>
-            <h2 style={styles.sectionTitle}>用流程驱动品牌在 AI 场景中的持续增长</h2>
-            <div style={styles.sectionAccent}>董逻辑 MGEO 的核心不是单点功能，而是完整闭环</div>
-            <p style={styles.sectionText}>
-              围绕公司信息、问题训练、文章训练、发布系统、效果监测和数据统计六大环节，构建从诊断到优化的完整运营链路。
-            </p>
-          </div>
-          <div style={styles.workflowGrid}>
-            {workflowCards.map((item) => (
-              <article key={item.id} style={styles.workflowCard}>
-                <div style={styles.workflowId}>{item.id}</div>
-                <h3 style={styles.workflowTitle}>{item.title}</h3>
-                {item.lines.map((line) => (
-                  <p key={line} style={styles.workflowLine}>
-                    {line}
-                  </p>
-                ))}
-              </article>
+        <section style={styles.coveredIndustriesSection}>
+          <div style={styles.coveredIndustriesLabel}>已覆盖行业</div>
+          <div style={styles.coveredIndustriesWrap}>
+            {coveredIndustries.map((item) => (
+              <span key={item} style={styles.coveredIndustryTag}>
+                {item}
+              </span>
             ))}
           </div>
         </section>
@@ -259,11 +193,7 @@ export default function MarketingHomePage() {
                         )}
                       </td>
                       <td style={styles.td}>
-                        {consistency === "-" ? (
-                          "-"
-                        ) : (
-                          <span style={styles.warningStatus}>❌ {consistency}</span>
-                        )}
+                        {consistency === "-" ? "-" : <span style={styles.warningStatus}>❌ {consistency}</span>}
                       </td>
                       <td style={styles.td}>{status}</td>
                     </tr>
@@ -274,25 +204,20 @@ export default function MarketingHomePage() {
           </div>
         </section>
 
-        <section style={styles.deliverySection}>
+        <section style={styles.workflowSection}>
           <div style={styles.sectionHead}>
-            <h2 style={styles.sectionTitle}>30天完成一轮可追踪、可复盘的 MGEO 交付闭环</h2>
-            <div style={styles.sectionAccent}>以标准化交付路径支撑品牌持续增长</div>
-            <p style={styles.sectionTextWide}>
-              董逻辑 MGEO 将诊断、内容适配与持续优化拆解为清晰阶段，帮助品牌在 AI 场景中稳定提升可见性与理解一致性。
+            <h2 style={styles.sectionTitle}>从一次检测到持续增长的 6 步路径</h2>
+            <div style={styles.sectionAccent}>保留流程，但不再重复讲同一件事</div>
+            <p style={styles.sectionText}>
+              先检测，再诊断，再执行。每一步都服务于品牌在 AI 场景中的长期可见性增长。
             </p>
           </div>
-
-          <div style={styles.deliveryGrid}>
-            {deliveryCards.map((item) => (
-              <article key={item.day} style={styles.deliveryCard}>
-                <div style={styles.deliveryDay}>{item.day}</div>
-                <h3 style={styles.deliveryTitle}>{item.title}</h3>
-                {item.lines.map((line) => (
-                  <p key={line} style={styles.deliveryText}>
-                    {line}
-                  </p>
-                ))}
+          <div style={styles.workflowGrid}>
+            {workflowCards.map((item) => (
+              <article key={item.id} style={styles.workflowCard}>
+                <div style={styles.workflowId}>{item.id}</div>
+                <h3 style={styles.workflowTitle}>{item.title}</h3>
+                <p style={styles.workflowLine}>{item.desc}</p>
               </article>
             ))}
           </div>
@@ -519,9 +444,37 @@ const styles: Record<string, React.CSSProperties> = {
     maxWidth: 1000,
     margin: "0 auto",
   },
+  coveredIndustriesSection: {
+    maxWidth: 1180,
+    margin: "60px auto 0",
+    padding: "0 24px",
+    display: "grid",
+    justifyItems: "center",
+    gap: 18,
+  },
+  coveredIndustriesLabel: {
+    fontSize: 14,
+    color: "#8a909d",
+    fontWeight: 700,
+    textAlign: "center",
+  },
+  coveredIndustriesWrap: {
+    display: "flex",
+    justifyContent: "center",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  coveredIndustryTag: {
+    padding: "6px 16px",
+    borderRadius: 20,
+    background: "#F5F5F3",
+    color: "#666666",
+    fontSize: 13,
+    lineHeight: 1.4,
+  },
   workflowSection: {
     maxWidth: 1180,
-    margin: "90px auto 0",
+    margin: "60px auto 0",
     padding: "0 24px",
   },
   sectionHead: {
@@ -570,7 +523,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: "1px solid #dfe4ec",
     borderRadius: 28,
     padding: 30,
-    minHeight: 334,
+    minHeight: 220,
     boxShadow: "0 20px 50px rgba(15, 23, 42, 0.05)",
   },
   workflowId: {
@@ -595,7 +548,7 @@ const styles: Record<string, React.CSSProperties> = {
   workflowLine: {
     margin: "18px 0 0",
     fontSize: 16,
-    lineHeight: 1.9,
+    lineHeight: 1.8,
     color: "#4f5562",
     paddingTop: 18,
     borderTop: "1px solid #edf0f4",
@@ -718,43 +671,6 @@ const styles: Record<string, React.CSSProperties> = {
   warningStatus: {
     color: "#202226",
     fontWeight: 500,
-  },
-  deliverySection: {
-    maxWidth: 1180,
-    margin: "92px auto 0",
-    padding: "0 24px",
-  },
-  deliveryGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 22,
-    marginTop: 38,
-  },
-  deliveryCard: {
-    background: "linear-gradient(135deg, #111317 0%, #0f1518 45%, #0f3b31 100%)",
-    borderRadius: 28,
-    padding: 30,
-    minHeight: 360,
-    color: "#ffffff",
-  },
-  deliveryDay: {
-    color: "#54e0c1",
-    fontSize: 16,
-    fontWeight: 800,
-  },
-  deliveryTitle: {
-    margin: "24px 0 0",
-    fontSize: 30,
-    lineHeight: 1.2,
-    fontWeight: 800,
-  },
-  deliveryText: {
-    margin: "18px 0 0",
-    color: "rgba(255,255,255,0.82)",
-    fontSize: 16,
-    lineHeight: 1.85,
-    paddingTop: 18,
-    borderTop: "1px solid rgba(255,255,255,0.12)",
   },
   ctaSection: {
     maxWidth: 1180,
