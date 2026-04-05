@@ -293,8 +293,8 @@ export default function MarketingHomePage() {
               董逻辑 MGEO 以清晰的检测入口建立认知，以标准化交付完成优化，以持续监测与复盘推动长期增长，让每一步都可理解、可执行、可追踪。
             </p>
             <div style={styles.ctaActions}>
-              <Link href="/detect" style={styles.ctaPrimary}>
-                立即开始检测
+              <Link href="/#detector" style={styles.ctaPrimary}>
+                免费检测
               </Link>
               <Link href="/pricing" style={styles.ctaSecondary}>
                 查看服务方案
@@ -391,7 +391,9 @@ export default function MarketingHomePage() {
             </span>
           ))}
         </div>
-        <div style={styles.footerCopyright}>Copyright © 2026 董逻辑MGEO. 保留所有权利。</div>
+        <div style={styles.footerCopyright}>
+          Copyright © 2026 董逻辑MGEO. 保留所有权利。MGEO概念于2026年4月1日全网首发
+        </div>
       </footer>
     </SiteShell>
   );

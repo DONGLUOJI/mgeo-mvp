@@ -171,6 +171,12 @@ export default function WhitepaperPage() {
             </div>
           </section>
         </div>
+
+        <footer style={styles.footer}>
+          <div style={styles.footerCopyright}>
+            Copyright © 2026 董逻辑MGEO. 保留所有权利。MGEO概念于2026年4月1日全网首发
+          </div>
+        </footer>
       </main>
     </SiteShell>
   );
@@ -204,7 +210,8 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: "center",
     gap: 40,
     color: "rgba(255,255,255,0.7)",
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: 500,
     flexWrap: "wrap",
   },
   mainContent: {
@@ -358,5 +365,15 @@ const styles: Record<string, React.CSSProperties> = {
     textDecoration: "none",
     fontWeight: 600,
     background: "rgba(255,255,255,0.04)",
+  },
+  footer: {
+    padding: "18px 24px 22px",
+    borderTop: "1px solid #e4e8ef",
+    textAlign: "center",
+    background: "#1f1f22",
+  },
+  footerCopyright: {
+    color: "#8d93a0",
+    fontSize: 14,
   },
 };

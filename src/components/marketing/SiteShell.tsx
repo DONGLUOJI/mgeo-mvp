@@ -37,14 +37,8 @@ export function SiteShell({
 
           <nav style={styles.nav}>
             {navItems.map((item) => {
-              const active = current === item.href;
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  style={styles.navLink}
-                >
+                <Link key={item.href} href={item.href} style={styles.navLink}>
                   {item.label}
                 </Link>
               );
