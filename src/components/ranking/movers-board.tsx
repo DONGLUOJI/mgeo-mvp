@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { IndustryTrendChart } from "./industry-trend-chart";
 
 type MoversBoardProps = {
@@ -70,21 +68,6 @@ export function MoversBoard({ risers, fallers, overview, industryTrends }: Mover
       </div>
 
       <IndustryTrendChart series={industryTrends} />
-
-      <div style={styles.cta}>
-        <div>
-          <div style={styles.ctaTitle}>不想排名下跌？</div>
-          <div style={styles.ctaText}>先从免费检测开始，后续可以再接入排名波动通知和竞品对比。</div>
-        </div>
-        <div style={styles.ctaActions}>
-          <Link href="/register" style={styles.ctaPrimary}>
-            注册免费版
-          </Link>
-          <Link href="/pricing" style={styles.ctaSecondary}>
-            查看优化方案
-          </Link>
-        </div>
-      </div>
     </section>
   );
 }
@@ -193,53 +176,5 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     color: "#4b5563",
     textAlign: "right",
-  },
-  cta: {
-    borderRadius: 24,
-    background: "#111827",
-    padding: "22px 24px",
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 16,
-    alignItems: "center",
-    flexWrap: "wrap",
-  },
-  ctaTitle: {
-    fontSize: 24,
-    fontWeight: 800,
-    color: "#ffffff",
-  },
-  ctaText: {
-    marginTop: 8,
-    fontSize: 15,
-    lineHeight: 1.7,
-    color: "rgba(255,255,255,0.72)",
-  },
-  ctaActions: {
-    display: "flex",
-    gap: 12,
-    flexWrap: "wrap",
-  },
-  ctaPrimary: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "12px 16px",
-    borderRadius: 12,
-    textDecoration: "none",
-    background: "#ffffff",
-    color: "#111827",
-    fontWeight: 700,
-  },
-  ctaSecondary: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "12px 16px",
-    borderRadius: 12,
-    textDecoration: "none",
-    border: "1px solid rgba(255,255,255,0.2)",
-    color: "#ffffff",
-    fontWeight: 700,
   },
 };

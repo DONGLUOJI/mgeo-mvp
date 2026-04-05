@@ -135,6 +135,18 @@ export function PlatformCoverage({
           data={PLATFORM_OPTIONS.map((platform) => ({
             label: PLATFORM_LABELS[platform.key],
             rate: Math.round(platformStats[platform.key].rate * 100),
+            color:
+              platform.key === "doubao"
+                ? "#C26A4A"
+                : platform.key === "deepseek"
+                  ? "#4F7FF5"
+                  : platform.key === "kimi"
+                    ? "#7967D8"
+                    : platform.key === "qianwen"
+                      ? "#D58E2A"
+                      : platform.key === "yuanbao"
+                        ? "#2F9B7C"
+                        : "#C15A7D",
           }))}
         />
       </div>
