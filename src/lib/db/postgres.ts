@@ -116,6 +116,25 @@ export async function ensurePostgresSchema() {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS trending_queries (
+        id TEXT PRIMARY KEY,
+        industry TEXT NOT NULL,
+        query_text TEXT NOT NULL,
+        heat_score INTEGER NOT NULL DEFAULT 0,
+        brand_count INTEGER NOT NULL DEFAULT 0,
+        trend_direction TEXT NOT NULL DEFAULT 'stable',
+        brands_mentioned_json TEXT,
+        snapshot_date DATE NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_trending_industry_date
+      ON trending_queries(industry, snapshot_date);
+    `);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS monitored_keywords (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL REFERENCES users(id),
@@ -155,6 +174,10 @@ export async function ensurePostgresSchema() {
     `);
 
     await client.query(`
+      ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS brand_logo_url TEXT;
+      ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS rank_position INTEGER;
+      ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS prev_tca_total REAL;
+      ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS platform_detail_json TEXT;
       ALTER TABLE customers ADD COLUMN IF NOT EXISTS user_id TEXT REFERENCES users(id);
       ALTER TABLE scan_tasks ADD COLUMN IF NOT EXISTS user_id TEXT REFERENCES users(id);
       ALTER TABLE scan_reports ADD COLUMN IF NOT EXISTS user_id TEXT REFERENCES users(id);

@@ -14,6 +14,7 @@ type DetectFormProps = {
   embedded?: boolean;
   title?: string;
   description?: string;
+  initialBrandName?: string;
   quota?: {
     used: number;
     limit: number;
@@ -27,11 +28,12 @@ export function DetectForm({
   embedded = false,
   title = "输入品牌信息，生成一份 MGEO 检测报告",
   description = "系统会根据您填写的品牌信息与检测问题，并发调用多个模型，快速生成一份围绕 Consistency、Coverage、Authority 的检测结果。",
+  initialBrandName = "",
   quota = null,
 }: DetectFormProps) {
   const router = useRouter();
 
-  const [brandName, setBrandName] = useState("");
+  const [brandName, setBrandName] = useState(initialBrandName);
   const [industry, setIndustry] = useState("");
   const [businessSummary, setBusinessSummary] = useState("");
   const [query, setQuery] = useState("");

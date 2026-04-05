@@ -89,6 +89,21 @@ function initializeSqlite(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_ranking_industry_date
     ON ranking_snapshots(industry, snapshot_date);
 
+    CREATE TABLE IF NOT EXISTS trending_queries (
+      id TEXT PRIMARY KEY,
+      industry TEXT NOT NULL,
+      query_text TEXT NOT NULL,
+      heat_score INTEGER NOT NULL DEFAULT 0,
+      brand_count INTEGER NOT NULL DEFAULT 0,
+      trend_direction TEXT NOT NULL DEFAULT 'stable',
+      brands_mentioned_json TEXT,
+      snapshot_date TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_trending_industry_date
+    ON trending_queries(industry, snapshot_date);
+
     CREATE TABLE IF NOT EXISTS monitored_keywords (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL REFERENCES users(id),
@@ -120,6 +135,31 @@ function initializeSqlite(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_monitor_results_keyword_checked
     ON monitor_results(keyword_id, checked_at);
   `);
+
+  ensureColumn(
+    db,
+    "ranking_snapshots",
+    "brand_logo_url",
+    "ALTER TABLE ranking_snapshots ADD COLUMN brand_logo_url TEXT"
+  );
+  ensureColumn(
+    db,
+    "ranking_snapshots",
+    "rank_position",
+    "ALTER TABLE ranking_snapshots ADD COLUMN rank_position INTEGER"
+  );
+  ensureColumn(
+    db,
+    "ranking_snapshots",
+    "prev_tca_total",
+    "ALTER TABLE ranking_snapshots ADD COLUMN prev_tca_total REAL"
+  );
+  ensureColumn(
+    db,
+    "ranking_snapshots",
+    "platform_detail_json",
+    "ALTER TABLE ranking_snapshots ADD COLUMN platform_detail_json TEXT"
+  );
 
   ensureColumn(
     db,

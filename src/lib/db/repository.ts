@@ -52,6 +52,14 @@ type RankingSnapshotRecord = {
   createdAt: string;
 };
 
+type RankingSeed = {
+  industry: string;
+  brandName: string;
+  tcaTotal: number;
+  platformCoverage: number;
+  delta7d: number;
+};
+
 type UserRecord = {
   id: string;
   email: string;
@@ -106,73 +114,58 @@ type DetectQuotaRecord = {
   plan: string;
 };
 
-const mockRankingSnapshots: RankingSnapshotRecord[] = [
-  {
-    id: "rank_tea_001",
-    industry: "本地生活",
-    brandName: "董逻辑MGEO",
-    tcaTotal: 82,
-    tcaConsistency: 84,
-    tcaCoverage: 78,
-    tcaAuthority: 81,
-    platformCoverage: 5,
-    delta7d: 5.2,
-    snapshotDate: "2026-04-05",
-    createdAt: "2026-04-05T09:00:00.000Z",
-  },
-  {
-    id: "rank_service_001",
-    industry: "营销咨询",
-    brandName: "品牌增长实验室",
-    tcaTotal: 76,
-    tcaConsistency: 75,
-    tcaCoverage: 72,
-    tcaAuthority: 80,
-    platformCoverage: 4,
-    delta7d: -1.3,
-    snapshotDate: "2026-04-05",
-    createdAt: "2026-04-05T09:00:00.000Z",
-  },
-  {
-    id: "rank_service_002",
-    industry: "企业服务",
-    brandName: "智能获客引擎",
-    tcaTotal: 74,
-    tcaConsistency: 71,
-    tcaCoverage: 77,
-    tcaAuthority: 73,
-    platformCoverage: 4,
-    delta7d: 2.6,
-    snapshotDate: "2026-04-05",
-    createdAt: "2026-04-05T09:00:00.000Z",
-  },
-  {
-    id: "rank_edu_001",
-    industry: "教育",
-    brandName: "知行课堂",
-    tcaTotal: 69,
-    tcaConsistency: 68,
-    tcaCoverage: 66,
-    tcaAuthority: 73,
-    platformCoverage: 4,
-    delta7d: 1.1,
-    snapshotDate: "2026-04-05",
-    createdAt: "2026-04-05T09:00:00.000Z",
-  },
-  {
-    id: "rank_retail_001",
-    industry: "连锁品牌",
-    brandName: "城市门店增长中心",
-    tcaTotal: 65,
-    tcaConsistency: 63,
-    tcaCoverage: 68,
-    tcaAuthority: 64,
-    platformCoverage: 3,
-    delta7d: -0.8,
-    snapshotDate: "2026-04-05",
-    createdAt: "2026-04-05T09:00:00.000Z",
-  },
+const mockRankingSeeds: RankingSeed[] = [
+  { industry: "新茶饮", brandName: "喜茶", tcaTotal: 86, platformCoverage: 6, delta7d: 3.8 },
+  { industry: "新茶饮", brandName: "霸王茶姬", tcaTotal: 84, platformCoverage: 6, delta7d: 5.6 },
+  { industry: "新茶饮", brandName: "茶百道", tcaTotal: 79, platformCoverage: 5, delta7d: -1.2 },
+  { industry: "新茶饮", brandName: "沪上阿姨", tcaTotal: 75, platformCoverage: 5, delta7d: 2.1 },
+  { industry: "新茶饮", brandName: "奈雪的茶", tcaTotal: 74, platformCoverage: 4, delta7d: -2.4 },
+  { industry: "新茶饮", brandName: "蜜雪冰城", tcaTotal: 72, platformCoverage: 5, delta7d: 1.7 },
+  { industry: "餐饮连锁", brandName: "海底捞", tcaTotal: 88, platformCoverage: 6, delta7d: 4.4 },
+  { industry: "餐饮连锁", brandName: "西贝", tcaTotal: 77, platformCoverage: 5, delta7d: 1.2 },
+  { industry: "餐饮连锁", brandName: "巴奴火锅", tcaTotal: 75, platformCoverage: 5, delta7d: 3.4 },
+  { industry: "餐饮连锁", brandName: "外婆家", tcaTotal: 71, platformCoverage: 4, delta7d: -1.5 },
+  { industry: "餐饮连锁", brandName: "绿茶餐厅", tcaTotal: 68, platformCoverage: 4, delta7d: -0.7 },
+  { industry: "餐饮连锁", brandName: "太二酸菜鱼", tcaTotal: 67, platformCoverage: 4, delta7d: 2.9 },
+  { industry: "教培", brandName: "新东方", tcaTotal: 90, platformCoverage: 6, delta7d: 4.9 },
+  { industry: "教培", brandName: "学而思", tcaTotal: 84, platformCoverage: 6, delta7d: -1.1 },
+  { industry: "教培", brandName: "火花思维", tcaTotal: 76, platformCoverage: 5, delta7d: 2.2 },
+  { industry: "教培", brandName: "猿辅导", tcaTotal: 74, platformCoverage: 5, delta7d: 3.1 },
+  { industry: "教培", brandName: "高途", tcaTotal: 71, platformCoverage: 4, delta7d: -2.6 },
+  { industry: "教培", brandName: "作业帮", tcaTotal: 69, platformCoverage: 4, delta7d: 0.9 },
+  { industry: "家政服务", brandName: "天鹅到家", tcaTotal: 81, platformCoverage: 5, delta7d: 6.3 },
+  { industry: "家政服务", brandName: "好慷在家", tcaTotal: 78, platformCoverage: 5, delta7d: 2.7 },
+  { industry: "家政服务", brandName: "58到家", tcaTotal: 74, platformCoverage: 4, delta7d: -1.8 },
+  { industry: "家政服务", brandName: "轻喜到家", tcaTotal: 70, platformCoverage: 4, delta7d: 1.9 },
+  { industry: "家政服务", brandName: "阿姨来了", tcaTotal: 67, platformCoverage: 3, delta7d: -0.9 },
+  { industry: "家政服务", brandName: "无忧保姆", tcaTotal: 63, platformCoverage: 3, delta7d: -3.4 },
+  { industry: "美妆护肤", brandName: "珀莱雅", tcaTotal: 87, platformCoverage: 6, delta7d: 5.8 },
+  { industry: "美妆护肤", brandName: "薇诺娜", tcaTotal: 83, platformCoverage: 5, delta7d: 2.6 },
+  { industry: "美妆护肤", brandName: "花西子", tcaTotal: 78, platformCoverage: 5, delta7d: -2.1 },
+  { industry: "美妆护肤", brandName: "可复美", tcaTotal: 75, platformCoverage: 4, delta7d: 3.5 },
+  { industry: "美妆护肤", brandName: "橘朵", tcaTotal: 70, platformCoverage: 4, delta7d: 1.4 },
+  { industry: "美妆护肤", brandName: "HBN", tcaTotal: 68, platformCoverage: 4, delta7d: -1.7 },
+  { industry: "企业服务", brandName: "飞书", tcaTotal: 89, platformCoverage: 6, delta7d: 4.2 },
+  { industry: "企业服务", brandName: "钉钉", tcaTotal: 85, platformCoverage: 6, delta7d: 1.3 },
+  { industry: "企业服务", brandName: "企微服务通", tcaTotal: 77, platformCoverage: 5, delta7d: 2.4 },
+  { industry: "企业服务", brandName: "销售易", tcaTotal: 74, platformCoverage: 5, delta7d: -1.4 },
+  { industry: "企业服务", brandName: "纷享销客", tcaTotal: 71, platformCoverage: 4, delta7d: 0.8 },
+  { industry: "企业服务", brandName: "金蝶云星空", tcaTotal: 69, platformCoverage: 4, delta7d: -2.8 },
 ];
+
+const mockRankingSnapshots: RankingSnapshotRecord[] = mockRankingSeeds.map((seed, index) => ({
+  id: `rank_${index + 1}`,
+  industry: seed.industry,
+  brandName: seed.brandName,
+  tcaTotal: seed.tcaTotal,
+  tcaConsistency: Math.max(52, Math.min(98, seed.tcaTotal + (index % 3 === 0 ? 2 : -1))),
+  tcaCoverage: Math.max(50, Math.min(98, seed.tcaTotal - 3 + (index % 4))),
+  tcaAuthority: Math.max(51, Math.min(98, seed.tcaTotal + (index % 5) - 2)),
+  platformCoverage: seed.platformCoverage,
+  delta7d: seed.delta7d,
+  snapshotDate: "2026-04-05",
+  createdAt: "2026-04-05T09:00:00.000Z",
+}));
 
 function buildCustomerId(brandName: string) {
   const normalized = brandName
