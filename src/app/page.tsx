@@ -142,11 +142,14 @@ export default function MarketingHomePage() {
       <main style={styles.page}>
         <section style={styles.hero}>
           <div style={styles.heroInner}>
-            <div style={styles.heroBadge}>多模式生成式引擎</div>
+            <div style={styles.heroBadge}>
+              <span style={styles.heroBadgeDot} />
+              <span>多模式生成式引擎</span>
+            </div>
             <h1 style={styles.heroTitle}>帮助品牌在AI搜索中被看见</h1>
             <div style={styles.metricRow}>
               <div style={styles.metricItem}>
-                <strong style={styles.metricValue}>6大</strong>
+                <strong style={styles.metricValue}>多平台</strong>
                 <span style={styles.metricLabel}>AI 平台覆盖</span>
               </div>
               <div style={styles.metricDivider} />
@@ -412,14 +415,22 @@ const styles: Record<string, React.CSSProperties> = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    height: 64,
+    gap: 12,
+    height: 58,
     padding: "0 28px",
     borderRadius: 999,
-    background: "rgba(8, 83, 72, 0.4)",
-    border: "1px solid rgba(22, 163, 148, 0.7)",
-    color: "#2dd4bf",
-    fontSize: 20,
+    background: "rgba(7, 54, 48, 0.44)",
+    border: "1px solid rgba(12, 148, 131, 0.65)",
+    color: "#13c6b2",
+    fontSize: 18,
     fontWeight: 700,
+  },
+  heroBadgeDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 999,
+    background: "#14d7c0",
+    boxShadow: "0 0 0 6px rgba(20, 215, 192, 0.16), 0 0 18px rgba(20, 215, 192, 0.9)",
   },
   heroTitle: {
     margin: "56px 0 0",
@@ -440,10 +451,10 @@ const styles: Record<string, React.CSSProperties> = {
     display: "grid",
     justifyItems: "center",
     gap: 8,
-    minWidth: 150,
+    minWidth: 168,
   },
   metricValue: {
-    fontSize: 38,
+    fontSize: 36,
     lineHeight: 1,
     fontWeight: 800,
     color: "#ffffff",
