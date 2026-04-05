@@ -173,9 +173,7 @@ export default function WhitepaperPage() {
         </div>
 
         <footer style={styles.footer}>
-          <div style={styles.footerCopyright}>
-            Copyright © 2026 董逻辑MGEO. 保留所有权利。MGEO概念于2026年4月1日全网首发
-          </div>
+          <div style={styles.footerCopyright}>Copyright © 2026 董逻辑MGEO. 保留所有权利。</div>
         </footer>
       </main>
     </SiteShell>

@@ -37,8 +37,17 @@ export function SiteShell({
 
           <nav style={styles.nav}>
             {navItems.map((item) => {
+              const active = current === item.href;
               return (
-                <Link key={item.href} href={item.href} style={styles.navLink}>
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  style={{
+                    ...styles.navLink,
+                    ...(active ? styles.navLinkActive : {}),
+                  }}
+                >
                   {item.label}
                 </Link>
               );
@@ -132,6 +141,10 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 18,
     fontWeight: 500,
     opacity: 0.8,
+  },
+  navLinkActive: {
+    color: "#0a7c66",
+    opacity: 1,
   },
   auth: {
     display: "flex",
