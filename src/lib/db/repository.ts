@@ -1,7 +1,7 @@
 import type { DetectReport } from "@/lib/detect/types";
 import { getPlanConfig } from "@/lib/auth/plans";
 import { queryPostgres } from "@/lib/db/postgres";
-import { db } from "@/lib/db/sqlite";
+import { getSqliteDb } from "@/lib/db/sqlite";
 
 type ScanReportRecord = {
   taskId: string;
@@ -192,6 +192,10 @@ function usePostgres() {
   return Boolean(process.env.DATABASE_URL);
 }
 
+function sqlite() {
+  return getSqliteDb();
+}
+
 function getMonthlyLimit(plan: string) {
   return getPlanConfig(plan).monthlyDetectLimit;
 }
@@ -365,7 +369,7 @@ export async function getUserByEmail(email: string): Promise<UserRecord | null> 
     return result.rows[0] ? mapUserRow(result.rows[0]) : null;
   }
 
-  const stmt = db.prepare(`
+  const stmt = sqlite().prepare(`
     SELECT id, email, name, plan, monthly_detect_count, monthly_detect_reset_at, created_at, updated_at, stripe_customer_id, stripe_subscription_id
     FROM users WHERE email = ?
   `);
@@ -408,7 +412,7 @@ export async function getUserById(userId: string): Promise<UserRecord | null> {
     return result.rows[0] ? mapUserRow(result.rows[0]) : null;
   }
 
-  const stmt = db.prepare(`
+  const stmt = sqlite().prepare(`
     SELECT id, email, name, plan, monthly_detect_count, monthly_detect_reset_at, created_at, updated_at, stripe_customer_id, stripe_subscription_id
     FROM users WHERE id = ?
   `);
@@ -450,7 +454,7 @@ export async function createUserIfMissing(email: string, name?: string | null): 
       [userId, normalizedEmail, name || null, now, now]
     );
   } else {
-    const stmt = db.prepare(`
+    const stmt = sqlite().prepare(`
       INSERT OR IGNORE INTO users (
         id, email, name, plan, monthly_detect_count, monthly_detect_reset_at, created_at, updated_at
       ) VALUES (?, ?, ?, 'free', 0, NULL, ?, ?)
@@ -497,7 +501,7 @@ export async function consumeDetectQuota(userId: string): Promise<DetectQuotaRec
       [userId, nextUsed, monthAnchor, now]
     );
   } else {
-    const stmt = db.prepare(`
+    const stmt = sqlite().prepare(`
       UPDATE users
       SET monthly_detect_count = ?,
           monthly_detect_reset_at = ?,
@@ -553,7 +557,7 @@ export async function updateUserPlan(
     return;
   }
 
-  const stmt = db.prepare(`
+  const stmt = sqlite().prepare(`
     UPDATE users
     SET plan = ?,
         stripe_customer_id = COALESCE(?, stripe_customer_id),
@@ -610,7 +614,7 @@ export async function addMonitoredKeyword(input: {
       ]
     );
   } else {
-    db.prepare(`
+    sqlite().prepare(`
       INSERT INTO monitored_keywords (
         id, user_id, brand_name, keyword, industry, business_summary, selected_models_json, is_active, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
@@ -653,7 +657,7 @@ export async function listMonitoredKeywords(userId: string): Promise<MonitoredKe
     return result.rows.map(mapKeywordRow);
   }
 
-  const rows = db
+  const rows = sqlite()
     .prepare(`
       SELECT id, user_id, brand_name, keyword, industry, business_summary, selected_models_json, is_active, created_at
       FROM monitored_keywords
@@ -681,7 +685,7 @@ export async function deleteMonitoredKeyword(id: string, userId: string) {
     return;
   }
 
-  db.prepare(`DELETE FROM monitored_keywords WHERE id = ? AND user_id = ?`).run(id, userId);
+  sqlite().prepare(`DELETE FROM monitored_keywords WHERE id = ? AND user_id = ?`).run(id, userId);
 }
 
 export async function saveMonitorResult(input: {
@@ -716,7 +720,7 @@ export async function saveMonitorResult(input: {
     return id;
   }
 
-  db.prepare(`
+  sqlite().prepare(`
     INSERT INTO monitor_results (
       id, keyword_id, user_id, tca_total, tca_consistency, tca_coverage, tca_authority, tca_level, result_json, checked_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -760,7 +764,7 @@ export async function listMonitorResults(keywordId: string, userId: string): Pro
     return result.rows.map(mapMonitorResultRow);
   }
 
-  const rows = db
+  const rows = sqlite()
     .prepare(`
       SELECT id, keyword_id, user_id, tca_total, tca_consistency, tca_coverage, tca_authority, tca_level, result_json, checked_at
       FROM monitor_results
@@ -818,7 +822,7 @@ export async function listMonitorTrend(userId: string, days = 30): Promise<Monit
   }
 
   const anchor = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-  const rows = db
+  const rows = sqlite()
     .prepare(`
       SELECT
         substr(checked_at, 1, 10) AS date,
@@ -872,7 +876,7 @@ export async function listActiveMonitoredKeywords(): Promise<MonitoredKeywordRec
     return result.rows.map(mapKeywordRow);
   }
 
-  const rows = db
+  const rows = sqlite()
     .prepare(`
       SELECT id, user_id, brand_name, keyword, industry, business_summary, selected_models_json, is_active, created_at
       FROM monitored_keywords
@@ -1034,7 +1038,7 @@ export async function saveReport(taskId: string, report: DetectReport, userId?: 
     return;
   }
 
-  const upsertCustomerStmt = db.prepare(`
+  const upsertCustomerStmt = sqlite().prepare(`
     INSERT INTO customers (
       customer_id,
       brand_name,
@@ -1059,7 +1063,7 @@ export async function saveReport(taskId: string, report: DetectReport, userId?: 
       updated_at = excluded.updated_at
   `);
 
-  const upsertTaskStmt = db.prepare(`
+  const upsertTaskStmt = sqlite().prepare(`
     INSERT OR REPLACE INTO scan_tasks (
       task_id,
       customer_id,
@@ -1083,7 +1087,7 @@ export async function saveReport(taskId: string, report: DetectReport, userId?: 
     )
   `);
 
-  const upsertReportStmt = db.prepare(`
+  const upsertReportStmt = sqlite().prepare(`
     INSERT OR REPLACE INTO scan_reports (
       task_id,
       brand_name,
@@ -1142,7 +1146,7 @@ export async function getReport(taskId: string, userId?: string | null): Promise
     return JSON.parse(row.report_json) as DetectReport;
   }
 
-  const stmt = db.prepare(`SELECT report_json, user_id FROM scan_reports WHERE task_id = ?`);
+  const stmt = sqlite().prepare(`SELECT report_json, user_id FROM scan_reports WHERE task_id = ?`);
   const row = stmt.get(taskId) as { report_json: string; user_id: string | null } | undefined;
   if (!row) return null;
   if (row.user_id && row.user_id !== userId) return null;
@@ -1171,7 +1175,7 @@ export async function listReports(limit = 20, userId?: string): Promise<ScanRepo
     return result.rows.map(mapReportRow);
   }
 
-  const stmt = db.prepare(`
+  const stmt = sqlite().prepare(`
     SELECT task_id, brand_name, report_json, user_id, created_at
     FROM scan_reports
     ${userId ? "WHERE user_id = ?" : ""}
@@ -1199,7 +1203,7 @@ export async function deleteReport(taskId: string, userId?: string) {
     return;
   }
 
-  const stmt = db.prepare(
+  const stmt = sqlite().prepare(
     `DELETE FROM scan_reports WHERE task_id = ? ${userId ? "AND user_id = ?" : ""}`
   );
   stmt.run(...(userId ? [taskId, userId] : [taskId]));
@@ -1239,7 +1243,7 @@ export async function listCustomers(limit = 50, userId?: string): Promise<Custom
     return result.rows.map(mapCustomerRow);
   }
 
-  const stmt = db.prepare(`
+  const stmt = sqlite().prepare(`
     SELECT
       c.customer_id,
       c.brand_name,
@@ -1296,7 +1300,7 @@ export async function listScanTasks(limit = 50, userId?: string): Promise<ScanTa
     return result.rows.map(mapTaskRow);
   }
 
-  const stmt = db.prepare(`
+  const stmt = sqlite().prepare(`
     SELECT task_id, customer_id, brand_name, industry, query, selected_models_json, execution_mode, created_at
     FROM scan_tasks
     ${userId ? "WHERE user_id = ?" : ""}
@@ -1351,7 +1355,7 @@ export async function getCustomer(customerId: string, userId?: string): Promise<
     return result.rows[0] ? mapCustomerRow(result.rows[0]) : null;
   }
 
-  const stmt = db.prepare(`
+  const stmt = sqlite().prepare(`
     SELECT
       c.customer_id,
       c.brand_name,
@@ -1413,7 +1417,7 @@ export async function listCustomerTasks(
     return result.rows.map(mapTaskRow);
   }
 
-  const stmt = db.prepare(`
+  const stmt = sqlite().prepare(`
     SELECT task_id, customer_id, brand_name, industry, query, selected_models_json, execution_mode, created_at
     FROM scan_tasks
     WHERE customer_id = ?
@@ -1545,7 +1549,7 @@ export async function listRankingSnapshots(options?: {
       params.push(anchor);
     }
 
-    const stmt = db.prepare(`
+    const stmt = sqlite().prepare(`
       SELECT id, industry, brand_name, tca_total, tca_consistency, tca_coverage, tca_authority,
         platform_coverage, delta_7d, snapshot_date, created_at
       FROM ranking_snapshots
