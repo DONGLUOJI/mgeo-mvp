@@ -69,6 +69,37 @@ export default async function RankingPage({
     }),
   ]);
 
+  const strongestPlatformEntry = Object.entries(platformData.platformStats).sort((a, b) => b[1].rate - a[1].rate)[0];
+  const platformOverview = {
+    trackedBrands: platformData.brands.length,
+    averageCoverageRate: platformData.brands.length
+      ? Math.round((platformData.brands.reduce((sum, brand) => sum + brand.coverageRate, 0) / platformData.brands.length) * 100)
+      : 0,
+    strongestPlatform:
+      strongestPlatformEntry?.[0] === "doubao"
+        ? "豆包"
+        : strongestPlatformEntry?.[0] === "deepseek"
+          ? "DeepSeek"
+          : strongestPlatformEntry?.[0] === "kimi"
+            ? "Kimi"
+            : strongestPlatformEntry?.[0] === "qianwen"
+              ? "千问"
+              : strongestPlatformEntry?.[0] === "yuanbao"
+                ? "元宝"
+                : "文心",
+  };
+  const hottestQuery = [...trendingData.queries].sort((a, b) => b.heatScore - a.heatScore)[0];
+  const trendingOverview = {
+    questionCount: trendingData.queries.length,
+    totalRecommendedBrands: trendingData.queries.reduce((sum, query) => sum + query.brandCount, 0),
+    hottestQuestion: hottestQuery?.queryText || "-",
+  };
+  const moversOverview = {
+    topRiser: moversData.risers[0] ? `${moversData.risers[0].brandName} ↑ ${moversData.risers[0].change.toFixed(1)}` : "-",
+    topFaller: moversData.fallers[0] ? `${moversData.fallers[0].brandName} ↓ ${Math.abs(moversData.fallers[0].change).toFixed(1)}` : "-",
+    trackedWeeks: moversData.industryTrends[0]?.data.length || 12,
+  };
+
   return (
     <SiteShell current="/ranking" ctaHref="/register" ctaLabel="注册">
       <main style={styles.page}>
@@ -118,17 +149,28 @@ export default async function RankingPage({
                   currentIndustry={currentIndustry}
                   currentPlatform={currentPlatform}
                   industries={INDUSTRY_OPTIONS}
+                  overview={platformOverview}
                   platformStats={platformData.platformStats}
                   brands={platformData.brands}
                 />
               ) : null}
 
               {currentTab === "trending" ? (
-                <TrendingQueries queries={trendingData.queries} industries={INDUSTRY_OPTIONS} currentIndustry={currentIndustry} />
+                <TrendingQueries
+                  queries={trendingData.queries}
+                  industries={INDUSTRY_OPTIONS}
+                  currentIndustry={currentIndustry}
+                  overview={trendingOverview}
+                />
               ) : null}
 
               {currentTab === "movers" ? (
-                <MoversBoard risers={moversData.risers} fallers={moversData.fallers} industryTrends={moversData.industryTrends} />
+                <MoversBoard
+                  risers={moversData.risers}
+                  fallers={moversData.fallers}
+                  overview={moversOverview}
+                  industryTrends={moversData.industryTrends}
+                />
               ) : null}
             </div>
           </section>

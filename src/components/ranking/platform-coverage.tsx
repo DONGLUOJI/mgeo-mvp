@@ -8,6 +8,11 @@ type PlatformCoverageProps = {
   currentIndustry: string;
   currentPlatform?: PlatformKey;
   industries: readonly string[];
+  overview: {
+    trackedBrands: number;
+    averageCoverageRate: number;
+    strongestPlatform: string;
+  };
   platformStats: Record<PlatformKey, { totalBrands: number; covered: number; rate: number }>;
   brands: Array<{
     brandName: string;
@@ -21,11 +26,27 @@ export function PlatformCoverage({
   currentIndustry,
   currentPlatform,
   industries,
+  overview,
   platformStats,
   brands,
 }: PlatformCoverageProps) {
   return (
     <section style={styles.section}>
+      <div style={styles.overviewGrid}>
+        <article style={styles.overviewCard}>
+          <div style={styles.overviewLabel}>参与统计品牌</div>
+          <div style={styles.overviewValue}>{overview.trackedBrands} 个</div>
+        </article>
+        <article style={styles.overviewCard}>
+          <div style={styles.overviewLabel}>平均覆盖率</div>
+          <div style={styles.overviewValue}>{overview.averageCoverageRate}%</div>
+        </article>
+        <article style={styles.overviewCard}>
+          <div style={styles.overviewLabel}>当前最强平台</div>
+          <div style={styles.overviewValue}>{overview.strongestPlatform}</div>
+        </article>
+      </div>
+
       <div>
         <h2 style={styles.title}>AI 平台覆盖率排行</h2>
         <p style={styles.text}>用平台平均覆盖率 + 品牌矩阵，直接回答“竞品覆盖了几个平台、我覆盖了几个”。</p>
@@ -94,6 +115,30 @@ const styles: Record<string, React.CSSProperties> = {
   section: {
     display: "grid",
     gap: 20,
+  },
+  overviewGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 16,
+  },
+  overviewCard: {
+    background: "#ffffff",
+    borderRadius: 22,
+    border: "1px solid #e5e7eb",
+    padding: "18px 20px",
+  },
+  overviewLabel: {
+    fontSize: 13,
+    color: "#6b7280",
+    fontWeight: 700,
+  },
+  overviewValue: {
+    marginTop: 10,
+    fontSize: 26,
+    lineHeight: 1.1,
+    letterSpacing: "-0.03em",
+    color: "#111827",
+    fontWeight: 800,
   },
   title: {
     margin: 0,

@@ -6,11 +6,31 @@ type TrendingQueriesProps = {
   queries: TrendingQueryRow[];
   industries: readonly string[];
   currentIndustry: string;
+  overview: {
+    questionCount: number;
+    totalRecommendedBrands: number;
+    hottestQuestion: string;
+  };
 };
 
-export function TrendingQueries({ queries, industries, currentIndustry }: TrendingQueriesProps) {
+export function TrendingQueries({ queries, industries, currentIndustry, overview }: TrendingQueriesProps) {
   return (
     <section style={styles.section}>
+      <div style={styles.overviewGrid}>
+        <article style={styles.overviewCard}>
+          <div style={styles.overviewLabel}>收录问题数</div>
+          <div style={styles.overviewValue}>{overview.questionCount} 个</div>
+        </article>
+        <article style={styles.overviewCard}>
+          <div style={styles.overviewLabel}>累计推荐品牌</div>
+          <div style={styles.overviewValue}>{overview.totalRecommendedBrands} 次</div>
+        </article>
+        <article style={styles.overviewCard}>
+          <div style={styles.overviewLabel}>当前最热问题</div>
+          <div style={styles.overviewValueSmall}>{overview.hottestQuestion}</div>
+        </article>
+      </div>
+
       <div>
         <h2 style={styles.title}>热门搜索问题榜</h2>
         <p style={styles.text}>让品牌方看到“用户到底在问什么”，从而决定内容、问答和投放的优先级。</p>
@@ -82,6 +102,37 @@ const styles: Record<string, React.CSSProperties> = {
   section: {
     display: "grid",
     gap: 20,
+  },
+  overviewGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 16,
+  },
+  overviewCard: {
+    background: "#ffffff",
+    borderRadius: 22,
+    border: "1px solid #e5e7eb",
+    padding: "18px 20px",
+  },
+  overviewLabel: {
+    fontSize: 13,
+    color: "#6b7280",
+    fontWeight: 700,
+  },
+  overviewValue: {
+    marginTop: 10,
+    fontSize: 26,
+    lineHeight: 1.1,
+    letterSpacing: "-0.03em",
+    color: "#111827",
+    fontWeight: 800,
+  },
+  overviewValueSmall: {
+    marginTop: 10,
+    fontSize: 18,
+    lineHeight: 1.45,
+    color: "#111827",
+    fontWeight: 800,
   },
   title: {
     margin: 0,

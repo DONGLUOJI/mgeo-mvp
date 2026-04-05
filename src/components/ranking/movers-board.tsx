@@ -5,15 +5,35 @@ import { IndustryTrendChart } from "./industry-trend-chart";
 type MoversBoardProps = {
   risers: Array<{ brandName: string; industry: string; change: number; currentScore: number }>;
   fallers: Array<{ brandName: string; industry: string; change: number; currentScore: number }>;
+  overview: {
+    topRiser: string;
+    topFaller: string;
+    trackedWeeks: number;
+  };
   industryTrends: Array<{
     industry: string;
     data: Array<{ week: string; avgScore: number }>;
   }>;
 };
 
-export function MoversBoard({ risers, fallers, industryTrends }: MoversBoardProps) {
+export function MoversBoard({ risers, fallers, overview, industryTrends }: MoversBoardProps) {
   return (
     <section style={styles.section}>
+      <div style={styles.overviewGrid}>
+        <article style={styles.overviewCard}>
+          <div style={styles.overviewLabel}>本周涨幅最高</div>
+          <div style={styles.overviewValueSmall}>{overview.topRiser}</div>
+        </article>
+        <article style={styles.overviewCard}>
+          <div style={styles.overviewLabel}>本周跌幅最高</div>
+          <div style={styles.overviewValueSmall}>{overview.topFaller}</div>
+        </article>
+        <article style={styles.overviewCard}>
+          <div style={styles.overviewLabel}>趋势追踪周期</div>
+          <div style={styles.overviewValue}>{overview.trackedWeeks} 周</div>
+        </article>
+      </div>
+
       <div>
         <h2 style={styles.title}>涨跌幅排行榜</h2>
         <p style={styles.text}>上升和下滑是最具讨论度的内容。把波动做出来，品牌方就更容易形成每周回看习惯。</p>
@@ -73,6 +93,37 @@ const styles: Record<string, React.CSSProperties> = {
   section: {
     display: "grid",
     gap: 20,
+  },
+  overviewGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 16,
+  },
+  overviewCard: {
+    background: "#ffffff",
+    borderRadius: 22,
+    border: "1px solid #e5e7eb",
+    padding: "18px 20px",
+  },
+  overviewLabel: {
+    fontSize: 13,
+    color: "#6b7280",
+    fontWeight: 700,
+  },
+  overviewValue: {
+    marginTop: 10,
+    fontSize: 26,
+    lineHeight: 1.1,
+    letterSpacing: "-0.03em",
+    color: "#111827",
+    fontWeight: 800,
+  },
+  overviewValueSmall: {
+    marginTop: 10,
+    fontSize: 18,
+    lineHeight: 1.45,
+    color: "#111827",
+    fontWeight: 800,
   },
   title: {
     margin: 0,
