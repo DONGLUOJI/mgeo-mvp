@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import { DetectForm } from "@/components/detect/DetectForm";
 import { SiteShell } from "@/components/marketing/SiteShell";
 
@@ -85,6 +84,16 @@ export default function MarketingHomePage() {
           </div>
         </section>
 
+        <section style={styles.detectSection}>
+          <div style={styles.sectionInner}>
+            <DetectForm
+              embedded
+              title="先做一次免费检测，再决定是否进入服务"
+              description="用真实检测结果作为服务沟通起点。填写品牌名、行业、业务描述与检测问题，即可快速生成一份 MGEO 检测报告。"
+            />
+          </div>
+        </section>
+
         <section style={styles.platformSection}>
           <div style={styles.sectionInner}>
             <div style={styles.sectionIntro}>
@@ -157,17 +166,6 @@ export default function MarketingHomePage() {
           </div>
         </section>
 
-        <section style={styles.detectSection}>
-          <div style={styles.sectionInner}>
-            <Suspense fallback={<div style={styles.detectFallback}>检测表单加载中...</div>}>
-              <DetectForm
-                embedded
-                title="先做一次免费检测，再决定是否进入服务"
-                description="用真实检测结果作为服务沟通起点。填写品牌名、行业、业务描述与检测问题，即可快速生成一份 MGEO 检测报告。"
-              />
-            </Suspense>
-          </div>
-        </section>
       </main>
     </SiteShell>
   );
@@ -294,14 +292,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "62px 24px 0",
   },
   detectSection: {
-    padding: "62px 24px 0",
-  },
-  detectFallback: {
-    background: "#ffffff",
-    border: "1px solid #e7ebf0",
-    borderRadius: 32,
-    padding: 36,
-    color: "#667085",
+    padding: "28px 24px 0",
   },
   sectionInner: {
     maxWidth: 1240,

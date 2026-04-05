@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { getServerSession } from "next-auth";
 
 import { DetectForm } from "@/components/detect/DetectForm";
@@ -10,19 +9,11 @@ export default async function DetectPage() {
   const quota = session?.user?.id ? await getDetectQuotaStatus(session.user.id) : null;
 
   return (
-    <Suspense
-      fallback={
-        <main style={styles.page}>
-          <div style={styles.container}>加载中...</div>
-        </main>
-      }
-    >
-      <main style={styles.page}>
-        <div style={styles.container}>
-          <DetectForm quota={quota} />
-        </div>
-      </main>
-    </Suspense>
+    <main style={styles.page}>
+      <div style={styles.container}>
+        <DetectForm quota={quota} />
+      </div>
+    </main>
   );
 }
 
@@ -37,4 +28,3 @@ const styles: Record<string, React.CSSProperties> = {
     margin: "0 auto",
   },
 };
-

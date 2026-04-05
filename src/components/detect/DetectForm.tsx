@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { DEFAULT_MODELS, MODEL_META } from "@/lib/detect/model-meta";
 import type { ModelName } from "@/lib/detect/types";
 
@@ -30,7 +30,6 @@ export function DetectForm({
   quota = null,
 }: DetectFormProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [brandName, setBrandName] = useState("");
   const [industry, setIndustry] = useState("");
@@ -39,30 +38,6 @@ export function DetectForm({
   const [selectedModels, setSelectedModels] = useState<ModelName[]>([...DEFAULT_MODELS]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    const brand = searchParams.get("brandName");
-    const nextIndustry = searchParams.get("industry");
-    const nextBusinessSummary = searchParams.get("businessSummary");
-    const nextQuery = searchParams.get("query");
-    const nextModels = searchParams.get("models");
-
-    if (brand) setBrandName(brand);
-    if (nextIndustry) setIndustry(nextIndustry);
-    if (nextBusinessSummary) setBusinessSummary(nextBusinessSummary);
-    if (nextQuery) setQuery(nextQuery);
-
-    if (nextModels) {
-      const parsed = nextModels
-        .split(",")
-        .map((item) => item.trim())
-        .filter((item): item is ModelName => DEFAULT_MODELS.includes(item as ModelName));
-
-      if (parsed.length) {
-        setSelectedModels(parsed);
-      }
-    }
-  }, [searchParams]);
 
   function toggleModel(modelId: ModelName) {
     setSelectedModels((prev) =>
