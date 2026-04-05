@@ -107,12 +107,6 @@ export default async function RankingPage({
           <BrandSearchBox />
 
           <section style={styles.tabCard}>
-            <div style={styles.tabIntro}>
-              <div style={styles.tabEyebrow}>多维排名</div>
-              <h2 style={styles.tabTitle}>让品牌方每周都回来一次，不靠一句口号，靠持续变化的数据面板</h2>
-              <p style={styles.tabText}>这一版先按你文档把结构搭完整：搜索品牌、切换板块、看变化、再转去免费检测。后面你给真实 API 后，我们再把数据更新频率做扎实。</p>
-            </div>
-
             <div style={styles.tabBar}>
               {RANKING_TABS.map((tab) => {
                 const active = tab.key === currentTab;
@@ -262,33 +256,6 @@ const styles: Record<string, React.CSSProperties> = {
     border: "1px solid #e5e7eb",
     padding: 24,
     boxShadow: "0 16px 40px rgba(15, 23, 42, 0.04)",
-  },
-  tabIntro: {
-    marginBottom: 22,
-    paddingBottom: 20,
-    borderBottom: "1px solid #eceff3",
-  },
-  tabEyebrow: {
-    fontSize: 13,
-    fontWeight: 700,
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
-    color: "#0a7c66",
-  },
-  tabTitle: {
-    margin: "10px 0 0",
-    fontSize: 34,
-    lineHeight: 1.08,
-    letterSpacing: "-0.04em",
-    color: "#111827",
-    maxWidth: 900,
-  },
-  tabText: {
-    margin: "12px 0 0",
-    fontSize: 16,
-    lineHeight: 1.7,
-    color: "#6b7280",
-    maxWidth: 880,
   },
   tabBar: {
     display: "grid",

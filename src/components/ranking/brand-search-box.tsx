@@ -59,7 +59,6 @@ export function BrandSearchBox() {
       <div style={styles.copyBlock}>
         <div style={styles.eyebrow}>品牌搜索</div>
         <h1 style={styles.title}>输入品牌名，查看你的 AI 可见性排名</h1>
-        <p style={styles.text}>白底黑字的排名页先用结构和数据密度把回访理由做出来，后续你给 API Key 后再接入真实更新。</p>
       </div>
 
       <form onSubmit={handleSearch} style={styles.form}>
@@ -136,13 +135,6 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.08,
     letterSpacing: "-0.04em",
     color: "#111827",
-  },
-  text: {
-    margin: "12px 0 0",
-    fontSize: 17,
-    lineHeight: 1.7,
-    color: "#6b7280",
-    maxWidth: 860,
   },
   form: {
     display: "grid",

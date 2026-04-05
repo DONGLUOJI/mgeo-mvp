@@ -43,7 +43,6 @@ export function IndustryLeaderboard({
       <div style={styles.sectionHead}>
         <div>
           <h2 style={styles.title}>行业 AI 可见性排行榜</h2>
-          <p style={styles.text}>默认按 TCA 综合分排序。点击任意品牌可展开看三项分数、平台覆盖和报告入口。</p>
         </div>
       </div>
 
@@ -194,13 +193,6 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.08,
     letterSpacing: "-0.04em",
     color: "#111827",
-  },
-  text: {
-    margin: "10px 0 0",
-    fontSize: 16,
-    lineHeight: 1.7,
-    color: "#6b7280",
-    maxWidth: 760,
   },
   filters: {
     display: "flex",
