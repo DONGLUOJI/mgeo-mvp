@@ -396,7 +396,7 @@ const styles: Record<string, React.CSSProperties> = {
   hero: {
     background:
       "radial-gradient(circle at top, rgba(14, 148, 136, 0.18), transparent 22%), linear-gradient(180deg, #0b0d13 0%, #131419 58%, #232326 100%)",
-    padding: "120px 24px 200px",
+    padding: "124px 24px 170px",
     color: "#ffffff",
     position: "relative",
     overflow: "hidden",
@@ -458,7 +458,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: "rgba(255,255,255,0.12)",
   },
   detectSection: {
-    marginTop: -116,
+    marginTop: -106,
     padding: "0 24px",
     position: "relative",
     zIndex: 2,
@@ -469,7 +469,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   workflowSection: {
     maxWidth: 1180,
-    margin: "84px auto 0",
+    margin: "90px auto 0",
     padding: "0 24px",
   },
   sectionHead: {
@@ -511,14 +511,14 @@ const styles: Record<string, React.CSSProperties> = {
     display: "grid",
     gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
     gap: 22,
-    marginTop: 42,
+    marginTop: 46,
   },
   workflowCard: {
     background: "#ffffff",
     border: "1px solid #dfe4ec",
     borderRadius: 28,
     padding: 30,
-    minHeight: 328,
+    minHeight: 334,
     boxShadow: "0 20px 50px rgba(15, 23, 42, 0.05)",
   },
   workflowId: {
@@ -550,7 +550,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   reportSection: {
     maxWidth: 1180,
-    margin: "72px auto 0",
+    margin: "94px auto 0",
     padding: "0 24px",
   },
   reportCard: {
@@ -558,7 +558,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
     border: "1px solid #e1e6ed",
     borderRadius: 34,
-    padding: 34,
+    padding: "34px 36px 30px",
     boxShadow: "0 26px 60px rgba(15, 23, 42, 0.06)",
   },
   reportTop: {
@@ -569,22 +569,22 @@ const styles: Record<string, React.CSSProperties> = {
   },
   reportTitle: {
     margin: "8px 0 0",
-    fontSize: 56,
-    lineHeight: 1.12,
+    fontSize: 50,
+    lineHeight: 1.14,
     color: "#202226",
     letterSpacing: "-0.04em",
   },
   reportSummary: {
     margin: "18px 0 0",
     color: "#6e7380",
-    fontSize: 17,
+    fontSize: 16,
     lineHeight: 1.8,
   },
   scoreCard: {
     justifySelf: "end",
-    width: 194,
-    height: 140,
-    borderRadius: 26,
+    width: 188,
+    height: 142,
+    borderRadius: 24,
     background: "#121212",
     color: "#ffffff",
     display: "grid",
@@ -605,7 +605,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: "grid",
     gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
     gap: 18,
-    marginTop: 30,
+    marginTop: 26,
   },
   diagnosisCard: {
     background: "#ffffff",
@@ -620,7 +620,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   diagnosisTitle: {
     margin: "18px 0 0",
-    fontSize: 24,
+    fontSize: 22,
     lineHeight: 1.35,
     color: "#202226",
     fontWeight: 800,
@@ -628,12 +628,12 @@ const styles: Record<string, React.CSSProperties> = {
   diagnosisText: {
     margin: "16px 0 0",
     color: "#6a6f7b",
-    fontSize: 16,
+    fontSize: 15,
     lineHeight: 1.8,
   },
   tableWrap: {
     overflowX: "auto",
-    marginTop: 28,
+    marginTop: 24,
     borderRadius: 24,
     border: "1px solid #edf0f4",
     background: "#ffffff",
@@ -644,20 +644,20 @@ const styles: Record<string, React.CSSProperties> = {
   },
   th: {
     textAlign: "left",
-    padding: "18px 20px",
+    padding: "16px 18px",
     fontSize: 16,
     color: "#6c7280",
     background: "#f7f8fb",
   },
   td: {
-    padding: "18px 20px",
-    fontSize: 16,
+    padding: "16px 18px",
+    fontSize: 15,
     color: "#202226",
     borderTop: "1px solid #edf0f4",
   },
   deliverySection: {
     maxWidth: 1180,
-    margin: "84px auto 0",
+    margin: "92px auto 0",
     padding: "0 24px",
   },
   deliveryGrid: {
@@ -694,18 +694,18 @@ const styles: Record<string, React.CSSProperties> = {
   },
   ctaSection: {
     maxWidth: 1180,
-    margin: "82px auto 0",
+    margin: "96px auto 0",
     padding: "0 24px",
   },
   ctaCard: {
     borderRadius: 34,
-    padding: "58px 48px",
+    padding: "56px 48px 50px",
     background: "linear-gradient(135deg, #0f1217 0%, #111a1e 42%, #0f4a38 100%)",
     color: "#ffffff",
   },
   ctaTitle: {
     margin: 0,
-    fontSize: 58,
+    fontSize: 54,
     lineHeight: 1.16,
     letterSpacing: "-0.04em",
     maxWidth: 960,
@@ -714,7 +714,7 @@ const styles: Record<string, React.CSSProperties> = {
     margin: "22px 0 0",
     maxWidth: 980,
     color: "rgba(255,255,255,0.72)",
-    fontSize: 18,
+    fontSize: 17,
     lineHeight: 1.85,
   },
   ctaActions: {
@@ -751,8 +751,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   contactSection: {
     maxWidth: 1180,
-    margin: "82px auto 0",
-    padding: "0 24px 48px",
+    margin: "88px auto 0",
+    padding: "0 24px 28px",
   },
   contactHeading: {
     margin: 0,
@@ -765,14 +765,13 @@ const styles: Record<string, React.CSSProperties> = {
     display: "grid",
     gridTemplateColumns: "0.9fr 1.1fr",
     gap: 26,
-    marginTop: 38,
+    marginTop: 34,
   },
   contactCard: {
     background: "#ffffff",
     border: "1px solid #dfe4ec",
     borderRadius: 30,
     padding: 34,
-    minHeight: 620,
   },
   contactCardTitle: {
     margin: 0,
@@ -801,7 +800,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   contactValue: {
     color: "#202226",
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: 800,
     lineHeight: 1.4,
   },
@@ -854,7 +853,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginTop: 10,
   },
   footer: {
-    padding: "26px 24px 42px",
+    padding: "18px 24px 22px",
     borderTop: "1px solid #e4e8ef",
     textAlign: "center",
   },
@@ -870,7 +869,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#6d7380",
   },
   footerCopyright: {
-    marginTop: 24,
+    marginTop: 18,
     color: "#8d93a0",
     fontSize: 14,
   },
