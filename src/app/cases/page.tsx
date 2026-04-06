@@ -147,6 +147,18 @@ const scoreCardThemes: Record<TagStyle, React.CSSProperties> = {
   },
 };
 
+const scoreTitleColors: Record<TagStyle, React.CSSProperties> = {
+  consistency: {
+    color: "#0a7c66",
+  },
+  coverage: {
+    color: "#315fd6",
+  },
+  authority: {
+    color: "#6e44d8",
+  },
+};
+
 export default function CasesPage() {
   return (
     <SiteShell current="/cases" hideFooter>
@@ -238,7 +250,7 @@ export default function CasesPage() {
             <div style={styles.scoreGrid}>
               {scoreCards.map((item) => (
                 <article key={item.name} style={{ ...styles.scoreCard, ...scoreCardThemes[item.theme] }}>
-                  <h3 style={styles.scoreTitle}>{item.name}</h3>
+                  <h3 style={{ ...styles.scoreTitle, ...scoreTitleColors[item.theme] }}>{item.name}</h3>
                   <p style={styles.scoreSubtitle}>{item.subtitle}</p>
                   <div style={styles.scoreRow}>
                     <span>合格线</span>
@@ -368,7 +380,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 800,
   },
   sceneIntro: {
-    minHeight: 238,
+    minHeight: 180,
   },
   sceneDescription: {
     margin: "14px 0 0",
@@ -380,7 +392,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginTop: 24,
     paddingLeft: 20,
     borderLeft: "2px solid #dde4ed",
-    minHeight: 320,
+    minHeight: 244,
   },
   stepsTitle: {
     fontSize: 15,
@@ -536,7 +548,6 @@ const styles: Record<string, React.CSSProperties> = {
     margin: 0,
     fontSize: 34,
     lineHeight: 1.1,
-    color: "#1d1d1f",
   },
   scoreSubtitle: {
     margin: "12px 0 0",
