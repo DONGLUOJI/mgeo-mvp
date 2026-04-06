@@ -1,5 +1,4 @@
 import type { ModelName, ProviderResponse } from "@/lib/detect/types";
-import { callChatProvider } from "@/lib/providers/chat-provider";
 
 type RuntimeProvider = {
   name: ModelName;
@@ -27,16 +26,64 @@ export function createDoubaoProvider(): RuntimeProvider {
         };
       }
 
-      return callChatProvider(
-        {
-          baseUrl,
-          apiKey,
-          model,
-          modelName: "doubao",
-          endpointPath: "/chat/completions",
-        },
-        prompt
-      );
+      const start = Date.now();
+
+      try {
+        const res = await fetch(`${baseUrl}/responses`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model,
+            input: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "input_text",
+                    text: prompt,
+                  },
+                ],
+              },
+            ],
+          }),
+        });
+
+        if (!res.ok) {
+          const message = await res.text();
+
+          return {
+            model: "doubao",
+            success: false,
+            rawText: "",
+            latencyMs: Date.now() - start,
+            error: `HTTP ${res.status}: ${message}`,
+          };
+        }
+
+        const data = await res.json();
+        const rawText =
+          data.output_text ||
+          data.output?.flatMap((item: { content?: Array<{ text?: string }> }) => item.content || []).map((item: { text?: string }) => item.text || "").join("\n") ||
+          "";
+
+        return {
+          model: "doubao",
+          success: true,
+          rawText,
+          latencyMs: Date.now() - start,
+        };
+      } catch (error) {
+        return {
+          model: "doubao",
+          success: false,
+          rawText: "",
+          latencyMs: Date.now() - start,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
+      }
     },
   };
 }
