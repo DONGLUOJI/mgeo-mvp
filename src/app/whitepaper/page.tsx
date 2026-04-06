@@ -680,6 +680,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 20,
     fontWeight: 600,
     color: "#1d1d1f",
+    width: "100%",
+    maxWidth: 1040,
+    whiteSpace: "nowrap",
+    overflowX: "auto",
+    boxSizing: "border-box",
   },
   appendixGroup: {
     marginBottom: 10,
