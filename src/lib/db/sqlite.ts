@@ -7,15 +7,35 @@ const dbPath = path.join(dataDir, "mgeo.sqlite");
 
 let sqliteDb: Database.Database | null = null;
 
-function ensureColumn(db: Database.Database, table: string, column: string, sql: string) {
-  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
-  if (!columns.some((item) => item.name === column)) {
+function isReadonlySqliteError(error: unknown) {
+  return error instanceof Error && /readonly|attempt to write a readonly database/i.test(error.message);
+}
+
+function safeExec(db: Database.Database, sql: string) {
+  try {
     db.exec(sql);
+  } catch (error) {
+    if (isReadonlySqliteError(error)) {
+      return;
+    }
+    throw error;
   }
 }
 
-function initializeSqlite(db: Database.Database) {
-  db.exec(`
+function hasColumn(db: Database.Database, table: string, column: string) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  return columns.some((item) => item.name === column);
+}
+
+function ensureColumn(db: Database.Database, table: string, column: string, sql: string) {
+  if (!hasColumn(db, table, column)) {
+    safeExec(db, sql);
+  }
+}
+
+function initializeSqlite(db: Database.Database, allowWrites: boolean) {
+  if (allowWrites) {
+    safeExec(db, `
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       email TEXT NOT NULL UNIQUE,
@@ -146,6 +166,7 @@ function initializeSqlite(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_monitor_results_keyword_checked
     ON monitor_results(keyword_id, checked_at);
   `);
+  }
 
   ensureColumn(
     db,
@@ -216,12 +237,12 @@ function initializeSqlite(db: Database.Database) {
     "ALTER TABLE scan_reports ADD COLUMN user_id TEXT REFERENCES users(id)"
   );
 
-  db.exec(`
+  safeExec(db, `
     CREATE INDEX IF NOT EXISTS idx_ranking_city_industry_date
     ON ranking_snapshots(city, industry, snapshot_date);
   `);
 
-  db.exec(`
+  safeExec(db, `
     INSERT OR IGNORE INTO supported_cities (city_code, city_name, region, brand_count, is_active)
     VALUES
       ('national', '全国', '全国', 60, 1),
@@ -234,6 +255,20 @@ function initializeSqlite(db: Database.Database) {
   `);
 }
 
+function canWriteDbStorage() {
+  try {
+    if (fs.existsSync(dbPath)) {
+      fs.accessSync(dbPath, fs.constants.W_OK);
+      return true;
+    }
+
+    fs.accessSync(dataDir, fs.constants.W_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function getSqliteDb() {
   if (sqliteDb) {
     return sqliteDb;
@@ -244,7 +279,7 @@ function getSqliteDb() {
   }
 
   sqliteDb = new Database(dbPath);
-  initializeSqlite(sqliteDb);
+  initializeSqlite(sqliteDb, canWriteDbStorage());
   return sqliteDb;
 }
 
@@ -258,4 +293,8 @@ function pingSqlite() {
   };
 }
 
-export { dbPath, getSqliteDb, pingSqlite };
+function sqliteHasColumn(table: string, column: string) {
+  return hasColumn(getSqliteDb(), table, column);
+}
+
+export { dbPath, getSqliteDb, pingSqlite, sqliteHasColumn };

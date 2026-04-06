@@ -1,7 +1,7 @@
 import type { DetectReport } from "@/lib/detect/types";
 import { getPlanConfig } from "@/lib/auth/plans";
 import { queryPostgres } from "@/lib/db/postgres";
-import { getSqliteDb } from "@/lib/db/sqlite";
+import { getSqliteDb, sqliteHasColumn } from "@/lib/db/sqlite";
 
 type ScanReportRecord = {
   taskId: string;
@@ -1719,6 +1719,8 @@ export async function listRankingSnapshots(options?: {
 
     if (rows.length) return rows;
   } else {
+    const hasCityColumn = sqliteHasColumn("ranking_snapshots", "city");
+
     const params: unknown[] = [];
     let where = "";
 
@@ -1728,9 +1730,13 @@ export async function listRankingSnapshots(options?: {
     }
 
     if (city && city !== "全国") {
+      if (!hasCityColumn) {
+        return [];
+      }
+
       where = where ? `${where} AND COALESCE(city, '全国') = ?` : "WHERE COALESCE(city, '全国') = ?";
       params.push(city);
-    } else {
+    } else if (hasCityColumn) {
       where = where ? `${where} AND COALESCE(city, '全国') = '全国'` : "WHERE COALESCE(city, '全国') = '全国'";
     }
 
@@ -1741,7 +1747,7 @@ export async function listRankingSnapshots(options?: {
     }
 
     const stmt = sqlite().prepare(`
-      SELECT id, industry, COALESCE(city, '全国') AS city, brand_name, tca_total, tca_consistency, tca_coverage, tca_authority,
+      SELECT id, industry, ${hasCityColumn ? "COALESCE(city, '全国')" : "'全国'"} AS city, brand_name, tca_total, tca_consistency, tca_coverage, tca_authority,
         platform_coverage, delta_7d, snapshot_date, created_at
       FROM ranking_snapshots
       ${where}
