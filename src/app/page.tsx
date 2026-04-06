@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { DetectForm } from "@/components/detect/DetectForm";
+import { ConsultForm } from "@/components/marketing/consult-form";
 import { SiteShell } from "@/components/marketing/SiteShell";
 
 export const metadata: Metadata = {
@@ -264,40 +265,7 @@ export default function MarketingHomePage() {
               <p style={styles.contactIntro}>
                 留下您的品牌信息与当前需求，我们会根据业务阶段给出相应建议。
               </p>
-
-              <form style={styles.consultForm}>
-                <div style={styles.consultRow}>
-                  <label style={styles.consultField}>
-                    <span style={styles.consultLabel}>姓名</span>
-                    <input style={styles.consultInput} placeholder="请输入您的姓名" />
-                  </label>
-                  <label style={styles.consultField}>
-                    <span style={styles.consultLabel}>公司 / 品牌</span>
-                    <input style={styles.consultInput} placeholder="请输入公司或品牌名称" />
-                  </label>
-                </div>
-                <div style={styles.consultRow}>
-                  <label style={styles.consultField}>
-                    <span style={styles.consultLabel}>联系电话</span>
-                    <input style={styles.consultInput} placeholder="请输入手机号或微信号" />
-                  </label>
-                  <label style={styles.consultField}>
-                    <span style={styles.consultLabel}>所属行业</span>
-                    <input style={styles.consultInput} placeholder="例如：企业服务 / 本地生活" />
-                  </label>
-                </div>
-                <label style={styles.consultField}>
-                  <span style={styles.consultLabel}>需求描述</span>
-                  <textarea
-                    style={styles.consultTextarea}
-                    placeholder="请简单描述当前遇到的问题、目标或者希望了解的服务内容"
-                    rows={5}
-                  />
-                </label>
-                <button type="button" style={styles.consultButton}>
-                  提交咨询
-                </button>
-              </form>
+              <ConsultForm />
             </article>
           </div>
         </section>
@@ -770,54 +738,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 24,
     fontWeight: 800,
     lineHeight: 1.4,
-  },
-  consultForm: {
-    display: "grid",
-    gap: 20,
-    marginTop: 24,
-  },
-  consultRow: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 16,
-  },
-  consultField: {
-    display: "grid",
-    gap: 10,
-  },
-  consultLabel: {
-    color: "#202226",
-    fontSize: 16,
-    fontWeight: 700,
-  },
-  consultInput: {
-    height: 54,
-    borderRadius: 18,
-    border: "1px solid #d7dde7",
-    padding: "0 18px",
-    fontSize: 16,
-    outline: "none",
-  },
-  consultTextarea: {
-    borderRadius: 18,
-    border: "1px solid #d7dde7",
-    padding: "16px 18px",
-    fontSize: 16,
-    lineHeight: 1.75,
-    outline: "none",
-    resize: "vertical",
-  },
-  consultButton: {
-    width: 256,
-    height: 68,
-    borderRadius: 18,
-    border: "none",
-    background: "#232123",
-    color: "#ffffff",
-    fontSize: 18,
-    fontWeight: 700,
-    cursor: "pointer",
-    marginTop: 10,
   },
   footer: {
     padding: "18px 24px 22px",
