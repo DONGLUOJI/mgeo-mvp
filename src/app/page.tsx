@@ -69,8 +69,6 @@ const reportRows = [
   ["百度文心", "negative", "-", "品牌内容仍未进入稳定推荐场景"],
 ];
 
-const coveredIndustries = ["新茶饮", "餐饮连锁", "教育培训", "家政服务", "美妆护肤", "企业服务"];
-
 const legalLinks = ["隐私政策", "用户协议", "退款政策", "网站地图"];
 
 export default function MarketingHomePage() {
@@ -128,21 +126,11 @@ export default function MarketingHomePage() {
           </div>
         </section>
 
-        <section style={styles.coveredIndustriesSection}>
-          <div style={styles.coveredIndustriesWrap}>
-            {coveredIndustries.map((item) => (
-              <span key={item} style={styles.coveredIndustryTag}>
-                {item}
-              </span>
-            ))}
-          </div>
-        </section>
-
         <section style={styles.reportSection}>
           <div style={styles.sectionHead}>
-            <div style={styles.sectionAccent}>检测之后，核心输出是一份清晰的品牌诊断报告</div>
+            <div style={styles.sectionAccent}>品牌诊断报告</div>
             <p style={styles.sectionTextWide}>
-              报告聚焦品牌在多模型环境中的真实问题，帮助客户快速理解风险、判断优先级，并进入下一步优化流程。
+              聚焦品牌在多模型环境中的真实问题，帮助客户快速理解风险、判断优先级，启动针对性优化。
             </p>
           </div>
 
