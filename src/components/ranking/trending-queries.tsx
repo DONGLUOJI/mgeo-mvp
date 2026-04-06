@@ -1,11 +1,12 @@
 import Link from "next/link";
 
 import type { TrendingQueryRow } from "@/lib/ranking/data";
-import { getIndustryTheme } from "@/lib/ranking/shared";
+import { buildRankingHref, getIndustryTheme } from "@/lib/ranking/shared";
 
 type TrendingQueriesProps = {
   queries: TrendingQueryRow[];
   industries: readonly string[];
+  currentCity: string;
   currentIndustry: string;
   overview: {
     questionCount: number;
@@ -14,7 +15,7 @@ type TrendingQueriesProps = {
   };
 };
 
-export function TrendingQueries({ queries, industries, currentIndustry, overview }: TrendingQueriesProps) {
+export function TrendingQueries({ queries, industries, currentCity, currentIndustry, overview }: TrendingQueriesProps) {
   return (
     <section style={styles.section}>
       <div style={styles.overviewGrid}>
@@ -33,7 +34,7 @@ export function TrendingQueries({ queries, industries, currentIndustry, overview
       </div>
 
       <div>
-        <h2 style={styles.title}>热门搜索问题榜</h2>
+        <h2 style={styles.title}>{currentCity === "全国" ? "热门搜索问题榜" : `${currentCity}热门搜索问题榜`}</h2>
         <p style={styles.text}>让品牌方看到“用户到底在问什么”，从而决定内容、问答和投放的优先级。</p>
       </div>
 
@@ -41,7 +42,7 @@ export function TrendingQueries({ queries, industries, currentIndustry, overview
         {industries.map((industry) => {
           const active = currentIndustry === industry;
           const theme = getIndustryTheme(industry);
-          const href = industry === "全部" ? "/ranking?tab=trending" : `/ranking?tab=trending&industry=${encodeURIComponent(industry)}`;
+          const href = buildRankingHref({ tab: "trending", city: currentCity, industry });
           return (
             <Link
               key={industry}
@@ -113,7 +114,7 @@ export function TrendingQueries({ queries, industries, currentIndustry, overview
 
               <div style={styles.ctaWrap}>
                 <div style={styles.ctaText}>你的品牌在这个问题上排第几？</div>
-                <Link href="/detect" style={styles.ctaButton}>
+                <Link href={`/detect${currentCity !== "全国" ? `?city=${encodeURIComponent(currentCity)}` : ""}`} style={styles.ctaButton}>
                   立即免费检测
                 </Link>
               </div>

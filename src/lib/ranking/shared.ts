@@ -17,6 +17,23 @@ export const INDUSTRY_OPTIONS = [
   "企业服务",
 ] as const;
 
+export const SUPPORTED_CITIES = [
+  { code: "national", name: "全国", region: "全国", hasData: true },
+  { code: "beijing", name: "北京", region: "华北", hasData: false },
+  { code: "shanghai", name: "上海", region: "华东", hasData: false },
+  { code: "guangzhou", name: "广州", region: "华南", hasData: false },
+  { code: "shenzhen", name: "深圳", region: "华南", hasData: true },
+  { code: "hangzhou", name: "杭州", region: "华东", hasData: true },
+  { code: "chengdu", name: "成都", region: "西南", hasData: true },
+  { code: "wuhan", name: "武汉", region: "华中", hasData: false },
+  { code: "chongqing", name: "重庆", region: "西南", hasData: false },
+  { code: "xian", name: "西安", region: "西北", hasData: false },
+] as const;
+
+export const FEATURED_CITY_NAMES = ["全国", "北京", "上海", "广州", "深圳", "杭州", "成都"] as const;
+
+export type SupportedCityName = (typeof SUPPORTED_CITIES)[number]["name"];
+
 export const PLATFORM_OPTIONS = [
   { key: "doubao", label: "豆包" },
   { key: "deepseek", label: "DeepSeek" },
@@ -93,6 +110,7 @@ export type RankedBrand = {
   rank: number;
   brandName: string;
   industry: string;
+  city: string;
   tcaTotal: number;
   tcaConsistency: number;
   tcaCoverage: number;
@@ -109,6 +127,7 @@ export type TrendingQueryRow = {
   rank: number;
   queryText: string;
   industry: string;
+  city: string;
   heatScore: number;
   brandCount: number;
   trendDirection: "up" | "down" | "stable";
@@ -125,4 +144,35 @@ export function getBrandAnchorId(brandName: string) {
 
 export function getIndustryTheme(industry: string) {
   return INDUSTRY_THEMES[industry as keyof typeof INDUSTRY_THEMES] || INDUSTRY_THEMES.全部;
+}
+
+export function isSupportedCity(value?: string): value is SupportedCityName {
+  return SUPPORTED_CITIES.some((item) => item.name === value);
+}
+
+export function getCityMeta(city?: string) {
+  return SUPPORTED_CITIES.find((item) => item.name === city) || SUPPORTED_CITIES[0];
+}
+
+export function buildRankingHref(options: {
+  tab?: RankingTabKey;
+  city?: string;
+  industry?: string;
+  days?: number;
+  platform?: string;
+  coverage?: string;
+  focusBrand?: string;
+}) {
+  const params = new URLSearchParams();
+
+  if (options.tab) params.set("tab", options.tab);
+  if (options.city && options.city !== "全国") params.set("city", options.city);
+  if (options.industry && options.industry !== "全部") params.set("industry", options.industry);
+  if (options.days && options.days !== 30) params.set("days", String(options.days));
+  if (options.platform) params.set("platform", options.platform);
+  if (options.coverage) params.set("coverage", options.coverage);
+  if (options.focusBrand) params.set("focusBrand", options.focusBrand);
+
+  const query = params.toString();
+  return query ? `/ranking?${query}` : "/ranking";
 }

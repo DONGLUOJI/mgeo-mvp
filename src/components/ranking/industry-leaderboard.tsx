@@ -10,12 +10,13 @@ import {
   TcaScoreBar,
 } from "@/components/ranking/ranking-cell-primitives";
 import { PLATFORM_OPTIONS, type RankedBrand } from "@/lib/ranking/data";
-import { getBrandAnchorId, getIndustryTheme } from "@/lib/ranking/shared";
+import { buildRankingHref, getBrandAnchorId, getIndustryTheme } from "@/lib/ranking/shared";
 import stylesModule from "./industry-leaderboard.module.css";
 
 type IndustryLeaderboardProps = {
   brands: RankedBrand[];
   industries: readonly string[];
+  currentCity: string;
   currentIndustry: string;
   currentDays: number;
   focusBrand?: string;
@@ -46,6 +47,7 @@ function sentimentLabel(sentiment: "positive" | "neutral" | "negative" | null) {
 export function IndustryLeaderboard({
   brands,
   industries,
+  currentCity,
   currentIndustry,
   currentDays,
   focusBrand,
@@ -57,7 +59,7 @@ export function IndustryLeaderboard({
     <section style={styles.section}>
       <div style={styles.overviewGrid}>
         <article style={styles.overviewCard}>
-          <div style={styles.overviewLabel}>本周涨幅最大</div>
+          <div style={styles.overviewLabel}>{currentCity === "全国" ? "本周涨幅最大" : `${currentCity}涨幅最大`}</div>
           <div style={styles.overviewMain}>{overview.topRiser?.brandName || "-"}</div>
           <div style={styles.overviewAccentUp}>
             {overview.topRiser ? `↑ ${overview.topRiser.change7d.toFixed(1)}` : "-"}
@@ -66,7 +68,7 @@ export function IndustryLeaderboard({
         </article>
 
         <article style={styles.overviewCard}>
-          <div style={styles.overviewLabel}>本周跌幅最大</div>
+          <div style={styles.overviewLabel}>{currentCity === "全国" ? "本周跌幅最大" : `${currentCity}跌幅最大`}</div>
           <div style={styles.overviewMain}>{overview.topFaller?.brandName || "-"}</div>
           <div style={styles.overviewAccentDown}>
             {overview.topFaller ? `↓ ${Math.abs(overview.topFaller.change7d).toFixed(1)}` : "-"}
@@ -75,7 +77,7 @@ export function IndustryLeaderboard({
         </article>
 
         <article style={styles.overviewCard}>
-          <div style={styles.overviewLabel}>当前行业均分</div>
+          <div style={styles.overviewLabel}>{currentCity === "全国" ? "当前行业均分" : `${currentCity}均分`}</div>
           <div style={styles.overviewMainLarge}>{overview.averageScore.current.toFixed(1)}</div>
           <div
             style={{
@@ -92,17 +94,19 @@ export function IndustryLeaderboard({
       </div>
 
       <div style={styles.sectionHead}>
-        <h2 style={styles.title}>行业 AI 可见性排行榜</h2>
+        <h2 style={styles.title}>{currentCity === "全国" ? "行业 AI 可见性排行榜" : `${currentCity} AI 可见性排行榜`}</h2>
       </div>
 
       <div style={styles.filters}>
         {industries.map((industry) => {
           const active = industry === currentIndustry;
           const theme = getIndustryTheme(industry);
-          const href =
-            industry === "全部"
-              ? `/ranking?tab=industry&days=${currentDays}`
-              : `/ranking?tab=industry&industry=${encodeURIComponent(industry)}&days=${currentDays}`;
+          const href = buildRankingHref({
+            tab: "industry",
+            city: currentCity,
+            industry,
+            days: currentDays,
+          });
 
           return (
             <Link
@@ -131,10 +135,12 @@ export function IndustryLeaderboard({
       <div style={styles.filters}>
         {[7, 30, 90].map((days) => {
           const active = currentDays === days;
-          const href =
-            currentIndustry === "全部"
-              ? `/ranking?tab=industry&days=${days}`
-              : `/ranking?tab=industry&industry=${encodeURIComponent(currentIndustry)}&days=${days}`;
+          const href = buildRankingHref({
+            tab: "industry",
+            city: currentCity,
+            industry: currentIndustry,
+            days,
+          });
           return (
             <Link key={days} href={href} style={{ ...styles.chip, ...(active ? styles.chipActive : {}) }}>
               最近 {days} 天
@@ -235,7 +241,10 @@ export function IndustryLeaderboard({
                     <Link href="/login" style={styles.reportButton}>
                       查看完整报告
                     </Link>
-                    <Link href={`/detect?brandName=${encodeURIComponent(brand.brandName)}`} style={styles.compareButton}>
+                    <Link
+                      href={`/detect?brandName=${encodeURIComponent(brand.brandName)}${currentCity !== "全国" ? `&city=${encodeURIComponent(currentCity)}` : ""}`}
+                      style={styles.compareButton}
+                    >
                       免费检测并对比
                     </Link>
                   </div>

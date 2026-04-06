@@ -7,6 +7,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const industry = searchParams.get("industry") || undefined;
+    const city = searchParams.get("city") || undefined;
     const platform = searchParams.get("platform") || undefined;
     const coverage = searchParams.get("coverage") || undefined;
     const limit = Number(searchParams.get("limit") || 50);
@@ -14,6 +15,7 @@ export async function GET(request: Request) {
 
     const data = await getPlatformCoverageData({
       industry,
+      city,
       platform: platform as PlatformKey | undefined,
       coverage: coverage as "low" | "medium" | "high" | undefined,
       limit: Number.isFinite(limit) ? limit : 50,

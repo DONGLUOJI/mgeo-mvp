@@ -1,12 +1,13 @@
 import Link from "next/link";
 
 import { PLATFORM_LABELS, PLATFORM_OPTIONS, type PlatformKey } from "@/lib/ranking/data";
-import { getIndustryTheme } from "@/lib/ranking/shared";
+import { buildRankingHref, getIndustryTheme } from "@/lib/ranking/shared";
 
 import { PlatformMatrix } from "./platform-matrix";
 import { PlatformCoverageChart } from "./platform-coverage-chart";
 
 type PlatformCoverageProps = {
+  currentCity: string;
   currentIndustry: string;
   currentPlatform?: PlatformKey;
   currentCoverage?: "low" | "medium" | "high";
@@ -26,6 +27,7 @@ type PlatformCoverageProps = {
 };
 
 export function PlatformCoverage({
+  currentCity,
   currentIndustry,
   currentPlatform,
   currentCoverage,
@@ -38,7 +40,7 @@ export function PlatformCoverage({
     <section style={styles.section}>
       <div style={styles.overviewGrid}>
         <article style={styles.overviewCard}>
-          <div style={styles.overviewLabel}>参与统计品牌</div>
+          <div style={styles.overviewLabel}>{currentCity === "全国" ? "参与统计品牌" : `${currentCity}参与统计品牌`}</div>
           <div style={styles.overviewValue}>{overview.trackedBrands} 个</div>
         </article>
         <article style={styles.overviewCard}>
@@ -52,7 +54,7 @@ export function PlatformCoverage({
       </div>
 
       <div>
-        <h2 style={styles.title}>AI 平台覆盖率排行</h2>
+        <h2 style={styles.title}>{currentCity === "全国" ? "AI 平台覆盖率排行" : `${currentCity}平台覆盖率排行`}</h2>
         <p style={styles.text}>用平台平均覆盖率 + 品牌矩阵，直接回答“竞品覆盖了几个平台、我覆盖了几个”。</p>
       </div>
 
@@ -61,7 +63,7 @@ export function PlatformCoverage({
           {industries.map((industry) => {
             const active = currentIndustry === industry;
             const theme = getIndustryTheme(industry);
-            const href = industry === "全部" ? "/ranking?tab=platform" : `/ranking?tab=platform&industry=${encodeURIComponent(industry)}`;
+            const href = buildRankingHref({ tab: "platform", city: currentCity, industry });
             return (
               <Link
                 key={industry}
@@ -87,15 +89,17 @@ export function PlatformCoverage({
         </div>
 
         <div style={styles.filters}>
-          <Link href={currentIndustry === "全部" ? "/ranking?tab=platform" : `/ranking?tab=platform&industry=${encodeURIComponent(currentIndustry)}`} style={{ ...styles.chip, ...(!currentPlatform ? styles.chipActive : {}) }}>
+          <Link href={buildRankingHref({ tab: "platform", city: currentCity, industry: currentIndustry })} style={{ ...styles.chip, ...(!currentPlatform ? styles.chipActive : {}) }}>
             全部平台
           </Link>
           {PLATFORM_OPTIONS.map((platform) => {
             const active = currentPlatform === platform.key;
-            const href =
-              currentIndustry === "全部"
-                ? `/ranking?tab=platform&platform=${platform.key}`
-                : `/ranking?tab=platform&industry=${encodeURIComponent(currentIndustry)}&platform=${platform.key}`;
+            const href = buildRankingHref({
+              tab: "platform",
+              city: currentCity,
+              industry: currentIndustry,
+              platform: platform.key,
+            });
 
             return (
               <Link key={platform.key} href={href} style={{ ...styles.chip, ...(active ? styles.chipActive : {}) }}>
@@ -114,13 +118,16 @@ export function PlatformCoverage({
           ].map((item) => {
             const active = (currentCoverage || "") === item.key;
             const params = new URLSearchParams();
-            params.set("tab", "platform");
-            if (currentIndustry !== "全部") params.set("industry", currentIndustry);
-            if (currentPlatform) params.set("platform", currentPlatform);
-            if (item.key) params.set("coverage", item.key);
+            const href = buildRankingHref({
+              tab: "platform",
+              city: currentCity,
+              industry: currentIndustry,
+              platform: currentPlatform,
+              coverage: item.key,
+            });
 
             return (
-              <Link key={item.label} href={`/ranking?${params.toString()}`} style={{ ...styles.chip, ...(active ? styles.chipActive : {}) }}>
+              <Link key={item.label} href={href} style={{ ...styles.chip, ...(active ? styles.chipActive : {}) }}>
                 {item.label}
               </Link>
             );

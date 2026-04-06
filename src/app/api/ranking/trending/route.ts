@@ -6,12 +6,14 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const industry = searchParams.get("industry") || undefined;
+    const city = searchParams.get("city") || undefined;
     const days = Number(searchParams.get("days") || 30);
     const limit = Number(searchParams.get("limit") || 20);
     const offset = Number(searchParams.get("offset") || 0);
 
     const data = await getTrendingQueriesData({
       industry,
+      city,
       days: Number.isFinite(days) ? days : 30,
       limit: Number.isFinite(limit) ? limit : 20,
       offset: Number.isFinite(offset) ? offset : 0,

@@ -1,14 +1,17 @@
 import { listRankingSnapshots } from "@/lib/db/repository";
 import {
+  FEATURED_CITY_NAMES,
   INDUSTRY_OPTIONS,
   PLATFORM_LABELS,
   PLATFORM_OPTIONS,
+  SUPPORTED_CITIES,
   type PlatformDetail,
   type PlatformKey,
+  type SupportedCityName,
 } from "@/lib/ranking/shared";
 
-export { INDUSTRY_OPTIONS, PLATFORM_LABELS, PLATFORM_OPTIONS } from "@/lib/ranking/shared";
-export type { PlatformDetail, PlatformKey, RankedBrand, RankingTabKey, TrendingQueryRow } from "@/lib/ranking/shared";
+export { FEATURED_CITY_NAMES, INDUSTRY_OPTIONS, PLATFORM_LABELS, PLATFORM_OPTIONS, SUPPORTED_CITIES } from "@/lib/ranking/shared";
+export type { PlatformDetail, PlatformKey, RankedBrand, RankingTabKey, TrendingQueryRow, SupportedCityName } from "@/lib/ranking/shared";
 
 type RankingSnapshotBase = Awaited<ReturnType<typeof listRankingSnapshots>>[number];
 
@@ -291,13 +294,14 @@ function buildPlatformDetail(row: RankingSnapshotBase) {
   ) as Record<PlatformKey, PlatformDetail>;
 }
 
-async function getLatestSnapshots(days = 30) {
-  const rows = await listRankingSnapshots({ days, limit: 240 });
+async function getLatestSnapshots(days = 30, city: string = "全国") {
+  const rows = await listRankingSnapshots({ days, city, limit: 240 });
   const deduped = new Map<string, RankingSnapshotBase>();
 
   rows.forEach((row) => {
-    if (!deduped.has(row.brandName)) {
-      deduped.set(row.brandName, row);
+    const key = `${row.city}-${row.brandName}`;
+    if (!deduped.has(key)) {
+      deduped.set(key, row);
     }
   });
 
@@ -311,6 +315,7 @@ function enrichRankingRows(rows: RankingSnapshotBase[]) {
       rank: index + 1,
       brandName: row.brandName,
       industry: row.industry,
+      city: row.city,
       tcaTotal: row.tcaTotal,
       tcaConsistency: row.tcaConsistency,
       tcaCoverage: row.tcaCoverage,
@@ -326,13 +331,14 @@ function enrichRankingRows(rows: RankingSnapshotBase[]) {
 
 export async function getIndustryRankingData(options?: {
   industry?: string;
+  city?: string;
   days?: number;
   limit?: number;
   offset?: number;
   q?: string;
 }) {
-  const { industry, days = 30, limit = 50, offset = 0, q } = options || {};
-  const snapshots = await getLatestSnapshots(days);
+  const { industry, city = "全国", days = 30, limit = 50, offset = 0, q } = options || {};
+  const snapshots = await getLatestSnapshots(days, city);
   const keyword = q?.trim().toLowerCase();
 
   const filtered = snapshots.filter((row) => {
@@ -347,6 +353,7 @@ export async function getIndustryRankingData(options?: {
   return {
     total: brands.length,
     snapshotDate: brands[0]?.snapshotDate || "2026-04-05",
+    city,
     overview: {
       topRiser: brands[0]
         ? [...brands].sort((left, right) => right.change7d - left.change7d)[0]
@@ -374,14 +381,16 @@ export async function getIndustryRankingData(options?: {
 
 export async function getPlatformCoverageData(options?: {
   industry?: string;
+  city?: string;
   platform?: PlatformKey;
   coverage?: "low" | "medium" | "high";
   limit?: number;
   offset?: number;
 }) {
-  const { industry, platform, coverage, limit = 50, offset = 0 } = options || {};
+  const { industry, city = "全国", platform, coverage, limit = 50, offset = 0 } = options || {};
   const industryData = await getIndustryRankingData({
     industry,
+    city,
     limit: 240,
     offset: 0,
   });
@@ -428,34 +437,51 @@ export async function getPlatformCoverageData(options?: {
 
 export async function getTrendingQueriesData(options?: {
   industry?: string;
+  city?: string;
   days?: number;
   limit?: number;
   offset?: number;
 }) {
-  const { industry, limit = 20, offset = 0 } = options || {};
-  const filtered = TRENDING_SEEDS.filter((row) => !industry || industry === "全部" || row.industry === industry)
+  const { industry, city = "全国", limit = 20, offset = 0 } = options || {};
+  const cityHasData = SUPPORTED_CITIES.find((item) => item.name === city)?.hasData ?? city === "全国";
+  const availableCityIndustries = new Set(
+    city === "全国"
+      ? INDUSTRY_OPTIONS.filter((item) => item !== "全部")
+      : (await getLatestSnapshots(30, city)).map((row) => row.industry),
+  );
+  const filtered = (cityHasData
+    ? TRENDING_SEEDS.filter((row) => (!industry || industry === "全部" || row.industry === industry) && availableCityIndustries.has(row.industry))
     .map((row, index) => ({
       rank: index + 1,
-      queryText: row.queryText,
+      queryText:
+        city === "全国" || row.queryText.includes(city)
+          ? row.queryText
+          : row.industry === "新茶饮"
+            ? `${city}${row.queryText}`
+            : `${city}${row.queryText.replace(/推荐|排行|品牌/g, "")}`.trim(),
       industry: row.industry,
+      city,
       heatScore: row.heatScore,
       brandCount: row.brandsMentioned.length,
       trendDirection: row.trendDirection,
       brandsMentioned: row.brandsMentioned,
     }))
-    .slice(offset, offset + limit);
+    : []
+  ).slice(offset, offset + limit);
 
   return { queries: filtered };
 }
 
 export async function getMoversData(options?: {
   industry?: string;
+  city?: string;
   days?: number;
   limit?: number;
 }) {
-  const { industry, days = 7, limit = 10 } = options || {};
+  const { industry, city = "全国", days = 7, limit = 10 } = options || {};
   const industryData = await getIndustryRankingData({
     industry,
+    city,
     days,
     limit: 240,
   });
@@ -477,8 +503,13 @@ export async function getMoversData(options?: {
       currentScore: brand.tcaTotal,
     }));
 
-  const industryTrends = INDUSTRY_OPTIONS.filter((item) => item !== "全部").map((industryName) => {
-    const target = INDUSTRY_AVERAGE_TARGETS[industryName as keyof typeof INDUSTRY_AVERAGE_TARGETS] || 60;
+  const activeIndustries = city === "全国"
+    ? INDUSTRY_OPTIONS.filter((item) => item !== "全部")
+    : Array.from(new Set(industryData.brands.map((item) => item.industry)));
+
+  const cityPenalty = city === "全国" ? 0 : 12;
+  const industryTrends = activeIndustries.map((industryName) => {
+    const target = (INDUSTRY_AVERAGE_TARGETS[industryName as keyof typeof INDUSTRY_AVERAGE_TARGETS] || 60) - cityPenalty;
 
     return {
       industry: industryName,

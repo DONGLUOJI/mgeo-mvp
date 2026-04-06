@@ -78,6 +78,7 @@ export async function ensurePostgresSchema() {
         customer_id TEXT NOT NULL REFERENCES customers(customer_id),
         brand_name TEXT NOT NULL,
         industry TEXT NOT NULL,
+        city TEXT NOT NULL DEFAULT '全国',
         query TEXT NOT NULL,
         selected_models_json TEXT NOT NULL,
         execution_mode TEXT NOT NULL,
@@ -98,6 +99,7 @@ export async function ensurePostgresSchema() {
       CREATE TABLE IF NOT EXISTS ranking_snapshots (
         id TEXT PRIMARY KEY,
         industry TEXT NOT NULL,
+        city TEXT NOT NULL DEFAULT '全国',
         brand_name TEXT NOT NULL,
         tca_total REAL NOT NULL,
         tca_consistency REAL NOT NULL,
@@ -113,6 +115,22 @@ export async function ensurePostgresSchema() {
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_ranking_industry_date
       ON ranking_snapshots(industry, snapshot_date);
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_ranking_city_industry_date
+      ON ranking_snapshots(city, industry, snapshot_date);
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS supported_cities (
+        city_code TEXT PRIMARY KEY,
+        city_name TEXT NOT NULL,
+        region TEXT NOT NULL,
+        brand_count INTEGER NOT NULL DEFAULT 0,
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
     `);
 
     await client.query(`
@@ -175,14 +193,29 @@ export async function ensurePostgresSchema() {
 
     await client.query(`
       ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS brand_logo_url TEXT;
+      ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS city TEXT DEFAULT '全国';
       ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS rank_position INTEGER;
       ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS prev_tca_total REAL;
       ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS platform_detail_json TEXT;
       ALTER TABLE customers ADD COLUMN IF NOT EXISTS user_id TEXT REFERENCES users(id);
+      ALTER TABLE scan_tasks ADD COLUMN IF NOT EXISTS city TEXT DEFAULT '全国';
       ALTER TABLE scan_tasks ADD COLUMN IF NOT EXISTS user_id TEXT REFERENCES users(id);
       ALTER TABLE scan_reports ADD COLUMN IF NOT EXISTS user_id TEXT REFERENCES users(id);
       ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
+    `);
+
+    await client.query(`
+      INSERT INTO supported_cities (city_code, city_name, region, brand_count, is_active)
+      VALUES
+        ('national', '全国', '全国', 60, TRUE),
+        ('beijing', '北京', '华北', 0, TRUE),
+        ('shanghai', '上海', '华东', 0, TRUE),
+        ('guangzhou', '广州', '华南', 0, TRUE),
+        ('shenzhen', '深圳', '华南', 35, TRUE),
+        ('hangzhou', '杭州', '华东', 32, TRUE),
+        ('chengdu', '成都', '西南', 30, TRUE)
+      ON CONFLICT (city_code) DO NOTHING;
     `);
     initialized = true;
   } finally {

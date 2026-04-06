@@ -27,6 +27,7 @@ type ScanTaskRecord = {
   customerId: string;
   brandName: string;
   industry: string;
+  city: string;
   query: string;
   selectedModels: string[];
   executionMode: string;
@@ -41,6 +42,7 @@ type CustomerDetailRecord = CustomerRecord & {
 type RankingSnapshotRecord = {
   id: string;
   industry: string;
+  city: string;
   brandName: string;
   tcaTotal: number;
   tcaConsistency: number;
@@ -54,6 +56,7 @@ type RankingSnapshotRecord = {
 
 type RankingSeed = {
   industry: string;
+  city: string;
   brandName: string;
   tcaTotal: number;
   platformCoverage: number;
@@ -198,11 +201,100 @@ function buildScoreBreakdown(seed: RankingSeed, index: number) {
 const mockRankingSeeds: RankingSeed[] = rankingSeedCatalog.flatMap((group) =>
   group.brands.map((brandName, brandIndex) => ({
     industry: group.industry,
+    city: "全国",
     brandName,
     tcaTotal: group.scores[brandIndex],
     platformCoverage: group.coverages[brandIndex],
     delta7d: group.changes[brandIndex],
   }))
+);
+
+const citySeedCatalog = [
+  {
+    city: "深圳",
+    industry: "新茶饮",
+    brands: ["喜茶", "奈雪的茶", "霸王茶姬", "茶理宜世", "百分茶", "阿嬷手作", "茉酸奶", "古茗", "KOI", "益禾堂"],
+    scores: [78, 73, 69, 61, 57, 54, 49, 44, 37, 28],
+    coverages: [5, 4, 4, 4, 3, 3, 2, 2, 1, 1],
+    changes: [6.1, 1.7, 2.2, -0.8, 0.4, 3.3, -1.4, -2.1, -0.6, -3.8],
+  },
+  {
+    city: "深圳",
+    industry: "餐饮连锁",
+    brands: ["海底捞", "木屋烧烤", "农耕记", "费大厨", "探鱼", "绿茶餐厅", "太二酸菜鱼", "八合里牛肉火锅", "乐凯撒", "巴奴火锅"],
+    scores: [82, 74, 69, 65, 58, 55, 51, 47, 41, 36],
+    coverages: [5, 4, 4, 4, 3, 3, 3, 2, 2, 1],
+    changes: [4.5, 8.3, 2.8, 1.2, -1.7, -0.3, -2.4, 0.9, -1.1, -3.6],
+  },
+  {
+    city: "深圳",
+    industry: "家政服务",
+    brands: ["轻喜到家", "天鹅到家", "好慷在家", "58到家", "深洁管家", "安心阿姨", "悦享到家", "到位家政", "无忧保姆", "邻家家政"],
+    scores: [64, 58, 54, 49, 43, 39, 35, 31, 24, 20],
+    coverages: [4, 4, 3, 3, 2, 2, 2, 1, 1, 0],
+    changes: [2.9, 1.1, -0.7, -1.6, 3.7, 0.4, -2.2, -0.8, -4.1, -1.3],
+  },
+  {
+    city: "杭州",
+    industry: "新茶饮",
+    brands: ["霸王茶姬", "茶百道", "古茗", "喜茶", "奈雪的茶", "茶话弄", "爷爷不泡茶", "茉莉奶白", "阿水大杯茶", "沪上阿姨"],
+    scores: [74, 68, 66, 63, 58, 51, 47, 41, 34, 27],
+    coverages: [4, 4, 4, 4, 3, 3, 2, 2, 1, 1],
+    changes: [5.4, 2.1, 1.8, -0.2, -1.9, 0.7, -1.1, -2.7, -0.4, -3.5],
+  },
+  {
+    city: "杭州",
+    industry: "教培",
+    brands: ["学而思", "新东方", "火花思维", "猿辅导", "编程猫", "核桃编程", "高途", "粉笔", "童程童美", "小码王"],
+    scores: [71, 66, 59, 55, 51, 47, 42, 36, 29, 23],
+    coverages: [4, 4, 3, 3, 3, 2, 2, 1, 1, 0],
+    changes: [3.2, 0.8, 1.4, -1.1, -0.3, 2.2, -2.6, -3.8, -1.2, -4.5],
+  },
+  {
+    city: "杭州",
+    industry: "企业服务",
+    brands: ["飞书", "钉钉", "有赞", "微盟", "销售易", "纷享销客", "北森", "简道云", "伙伴云", "石墨文档"],
+    scores: [79, 73, 68, 64, 55, 49, 43, 38, 31, 24],
+    coverages: [5, 5, 4, 4, 3, 3, 2, 2, 1, 1],
+    changes: [2.6, 1.1, 4.8, 3.3, -0.9, -1.6, -2.8, 0.5, -1.1, -3.7],
+  },
+  {
+    city: "成都",
+    industry: "餐饮连锁",
+    brands: ["海底捞", "大龙燚火锅", "蜀大侠", "钢管厂五区小郡肝", "马旺子", "费大厨", "巴奴火锅", "谭鸭血", "小龙坎", "冒椒火辣"],
+    scores: [76, 71, 68, 63, 58, 52, 49, 43, 39, 32],
+    coverages: [4, 4, 4, 3, 3, 3, 2, 2, 2, 1],
+    changes: [2.8, 7.4, 4.1, 1.2, -0.5, -1.3, -2.1, -0.9, -3.3, -4.6],
+  },
+  {
+    city: "成都",
+    industry: "新茶饮",
+    brands: ["茶百道", "书亦烧仙草", "霸王茶姬", "古茗", "喜茶", "霸王柠檬茶", "沪上阿姨", "爷爷不泡茶", "茶理宜世", "蜜雪冰城"],
+    scores: [72, 67, 62, 58, 54, 49, 44, 39, 34, 26],
+    coverages: [4, 4, 4, 3, 3, 3, 2, 2, 1, 1],
+    changes: [4.1, 2.4, 1.8, -0.7, -1.3, 0.9, -2.6, -0.8, -1.5, -3.1],
+  },
+  {
+    city: "成都",
+    industry: "家政服务",
+    brands: ["天鹅到家", "川妹子家政", "好慷在家", "轻喜到家", "蓉城阿姨", "无忧保姆", "乐家管家", "悦享到家", "邻家家政", "洁妹子"],
+    scores: [61, 55, 51, 47, 42, 37, 33, 29, 24, 19],
+    coverages: [4, 3, 3, 3, 2, 2, 2, 1, 1, 0],
+    changes: [1.7, 5.9, 0.6, -1.4, 1.1, -2.2, -0.5, -1.8, -3.4, -4.2],
+  },
+] as const;
+
+mockRankingSeeds.push(
+  ...citySeedCatalog.flatMap((group) =>
+    group.brands.map((brandName, brandIndex) => ({
+      industry: group.industry,
+      city: group.city,
+      brandName,
+      tcaTotal: group.scores[brandIndex],
+      platformCoverage: group.coverages[brandIndex],
+      delta7d: group.changes[brandIndex],
+    })),
+  ),
 );
 
 const mockRankingSnapshots: RankingSnapshotRecord[] = mockRankingSeeds.map((seed, index) => {
@@ -211,6 +303,7 @@ const mockRankingSnapshots: RankingSnapshotRecord[] = mockRankingSeeds.map((seed
   return {
     id: `rank_${index + 1}`,
     industry: seed.industry,
+    city: seed.city,
     brandName: seed.brandName,
     tcaTotal: seed.tcaTotal,
     tcaConsistency: breakdown.tcaConsistency,
@@ -280,6 +373,7 @@ function mapTaskRow(row: {
   customer_id: string;
   brand_name: string;
   industry: string;
+  city?: string | null;
   query: string;
   selected_models_json: string;
   execution_mode: string;
@@ -290,6 +384,7 @@ function mapTaskRow(row: {
     customerId: row.customer_id,
     brandName: row.brand_name,
     industry: row.industry,
+    city: row.city || "全国",
     query: row.query,
     selectedModels: JSON.parse(row.selected_models_json) as string[],
     executionMode: row.execution_mode,
@@ -1550,10 +1645,12 @@ export async function getCustomerDetail(
 
 export async function listRankingSnapshots(options?: {
   industry?: string;
+  city?: string;
   limit?: number;
   days?: number;
 }): Promise<RankingSnapshotRecord[]> {
   const industry = options?.industry?.trim();
+  const city = options?.city?.trim();
   const limit = options?.limit ?? 20;
   const days = options?.days;
 
@@ -1566,6 +1663,13 @@ export async function listRankingSnapshots(options?: {
       where.push(`industry = $${values.length}`);
     }
 
+    if (city && city !== "全国") {
+      values.push(city);
+      where.push(`COALESCE(city, '全国') = $${values.length}`);
+    } else {
+      where.push(`COALESCE(city, '全国') = '全国'`);
+    }
+
     if (days && Number.isFinite(days)) {
       values.push(String(days));
       where.push(`snapshot_date >= CURRENT_DATE - ($${values.length}::int - 1)`);
@@ -1573,9 +1677,10 @@ export async function listRankingSnapshots(options?: {
 
     values.push(limit);
 
-    const result = await queryPostgres<{
+      const result = await queryPostgres<{
       id: string;
       industry: string;
+      city: string | null;
       brand_name: string;
       tca_total: string;
       tca_consistency: string;
@@ -1588,7 +1693,7 @@ export async function listRankingSnapshots(options?: {
     }>(
       `
         SELECT id, industry, brand_name, tca_total, tca_consistency, tca_coverage, tca_authority,
-          platform_coverage, delta_7d, snapshot_date, created_at
+          COALESCE(city, '全国') AS city, platform_coverage, delta_7d, snapshot_date, created_at
         FROM ranking_snapshots
         ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
         ORDER BY snapshot_date DESC, tca_total DESC
@@ -1600,6 +1705,7 @@ export async function listRankingSnapshots(options?: {
     const rows = result.rows.map((row) => ({
       id: row.id,
       industry: row.industry,
+      city: row.city || "全国",
       brandName: row.brand_name,
       tcaTotal: Number(row.tca_total),
       tcaConsistency: Number(row.tca_consistency),
@@ -1621,6 +1727,13 @@ export async function listRankingSnapshots(options?: {
       params.push(industry);
     }
 
+    if (city && city !== "全国") {
+      where = where ? `${where} AND COALESCE(city, '全国') = ?` : "WHERE COALESCE(city, '全国') = ?";
+      params.push(city);
+    } else {
+      where = where ? `${where} AND COALESCE(city, '全国') = '全国'` : "WHERE COALESCE(city, '全国') = '全国'";
+    }
+
     if (days && Number.isFinite(days)) {
       const anchor = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
       where = where ? `${where} AND snapshot_date >= ?` : "WHERE snapshot_date >= ?";
@@ -1628,7 +1741,7 @@ export async function listRankingSnapshots(options?: {
     }
 
     const stmt = sqlite().prepare(`
-      SELECT id, industry, brand_name, tca_total, tca_consistency, tca_coverage, tca_authority,
+      SELECT id, industry, COALESCE(city, '全国') AS city, brand_name, tca_total, tca_consistency, tca_coverage, tca_authority,
         platform_coverage, delta_7d, snapshot_date, created_at
       FROM ranking_snapshots
       ${where}
@@ -1639,6 +1752,7 @@ export async function listRankingSnapshots(options?: {
     const rows = stmt.all(...params, limit) as Array<{
       id: string;
       industry: string;
+      city: string;
       brand_name: string;
       tca_total: number;
       tca_consistency: number;
@@ -1654,6 +1768,7 @@ export async function listRankingSnapshots(options?: {
       return rows.map((row) => ({
         id: row.id,
         industry: row.industry,
+        city: row.city || "全国",
         brandName: row.brand_name,
         tcaTotal: Number(row.tca_total),
         tcaConsistency: Number(row.tca_consistency),
@@ -1667,5 +1782,7 @@ export async function listRankingSnapshots(options?: {
     }
   }
 
-  return mockRankingSnapshots.filter((item) => !industry || item.industry === industry).slice(0, limit);
+  return mockRankingSnapshots
+    .filter((item) => (!industry || item.industry === industry) && (!city ? item.city === "全国" : city === "全国" ? item.city === "全国" : item.city === city))
+    .slice(0, limit);
 }

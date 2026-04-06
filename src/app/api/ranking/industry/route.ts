@@ -6,6 +6,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const industry = searchParams.get("industry") || undefined;
+    const city = searchParams.get("city") || undefined;
     const days = Number(searchParams.get("days") || 30);
     const limit = Number(searchParams.get("limit") || 50);
     const offset = Number(searchParams.get("offset") || 0);
@@ -13,6 +14,7 @@ export async function GET(request: Request) {
 
     const data = await getIndustryRankingData({
       industry,
+      city,
       days: Number.isFinite(days) ? days : 30,
       limit: Number.isFinite(limit) ? limit : 50,
       offset: Number.isFinite(offset) ? offset : 0,
@@ -26,6 +28,7 @@ export async function GET(request: Request) {
         rank: brand.rank,
         brand_name: brand.brandName,
         industry: brand.industry,
+        city: brand.city,
         tca_total: brand.tcaTotal,
         tca_consistency: brand.tcaConsistency,
         tca_coverage: brand.tcaCoverage,

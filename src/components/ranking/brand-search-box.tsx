@@ -25,9 +25,11 @@ type SearchResult =
 export function BrandSearchBox({
   initialQuery = "",
   initialResult = null,
+  currentCity = "全国",
 }: {
   initialQuery?: string;
   initialResult?: SearchResult;
+  currentCity?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -43,7 +45,12 @@ export function BrandSearchBox({
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/ranking/industry?q=${encodeURIComponent(keyword)}&limit=1`, {
+      const params = new URLSearchParams();
+      params.set("q", keyword);
+      params.set("limit", "1");
+      if (currentCity !== "全国") params.set("city", currentCity);
+
+      const res = await fetch(`/api/ranking/industry?${params.toString()}`, {
         cache: "no-store",
       });
       const data = await res.json();
@@ -55,17 +62,22 @@ export function BrandSearchBox({
           brand: firstBrand,
         } as const;
         setResult(nextResult);
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("tab", "industry");
-        params.set("industry", firstBrand.industry);
-        params.set("focusBrand", firstBrand.brand_name);
-        router.push(`${pathname}?${params.toString()}#${getBrandAnchorId(firstBrand.brand_name)}`);
+        const nextParams = new URLSearchParams(searchParams.toString());
+        nextParams.set("tab", "industry");
+        nextParams.set("industry", firstBrand.industry);
+        nextParams.set("focusBrand", firstBrand.brand_name);
+        if (currentCity !== "全国") {
+          nextParams.set("city", currentCity);
+        } else {
+          nextParams.delete("city");
+        }
+        router.push(`${pathname}?${nextParams.toString()}#${getBrandAnchorId(firstBrand.brand_name)}`);
       } else {
         const nextResult = { found: false, query: keyword } as const;
         setResult(nextResult);
-        const params = new URLSearchParams(searchParams.toString());
-        params.delete("focusBrand");
-        router.replace(`${pathname}?${params.toString()}`);
+        const nextParams = new URLSearchParams(searchParams.toString());
+        nextParams.delete("focusBrand");
+        router.replace(`${pathname}?${nextParams.toString()}`);
       }
     } catch {
       setResult({ found: false, query: keyword });
@@ -98,7 +110,7 @@ export function BrandSearchBox({
           <div>
             <div style={styles.resultLabel}>已收录</div>
             <div style={styles.resultTitle}>
-              {result.brand.brand_name} 当前排第 {result.brand.rank} 位
+              {result.brand.brand_name} 当前在{currentCity === "全国" ? "全国" : currentCity}排第 {result.brand.rank} 位
             </div>
             <div style={styles.resultText}>
               行业：{result.brand.industry} | TCA 综合分：{result.brand.tca_total}
@@ -119,11 +131,14 @@ export function BrandSearchBox({
         <div style={styles.resultCardMuted}>
           <div>
             <div style={styles.resultLabel}>暂未收录</div>
-            <div style={styles.resultTitle}>「{result.query}」暂未进入当前排名系统</div>
+            <div style={styles.resultTitle}>「{result.query}」暂未收录到{currentCity === "全国" ? "当前" : currentCity}排名</div>
             <div style={styles.resultText}>立即免费检测，30 秒获取你的 AI 可见性评分，并为后续上榜做基线记录。</div>
           </div>
-          <Link href={`/detect?brandName=${encodeURIComponent(result.query)}`} style={styles.detectAction}>
-            免费检测你的品牌
+          <Link
+            href={`/detect?brandName=${encodeURIComponent(result.query)}${currentCity !== "全国" ? `&city=${encodeURIComponent(currentCity)}` : ""}`}
+            style={styles.detectAction}
+          >
+            免费检测你的品牌{currentCity === "全国" ? "" : `（${currentCity}）`}
           </Link>
         </div>
       ) : null}

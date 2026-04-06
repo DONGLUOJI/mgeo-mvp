@@ -1,6 +1,7 @@
 import { IndustryTrendChart } from "./industry-trend-chart";
 
 type MoversBoardProps = {
+  currentCity: string;
   risers: Array<{ brandName: string; industry: string; change: number; currentScore: number }>;
   fallers: Array<{ brandName: string; industry: string; change: number; currentScore: number }>;
   overview: {
@@ -14,16 +15,16 @@ type MoversBoardProps = {
   }>;
 };
 
-export function MoversBoard({ risers, fallers, overview, industryTrends }: MoversBoardProps) {
+export function MoversBoard({ currentCity, risers, fallers, overview, industryTrends }: MoversBoardProps) {
   return (
     <section style={styles.section}>
       <div style={styles.overviewGrid}>
         <article style={styles.overviewCard}>
-          <div style={styles.overviewLabel}>本周涨幅最高</div>
+          <div style={styles.overviewLabel}>{currentCity === "全国" ? "本周涨幅最高" : `${currentCity}涨幅最高`}</div>
           <div style={styles.overviewValueSmall}>{overview.topRiser}</div>
         </article>
         <article style={styles.overviewCard}>
-          <div style={styles.overviewLabel}>本周跌幅最高</div>
+          <div style={styles.overviewLabel}>{currentCity === "全国" ? "本周跌幅最高" : `${currentCity}跌幅最高`}</div>
           <div style={styles.overviewValueSmall}>{overview.topFaller}</div>
         </article>
         <article style={styles.overviewCard}>
@@ -33,7 +34,7 @@ export function MoversBoard({ risers, fallers, overview, industryTrends }: Mover
       </div>
 
       <div>
-        <h2 style={styles.title}>涨跌幅排行榜</h2>
+        <h2 style={styles.title}>{currentCity === "全国" ? "涨跌幅排行榜" : `${currentCity}涨跌幅排行榜`}</h2>
         <p style={styles.text}>上升和下滑是最具讨论度的内容。把波动做出来，品牌方就更容易形成每周回看习惯。</p>
       </div>
 

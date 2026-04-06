@@ -8,12 +8,22 @@ import { MoversBoard } from "@/components/ranking/movers-board";
 import { PlatformCoverage } from "@/components/ranking/platform-coverage";
 import { TrendingQueries } from "@/components/ranking/trending-queries";
 import {
+  FEATURED_CITY_NAMES,
   getIndustryRankingData,
   getMoversData,
   getPlatformCoverageData,
+  SUPPORTED_CITIES,
   getTrendingQueriesData,
 } from "@/lib/ranking/data";
-import { INDUSTRY_OPTIONS, PLATFORM_LABELS, RANKING_TABS, type PlatformKey, type RankingTabKey } from "@/lib/ranking/shared";
+import {
+  INDUSTRY_OPTIONS,
+  PLATFORM_LABELS,
+  RANKING_TABS,
+  buildRankingHref,
+  isSupportedCity,
+  type PlatformKey,
+  type RankingTabKey,
+} from "@/lib/ranking/shared";
 
 export const metadata: Metadata = {
   title: "AI可见性排名 - 董逻辑MGEO",
@@ -26,20 +36,20 @@ function isTab(value?: string): value is RankingTabKey {
 
 function getTabHref(
   tab: RankingTabKey,
+  currentCity: string,
   currentIndustry: string,
   currentDays: number,
   currentPlatform?: string,
   currentCoverage?: string
 ) {
-  const params = new URLSearchParams();
-  params.set("tab", tab);
-
-  if (currentIndustry !== "全部") params.set("industry", currentIndustry);
-  if (currentDays !== 30) params.set("days", String(currentDays));
-  if (currentPlatform && tab === "platform") params.set("platform", currentPlatform);
-  if (currentCoverage && tab === "platform") params.set("coverage", currentCoverage);
-
-  return `/ranking?${params.toString()}`;
+  return buildRankingHref({
+    tab,
+    city: currentCity,
+    industry: currentIndustry,
+    days: currentDays,
+    platform: tab === "platform" ? currentPlatform : undefined,
+    coverage: tab === "platform" ? currentCoverage : undefined,
+  });
 }
 
 export default async function RankingPage({
@@ -47,6 +57,7 @@ export default async function RankingPage({
 }: {
   searchParams?: Promise<{
     tab?: string;
+    city?: string;
     industry?: string;
     days?: string;
     platform?: string;
@@ -56,6 +67,7 @@ export default async function RankingPage({
 }) {
   const params = (await searchParams) || {};
   const currentTab: RankingTabKey = isTab(params.tab) ? params.tab : "industry";
+  const currentCity = isSupportedCity(params.city) ? params.city : "全国";
   const currentIndustry = INDUSTRY_OPTIONS.includes((params.industry || "全部") as (typeof INDUSTRY_OPTIONS)[number])
     ? params.industry || "全部"
     : "全部";
@@ -66,21 +78,25 @@ export default async function RankingPage({
 
   const [industryData, platformData, trendingData, moversData] = await Promise.all([
     getIndustryRankingData({
+      city: currentCity,
       industry: currentIndustry,
       days: currentDays,
       limit: 60,
     }),
     getPlatformCoverageData({
+      city: currentCity,
       industry: currentIndustry,
       platform: currentPlatform,
       coverage: currentCoverage,
       limit: 40,
     }),
     getTrendingQueriesData({
+      city: currentCity,
       industry: currentIndustry,
       limit: 12,
     }),
     getMoversData({
+      city: currentCity,
       industry: currentIndustry,
       days: 7,
       limit: 10,
@@ -107,12 +123,16 @@ export default async function RankingPage({
     topFaller: moversData.fallers[0] ? `${moversData.fallers[0].brandName} ↓ ${Math.abs(moversData.fallers[0].change).toFixed(1)}` : "-",
     trackedWeeks: moversData.industryTrends[0]?.data.length || 12,
   };
+  const currentCityMeta = SUPPORTED_CITIES.find((item) => item.name === currentCity) || SUPPORTED_CITIES[0];
+  const hasCityData = currentCity === "全国" || industryData.total > 0;
+  const moreCities = SUPPORTED_CITIES.filter((item) => !FEATURED_CITY_NAMES.includes(item.name as (typeof FEATURED_CITY_NAMES)[number]));
 
   return (
     <SiteShell current="/ranking">
       <main style={styles.page}>
         <div style={styles.wrap}>
           <BrandSearchBox
+            currentCity={currentCity}
             initialQuery={focusBrand}
             initialResult={
               focusedBrand
@@ -136,7 +156,7 @@ export default async function RankingPage({
                 return (
                   <Link
                     key={tab.key}
-                    href={getTabHref(tab.key, currentIndustry, currentDays, currentPlatform, currentCoverage)}
+                    href={getTabHref(tab.key, currentCity, currentIndustry, currentDays, currentPlatform, currentCoverage)}
                     style={{ ...styles.tabLink, ...(active ? styles.tabLinkActive : {}) }}
                   >
                     {tab.label}
@@ -145,11 +165,61 @@ export default async function RankingPage({
               })}
             </div>
 
+            <div style={styles.cityFilterShell}>
+              <div style={styles.cityLabel}>城市</div>
+              <div style={styles.cityRow}>
+                {FEATURED_CITY_NAMES.map((cityName) => {
+                  const active = cityName === currentCity;
+                  return (
+                    <Link
+                      key={cityName}
+                      href={buildRankingHref({ tab: currentTab, city: cityName, industry: currentIndustry, days: currentDays, platform: currentPlatform, coverage: currentCoverage })}
+                      style={{ ...styles.cityChip, ...(active ? styles.cityChipActive : {}) }}
+                    >
+                      {cityName}
+                    </Link>
+                  );
+                })}
+
+                {moreCities.length ? (
+                  <details style={styles.moreCities}>
+                    <summary style={styles.cityChip}>更多 ▾</summary>
+                    <div style={styles.morePanel}>
+                      {moreCities.map((city) => (
+                        <Link
+                          key={city.name}
+                          href={buildRankingHref({ tab: currentTab, city: city.name, industry: currentIndustry, days: currentDays, platform: currentPlatform, coverage: currentCoverage })}
+                          style={styles.moreLink}
+                        >
+                          {city.name}
+                          <span style={styles.moreRegion}>{city.region}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </details>
+                ) : null}
+              </div>
+            </div>
+
             <div style={styles.content}>
-              {currentTab === "industry" ? (
+              {!hasCityData ? (
+                <section style={styles.emptyState}>
+                  <div style={styles.emptyIcon}>📍</div>
+                  <h2 style={styles.emptyTitle}>{currentCity} 的品牌数据正在收录中</h2>
+                  <p style={styles.emptyText}>
+                    我们正在收录 {currentCityMeta.name} 地区的品牌数据，预计 1-2 周内上线。你也可以现在就先检测自己的品牌在 {currentCityMeta.name} 的 AI 可见性。
+                  </p>
+                  <Link href={`/detect?city=${encodeURIComponent(currentCityMeta.name)}`} style={styles.emptyButton}>
+                    免费检测你的品牌
+                  </Link>
+                </section>
+              ) : null}
+
+              {hasCityData && currentTab === "industry" ? (
                 <IndustryLeaderboard
                   brands={industryData.brands}
                   industries={INDUSTRY_OPTIONS}
+                  currentCity={currentCity}
                   currentIndustry={currentIndustry}
                   currentDays={currentDays}
                   focusBrand={focusBrand}
@@ -157,8 +227,9 @@ export default async function RankingPage({
                 />
               ) : null}
 
-              {currentTab === "platform" ? (
+              {hasCityData && currentTab === "platform" ? (
                 <PlatformCoverage
+                  currentCity={currentCity}
                   currentIndustry={currentIndustry}
                   currentPlatform={currentPlatform}
                   currentCoverage={currentCoverage}
@@ -169,17 +240,19 @@ export default async function RankingPage({
                 />
               ) : null}
 
-              {currentTab === "trending" ? (
+              {hasCityData && currentTab === "trending" ? (
                 <TrendingQueries
                   queries={trendingData.queries}
                   industries={INDUSTRY_OPTIONS}
+                  currentCity={currentCity}
                   currentIndustry={currentIndustry}
                   overview={trendingOverview}
                 />
               ) : null}
 
-              {currentTab === "movers" ? (
+              {hasCityData && currentTab === "movers" ? (
                 <MoversBoard
+                  currentCity={currentCity}
                   risers={moversData.risers}
                   fallers={moversData.fallers}
                   overview={moversOverview}
@@ -190,7 +263,7 @@ export default async function RankingPage({
           </section>
 
           <section style={styles.ctaSection}>
-            {currentTab === "industry" ? (
+            {hasCityData && currentTab === "industry" ? (
               <>
                 <div>
                   <div style={styles.ctaTitle}>想让你的品牌进入 TOP 10？</div>
@@ -207,7 +280,7 @@ export default async function RankingPage({
               </>
             ) : null}
 
-            {currentTab === "platform" ? (
+            {hasCityData && currentTab === "platform" ? (
               <>
                 <div>
                   <div style={styles.ctaTitle}>你的品牌覆盖了几个平台？</div>
@@ -221,7 +294,7 @@ export default async function RankingPage({
               </>
             ) : null}
 
-            {currentTab === "trending" ? (
+            {hasCityData && currentTab === "trending" ? (
               <>
                 <div>
                   <div style={styles.ctaTitle}>你的品牌在这些热搜问题中被推荐了吗？</div>
@@ -235,7 +308,7 @@ export default async function RankingPage({
               </>
             ) : null}
 
-            {currentTab === "movers" ? (
+            {hasCityData && currentTab === "movers" ? (
               <>
                 <div>
                   <div style={styles.ctaTitle}>不想排名下跌？</div>
@@ -277,6 +350,77 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 24,
     boxShadow: "0 16px 40px rgba(15, 23, 42, 0.04)",
   },
+  cityFilterShell: {
+    display: "grid",
+    gap: 10,
+    marginBottom: 22,
+  },
+  cityLabel: {
+    fontSize: 13,
+    color: "#6b7280",
+    fontWeight: 800,
+  },
+  cityRow: {
+    display: "flex",
+    gap: 10,
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
+  cityChip: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 38,
+    padding: "6px 16px",
+    borderRadius: 999,
+    textDecoration: "none",
+    background: "transparent",
+    border: "1px solid #d8dde5",
+    color: "#666666",
+    fontSize: 13,
+    fontWeight: 700,
+    cursor: "pointer",
+    listStyle: "none",
+  },
+  cityChipActive: {
+    background: "#333333",
+    color: "#ffffff",
+    borderColor: "#333333",
+  },
+  moreCities: {
+    position: "relative",
+  },
+  morePanel: {
+    position: "absolute",
+    top: "calc(100% + 10px)",
+    left: 0,
+    minWidth: 220,
+    padding: 10,
+    borderRadius: 18,
+    border: "1px solid #e5e7eb",
+    background: "#ffffff",
+    boxShadow: "0 18px 40px rgba(15, 23, 42, 0.08)",
+    display: "grid",
+    gap: 6,
+    zIndex: 10,
+  },
+  moreLink: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 12,
+    textDecoration: "none",
+    color: "#111827",
+    padding: "10px 12px",
+    borderRadius: 12,
+    fontSize: 14,
+    fontWeight: 700,
+    background: "#f8fafc",
+  },
+  moreRegion: {
+    color: "#8a8a8a",
+    fontSize: 12,
+    fontWeight: 700,
+  },
   tabBar: {
     display: "grid",
     gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
@@ -301,6 +445,45 @@ const styles: Record<string, React.CSSProperties> = {
   },
   content: {
     minHeight: 520,
+  },
+  emptyState: {
+    minHeight: 520,
+    borderRadius: 28,
+    border: "1px dashed #d6dbe3",
+    background: "#fafafa",
+    display: "grid",
+    placeItems: "center",
+    textAlign: "center",
+    padding: "56px 24px",
+  },
+  emptyIcon: {
+    fontSize: 42,
+  },
+  emptyTitle: {
+    margin: "14px 0 0",
+    fontSize: 34,
+    lineHeight: 1.15,
+    letterSpacing: "-0.03em",
+    color: "#111827",
+  },
+  emptyText: {
+    margin: "12px auto 0",
+    maxWidth: 680,
+    fontSize: 16,
+    lineHeight: 1.8,
+    color: "#6b7280",
+  },
+  emptyButton: {
+    marginTop: 18,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "14px 18px",
+    borderRadius: 12,
+    textDecoration: "none",
+    background: "#0a7c66",
+    color: "#ffffff",
+    fontWeight: 800,
   },
   ctaSection: {
     borderRadius: 28,

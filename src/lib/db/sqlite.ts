@@ -58,6 +58,7 @@ function initializeSqlite(db: Database.Database) {
       customer_id TEXT NOT NULL,
       brand_name TEXT NOT NULL,
       industry TEXT NOT NULL,
+      city TEXT NOT NULL DEFAULT '全国',
       query TEXT NOT NULL,
       selected_models_json TEXT NOT NULL,
       execution_mode TEXT NOT NULL,
@@ -75,6 +76,7 @@ function initializeSqlite(db: Database.Database) {
     CREATE TABLE IF NOT EXISTS ranking_snapshots (
       id TEXT PRIMARY KEY,
       industry TEXT NOT NULL,
+      city TEXT NOT NULL DEFAULT '全国',
       brand_name TEXT NOT NULL,
       tca_total REAL NOT NULL,
       tca_consistency REAL NOT NULL,
@@ -88,6 +90,18 @@ function initializeSqlite(db: Database.Database) {
 
     CREATE INDEX IF NOT EXISTS idx_ranking_industry_date
     ON ranking_snapshots(industry, snapshot_date);
+
+    CREATE INDEX IF NOT EXISTS idx_ranking_city_industry_date
+    ON ranking_snapshots(city, industry, snapshot_date);
+
+    CREATE TABLE IF NOT EXISTS supported_cities (
+      city_code TEXT PRIMARY KEY,
+      city_name TEXT NOT NULL,
+      region TEXT NOT NULL,
+      brand_count INTEGER NOT NULL DEFAULT 0,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
 
     CREATE TABLE IF NOT EXISTS trending_queries (
       id TEXT PRIMARY KEY,
@@ -136,6 +150,18 @@ function initializeSqlite(db: Database.Database) {
     ON monitor_results(keyword_id, checked_at);
   `);
 
+  ensureColumn(
+    db,
+    "ranking_snapshots",
+    "city",
+    "ALTER TABLE ranking_snapshots ADD COLUMN city TEXT NOT NULL DEFAULT '全国'"
+  );
+  ensureColumn(
+    db,
+    "scan_tasks",
+    "city",
+    "ALTER TABLE scan_tasks ADD COLUMN city TEXT NOT NULL DEFAULT '全国'"
+  );
   ensureColumn(
     db,
     "ranking_snapshots",
@@ -192,6 +218,18 @@ function initializeSqlite(db: Database.Database) {
     "user_id",
     "ALTER TABLE scan_reports ADD COLUMN user_id TEXT REFERENCES users(id)"
   );
+
+  db.exec(`
+    INSERT OR IGNORE INTO supported_cities (city_code, city_name, region, brand_count, is_active)
+    VALUES
+      ('national', '全国', '全国', 60, 1),
+      ('beijing', '北京', '华北', 0, 1),
+      ('shanghai', '上海', '华东', 0, 1),
+      ('guangzhou', '广州', '华南', 0, 1),
+      ('shenzhen', '深圳', '华南', 35, 1),
+      ('hangzhou', '杭州', '华东', 32, 1),
+      ('chengdu', '成都', '西南', 30, 1);
+  `);
 }
 
 function getSqliteDb() {
