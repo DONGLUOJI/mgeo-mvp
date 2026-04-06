@@ -91,9 +91,6 @@ function initializeSqlite(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_ranking_industry_date
     ON ranking_snapshots(industry, snapshot_date);
 
-    CREATE INDEX IF NOT EXISTS idx_ranking_city_industry_date
-    ON ranking_snapshots(city, industry, snapshot_date);
-
     CREATE TABLE IF NOT EXISTS supported_cities (
       city_code TEXT PRIMARY KEY,
       city_name TEXT NOT NULL,
@@ -218,6 +215,11 @@ function initializeSqlite(db: Database.Database) {
     "user_id",
     "ALTER TABLE scan_reports ADD COLUMN user_id TEXT REFERENCES users(id)"
   );
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_ranking_city_industry_date
+    ON ranking_snapshots(city, industry, snapshot_date);
+  `);
 
   db.exec(`
     INSERT OR IGNORE INTO supported_cities (city_code, city_name, region, brand_count, is_active)
