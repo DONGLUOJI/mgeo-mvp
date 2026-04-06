@@ -380,14 +380,15 @@ const styles: Record<string, React.CSSProperties> = {
   },
   metricsGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(120px, 1fr))",
-    gap: 14,
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 12,
     marginTop: 24,
+    minWidth: 0,
   },
   metricCard: {
     background: "#f7f8fb",
     borderRadius: 20,
-    padding: "16px 16px 18px",
+    padding: "16px 14px 18px",
     minHeight: 118,
     display: "grid",
     gridTemplateRows: "auto 1fr",
@@ -395,6 +396,7 @@ const styles: Record<string, React.CSSProperties> = {
     justifyItems: "start",
     gap: 10,
     minWidth: 0,
+    overflow: "hidden",
   },
   metricLabel: {
     color: "#818897",
@@ -405,7 +407,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   metricValue: {
     color: "#1d1d1f",
-    fontSize: 19,
+    fontSize: 17,
     fontWeight: 800,
     lineHeight: 1.3,
     letterSpacing: "-0.02em",
