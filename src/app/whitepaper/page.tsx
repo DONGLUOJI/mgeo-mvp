@@ -185,7 +185,6 @@ export default function WhitepaperPage() {
                 <h2 style={styles.tocTitle}>目录</h2>
                 <p style={styles.tocText}>当前页已同步为完整版本，帮助你系统理解 MGEO 的理论框架、实施标准与行业案例。</p>
               </div>
-              <span style={styles.previewBadge}>完整同步</span>
             </div>
             <ul style={styles.tocList}>
               {toc.map((item) => (
@@ -193,7 +192,6 @@ export default function WhitepaperPage() {
                   <a href={`#${item.id}`} style={styles.tocLink}>
                     <span style={styles.tocTitleRow}>
                       <span>{item.title}</span>
-                      <span style={styles.summaryPill}>完整</span>
                     </span>
                     <span>→</span>
                   </a>
@@ -228,10 +226,7 @@ export default function WhitepaperPage() {
           </section>
 
           <section id="ch1" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>
-              第一章：前言与背景
-              <span style={styles.chapterBadge}>完整</span>
-            </h2>
+            <h2 style={styles.chapterTitle}>第一章：前言与背景</h2>
             <h3 style={styles.chapterSubtitle}>1.1 生成式AI的范式转移</h3>
             <BulletList
               items={[
@@ -247,10 +242,7 @@ export default function WhitepaperPage() {
           </section>
 
           <section id="ch2" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>
-              第二章：MGEO基础理论
-              <span style={styles.chapterBadge}>完整</span>
-            </h2>
+            <h2 style={styles.chapterTitle}>第二章：MGEO基础理论</h2>
             <h3 style={styles.chapterSubtitle}>2.1 核心定义</h3>
             <div style={styles.quoteBox}>
               <p style={styles.quoteText}>
@@ -265,10 +257,7 @@ export default function WhitepaperPage() {
           </section>
 
           <section id="ch3" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>
-              第三章：MGEO三支柱模型（TCA Model）
-              <span style={styles.chapterBadge}>完整</span>
-            </h2>
+            <h2 style={styles.chapterTitle}>第三章：MGEO三支柱模型（TCA Model）</h2>
             <h3 style={styles.chapterSubtitle}>3.1 Consistency（一致性）</h3>
             <p style={styles.paragraph}>定义：品牌信息在不同AI模型中的描述统一度。</p>
             <h4 style={styles.subsectionLabel}>关键指标</h4>
@@ -292,10 +281,7 @@ export default function WhitepaperPage() {
           </section>
 
           <section id="ch4" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>
-              第四章：MGEO技术架构
-              <span style={styles.chapterBadge}>完整</span>
-            </h2>
+            <h2 style={styles.chapterTitle}>第四章：MGEO技术架构</h2>
             <h3 style={styles.chapterSubtitle}>4.1 多模型监测体系</h3>
             <BulletList items={["主流模型API接入（DeepSeek/豆包/Kimi/元宝/智谱）", "实时查询与结果抓取", "结构化数据存储与分析"]} />
             <h3 style={styles.chapterSubtitle}>4.2 一致性分析引擎</h3>
@@ -307,10 +293,7 @@ export default function WhitepaperPage() {
           </section>
 
           <section id="ch5" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>
-              第五章：MGEO实施标准
-              <span style={styles.chapterBadge}>完整</span>
-            </h2>
+            <h2 style={styles.chapterTitle}>第五章：MGEO实施标准</h2>
             <h3 style={styles.chapterSubtitle}>5.1 MGEO成熟度等级</h3>
             <DataTable headers={maturityHeaders} rows={maturityRows} />
             <h3 style={styles.chapterSubtitle}>5.2 实施流程（5步法）</h3>
@@ -329,10 +312,7 @@ export default function WhitepaperPage() {
           </section>
 
           <section id="ch6" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>
-              第六章：MGEO评估体系
-              <span style={styles.chapterBadge}>完整</span>
-            </h2>
+            <h2 style={styles.chapterTitle}>第六章：MGEO评估体系</h2>
             <h3 style={styles.chapterSubtitle}>6.1 MGEO Score（综合评分）</h3>
             <div style={styles.formula}>MGEO Score = (Consistency × 0.4) + (Coverage × 0.3) + (Authority × 0.3)</div>
             <p style={styles.paragraph}>满分100分，合格线60分，优秀线80分。</p>
@@ -343,10 +323,7 @@ export default function WhitepaperPage() {
           </section>
 
           <section id="ch7" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>
-              第七章：行业案例分析
-              <span style={styles.chapterBadge}>完整</span>
-            </h2>
+            <h2 style={styles.chapterTitle}>第七章：行业案例分析</h2>
             <h3 style={styles.chapterSubtitle}>7.1 案例一：跨境电商品牌（Anker模式）</h3>
             <DataTable headers={caseHeaders} rows={caseRows.crossBorder} />
             <h3 style={styles.chapterSubtitle}>7.2 案例二：本地服务企业（海底捞模式）</h3>
@@ -356,10 +333,7 @@ export default function WhitepaperPage() {
           </section>
 
           <section id="ch8" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>
-              第八章：MGEO工具与生态
-              <span style={styles.chapterBadge}>完整</span>
-            </h2>
+            <h2 style={styles.chapterTitle}>第八章：MGEO工具与生态</h2>
             <h3 style={styles.chapterSubtitle}>8.1 开源工具</h3>
             <DataTable headers={toolsHeaders} rows={toolsRows} />
             <h3 style={styles.chapterSubtitle}>8.2 商业解决方案</h3>
@@ -369,10 +343,7 @@ export default function WhitepaperPage() {
           </section>
 
           <section id="ch9" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>
-              第九章：未来展望
-              <span style={styles.chapterBadge}>完整</span>
-            </h2>
+            <h2 style={styles.chapterTitle}>第九章：未来展望</h2>
             <h3 style={styles.chapterSubtitle}>9.1 技术趋势</h3>
             <BulletList items={["实时MGEO（Real-time MGEO）", "预测性MGEO（Predictive MGEO）", "自动化MGEO（Auto-MGEO）"]} />
             <h3 style={styles.chapterSubtitle}>9.2 行业演进</h3>
@@ -382,10 +353,7 @@ export default function WhitepaperPage() {
           </section>
 
           <section id="appendix" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>
-              附录
-              <span style={styles.chapterBadge}>完整</span>
-            </h2>
+            <h2 style={styles.chapterTitle}>附录</h2>
             <h3 style={styles.chapterSubtitle}>附录A：术语表</h3>
             <DataTable headers={glossaryHeaders} rows={glossaryRows} />
             <h3 style={styles.chapterSubtitle}>附录B：主流AI模型特性对照表</h3>
