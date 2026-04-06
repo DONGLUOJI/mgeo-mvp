@@ -4,7 +4,7 @@ import Link from "next/link";
 import { SiteShell } from "@/components/marketing/SiteShell";
 
 export const metadata: Metadata = {
-  title: "方法与效果 - 董逻辑MGEO",
+  title: "方法案例 - 董逻辑MGEO",
   description: "品牌在 AI 搜索中的问题各不相同，但解决路径是系统化的。查看 MGEO 方法论应对三类典型问题场景的方式。",
 };
 
@@ -138,7 +138,7 @@ export default function CasesPage() {
       <main style={styles.page}>
         <section style={styles.hero}>
           <div style={styles.heroPanel}>
-            <h1 style={styles.heroTitle}>方法与效果</h1>
+            <h1 style={styles.heroTitle}>方法案例</h1>
             <p style={styles.heroText}>
               品牌在 AI 搜索中的问题各不相同，但解决路径是系统化的。以下是最常见的三类问题场景，以及 MGEO 方法论的应对方式。
             </p>
