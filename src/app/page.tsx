@@ -103,7 +103,7 @@ export default function MarketingHomePage() {
             <h1 style={styles.heroTitle}>帮助品牌在AI搜索中被看见</h1>
             <div style={styles.metricRow}>
               <div style={{ ...styles.metricItem, borderLeft: "none" }}>
-                <strong style={styles.metricValue}>6大</strong>
+                <strong style={styles.metricValue}>多平台</strong>
                 <span style={styles.metricLabel}>AI 平台覆盖</span>
               </div>
               <div style={styles.metricItem}>
