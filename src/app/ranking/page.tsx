@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { SiteShell } from "@/components/marketing/SiteShell";
 import { BrandSearchBox } from "@/components/ranking/brand-search-box";
+import { CityRequestPanel } from "@/components/ranking/city-request-panel";
 import { IndustryLeaderboard } from "@/components/ranking/industry-leaderboard";
 import { MoversBoard } from "@/components/ranking/movers-board";
 import { PlatformCoverage } from "@/components/ranking/platform-coverage";
@@ -51,17 +52,6 @@ function getTabHref(
     platform: tab === "platform" ? currentPlatform : undefined,
     coverage: tab === "platform" ? currentCoverage : undefined,
   });
-}
-
-function groupCitiesByRegion() {
-  return SUPPORTED_CITIES.filter((item) => !FEATURED_CITY_NAMES.includes(item.name as (typeof FEATURED_CITY_NAMES)[number])).reduce(
-    (groups, city) => {
-      groups[city.region] = groups[city.region] || [];
-      groups[city.region].push(city);
-      return groups;
-    },
-    {} as Record<string, (typeof SUPPORTED_CITIES)[number][]>,
-  );
 }
 
 export default async function RankingPage({
@@ -138,7 +128,6 @@ export default async function RankingPage({
   const currentCityMeta = getCityMeta(currentCity);
   const hasCityData = currentCity === "全国" || industryData.total > 0;
   const moreCities = SUPPORTED_CITIES.filter((item) => !FEATURED_CITY_NAMES.includes(item.name as (typeof FEATURED_CITY_NAMES)[number]));
-  const groupedMoreCities = groupCitiesByRegion();
   const citySummary = currentCity === "全国"
     ? "查看全国品牌在 AI 搜索中的综合表现，适合观察行业头部与整体趋势。"
     : `切换到 ${currentCity} 后，榜单会优先反映本地推荐场景，更适合本地品牌和区域连锁判断自己在城市搜索中的位置。`;
@@ -214,30 +203,15 @@ export default async function RankingPage({
                 })}
 
                 {moreCities.length ? (
-                  <details style={styles.moreCities}>
-                    <summary style={styles.cityChip}>更多 ▾</summary>
-                    <div style={styles.morePanel}>
-                      {Object.entries(groupedMoreCities).map(([region, cities]) => (
-                        <div key={region} style={styles.moreGroup}>
-                          <div style={styles.moreGroupTitle}>{region}</div>
-                          <div style={styles.moreGroupGrid}>
-                            {cities.map((city) => (
-                              <Link
-                                key={city.name}
-                                href={buildRankingHref({ tab: currentTab, city: city.name, industry: currentIndustry, days: currentDays, platform: currentPlatform, coverage: currentCoverage })}
-                                style={styles.moreLink}
-                              >
-                                <span>{city.name}</span>
-                                <span style={{ ...styles.moreState, color: city.hasData ? "#0a7c66" : "#8a8a8a" }}>
-                                  {city.hasData ? "可查看" : "收录中"}
-                                </span>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </details>
+                  <CityRequestPanel
+                    cities={moreCities}
+                    currentTab={currentTab}
+                    currentCity={currentCity}
+                    currentIndustry={currentIndustry}
+                    currentDays={currentDays}
+                    currentPlatform={currentPlatform}
+                    currentCoverage={currentCoverage}
+                  />
                 ) : null}
               </div>
             </div>
@@ -508,54 +482,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#ffffff",
     borderColor: "#202328",
     boxShadow: "0 10px 24px rgba(17, 24, 39, 0.18)",
-  },
-  moreCities: {
-    position: "relative",
-  },
-  morePanel: {
-    position: "absolute",
-    top: "calc(100% + 10px)",
-    left: 0,
-    minWidth: 320,
-    padding: 14,
-    borderRadius: 20,
-    border: "1px solid #e5e7eb",
-    background: "#ffffff",
-    boxShadow: "0 18px 40px rgba(15, 23, 42, 0.08)",
-    display: "grid",
-    gap: 12,
-    zIndex: 10,
-  },
-  moreGroup: {
-    display: "grid",
-    gap: 8,
-  },
-  moreGroupTitle: {
-    fontSize: 12,
-    fontWeight: 800,
-    color: "#8a8a8a",
-    letterSpacing: "0.04em",
-    textTransform: "uppercase",
-  },
-  moreGroupGrid: {
-    display: "grid",
-    gap: 6,
-  },
-  moreLink: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 12,
-    textDecoration: "none",
-    color: "#111827",
-    padding: "10px 12px",
-    borderRadius: 12,
-    fontSize: 14,
-    fontWeight: 700,
-    background: "#f8fafc",
-  },
-  moreState: {
-    fontSize: 12,
-    fontWeight: 700,
   },
   tabBar: {
     display: "grid",
