@@ -4,17 +4,12 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { MODEL_META } from "@/lib/detect/model-meta";
+import { generateAdvice } from "@/lib/report/generate-advice";
 import { generateReportHtml } from "@/lib/report/export-html";
+import { getScoreStyle } from "@/lib/report/score-colors";
 import type { DetectReport, ResultItem, Score } from "@/lib/detect/types";
 
 const SHOW_DEBUG_PANEL = process.env.NODE_ENV !== "production";
-
-function getScoreLabel(score: number) {
-  if (score < 40) return "偏弱";
-  if (score < 60) return "待优化";
-  if (score < 80) return "较稳定";
-  return "表现良好";
-}
 
 function getLevelText(level: Score["level"]) {
   if (level === "L1") return "基础级";
@@ -44,9 +39,30 @@ function getDebugModeLabel(mode: "real" | "mock" | "hybrid") {
   return "Mock 模式";
 }
 
+function formatReportTime(value?: string | null) {
+  const parsed = value ? new Date(value) : new Date();
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  const hours = String(parsed.getHours()).padStart(2, "0");
+  const minutes = String(parsed.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+const INDUSTRY_AVERAGES: Record<string, number> = {
+  新茶饮: 68,
+  餐饮连锁: 72,
+  教培: 60,
+  家政服务: 48,
+  美妆护肤: 65,
+  企业服务: 63,
+};
+
 export default function ReportDetailPage() {
   const params = useParams<{ taskId: string }>();
   const [report, setReport] = useState<DetectReport | null>(null);
+  const [createdAt, setCreatedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -100,7 +116,8 @@ export default function ReportDetailPage() {
           throw new Error(data.message || "报告加载失败");
         }
 
-        setReport(data.data);
+        setReport(data.data.report);
+        setCreatedAt(data.data.meta?.createdAt || null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "报告加载失败");
       } finally {
@@ -117,6 +134,16 @@ export default function ReportDetailPage() {
     if (!report) return 0;
     return getMentionCount(report.results);
   }, [report]);
+  const industryAverage = report ? INDUSTRY_AVERAGES[report.input.industry] ?? 64 : 64;
+  const averageDiff = report ? report.score.total - industryAverage : 0;
+  const adviceList = report ? generateAdvice(report.score) : [];
+  const scoreCards = report
+    ? [
+        { key: "Consistency", label: "一致性", value: report.score.consistency, desc: "品牌定位与描述一致性" },
+        { key: "Coverage", label: "覆盖度", value: report.score.coverage, desc: "模型提及覆盖度" },
+        { key: "Authority", label: "权威性", value: report.score.authority, desc: "品牌权威支撑表现" },
+      ]
+    : [];
 
   if (loading) {
     return (
@@ -154,9 +181,9 @@ export default function ReportDetailPage() {
       <div style={styles.container}>
         <section style={styles.hero}>
           <div>
-            <div style={styles.heroMeta}>检测任务 #{params.taskId}</div>
+            <div style={styles.heroMeta}>检测时间：{formatReportTime(createdAt)}</div>
             <h1 style={styles.heroTitle}>
-              {report.input.brandName} 的 MGEO 检测结果
+              {report.input.brandName} 的 AI 可见性检测报告
             </h1>
             <p style={styles.heroText}>{report.summary}</p>
             <div style={styles.heroTags}>
@@ -184,27 +211,47 @@ export default function ReportDetailPage() {
             <div style={styles.scoreLevel}>
               {report.score.level} · {getLevelText(report.score.level)}
             </div>
+            <div style={styles.scoreBenchmark}>
+              <div style={styles.scoreBenchmarkLine}>行业均分：{industryAverage}</div>
+              <div
+                style={{
+                  ...styles.scoreBenchmarkDiff,
+                  color: averageDiff >= 0 ? "#86efac" : "#fca5a5",
+                }}
+              >
+                {averageDiff >= 0 ? `高于行业均分 ${averageDiff} 分` : `低于行业均分 ${Math.abs(averageDiff)} 分`}
+              </div>
+            </div>
           </div>
         </section>
 
         <section style={styles.gridThree}>
-          <article style={styles.metricCard}>
-            <div style={styles.metricName}>Consistency</div>
-            <div style={styles.metricValue}>{report.score.consistency}</div>
-            <div style={styles.metricDesc}>{getScoreLabel(report.score.consistency)}</div>
-          </article>
-
-          <article style={styles.metricCard}>
-            <div style={styles.metricName}>Coverage</div>
-            <div style={styles.metricValue}>{report.score.coverage}</div>
-            <div style={styles.metricDesc}>{getScoreLabel(report.score.coverage)}</div>
-          </article>
-
-          <article style={styles.metricCard}>
-            <div style={styles.metricName}>Authority</div>
-            <div style={styles.metricValue}>{report.score.authority}</div>
-            <div style={styles.metricDesc}>{getScoreLabel(report.score.authority)}</div>
-          </article>
+          {scoreCards.map((item) => {
+            const scoreStyle = getScoreStyle(item.value);
+            return (
+              <article
+                key={item.key}
+                style={{
+                  ...styles.metricCard,
+                  borderLeft: `4px solid ${scoreStyle.barColor}`,
+                }}
+              >
+                <div style={{ ...styles.metricName, color: scoreStyle.color }}>{item.key}</div>
+                <div style={styles.metricSub}>{item.label}</div>
+                <div style={{ ...styles.metricValue, color: scoreStyle.color }}>{item.value}</div>
+                <span
+                  style={{
+                    ...styles.metricPill,
+                    background: scoreStyle.bgColor,
+                    color: scoreStyle.textColor,
+                  }}
+                >
+                  {scoreStyle.level}
+                </span>
+                <div style={styles.metricDesc}>{item.desc}</div>
+              </article>
+            );
+          })}
         </section>
 
         <section style={styles.panel}>
@@ -299,21 +346,62 @@ export default function ReportDetailPage() {
           </section>
         ) : null}
 
-        <section style={styles.ctaPanel}>
-          <div>
-            <h2 style={styles.sectionTitle}>下一步建议</h2>
-            <p style={styles.ctaText}>
-              如果您希望进一步解读这份报告，或希望我们基于结果提供服务方案，可以直接进入下一步沟通。
-            </p>
+        <section style={styles.advicePanel}>
+          <div style={styles.adviceHead}>
+            <h2 style={styles.sectionTitle}>诊断建议</h2>
+            <p style={styles.ctaText}>根据本次检测结果，你的品牌当前最需要优先解决的问题是：</p>
           </div>
 
-          <div style={styles.buttonRow}>
-            <Link href="/pricing" style={styles.primaryButton}>
-              查看服务方案
-            </Link>
-            <Link href="/#contact" style={styles.secondaryButton}>
-              联系我们
-            </Link>
+          <div style={styles.adviceList}>
+            {adviceList.map((advice, index) => {
+              const scoreStyle = getScoreStyle(advice.score);
+              return (
+                <article
+                  key={advice.dimension}
+                  style={{
+                    ...styles.adviceItem,
+                    borderLeft: `4px solid ${scoreStyle.barColor}`,
+                  }}
+                >
+                  <div style={styles.adviceTop}>
+                    <div style={{ ...styles.adviceTitle, color: scoreStyle.color }}>
+                      {advice.dimensionLabel}（{advice.dimension}）
+                    </div>
+                    <div style={styles.adviceMeta}>
+                      <span style={{ ...styles.adviceScore, color: scoreStyle.color }}>当前 {advice.score} 分</span>
+                      <span
+                        style={{
+                          ...styles.advicePill,
+                          background: scoreStyle.bgColor,
+                          color: scoreStyle.textColor,
+                        }}
+                      >
+                        {advice.level}
+                      </span>
+                      {index === 0 ? <span style={styles.priorityPill}>最优先</span> : null}
+                    </div>
+                  </div>
+                  <div style={styles.adviceText}>{advice.suggestion}</div>
+                </article>
+              );
+            })}
+          </div>
+
+          <div style={styles.adviceDivider} />
+
+          <div style={styles.adviceCtaArea}>
+            <p style={styles.adviceCtaTitle}>想要提升你的品牌 AI 可见性？</p>
+            <div style={styles.buttonRow}>
+              <Link href="/pricing" style={styles.ctaPrimaryButton}>
+                查看服务方案
+              </Link>
+              <Link href="/#contact" style={styles.secondaryButton}>
+                联系我们获取定制建议
+              </Link>
+              <Link href="/#detector" style={styles.ghostButton}>
+                重新检测
+              </Link>
+            </div>
           </div>
         </section>
       </div>
@@ -409,6 +497,21 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 15,
     opacity: 0.75,
   },
+  scoreBenchmark: {
+    marginTop: 18,
+    paddingTop: 16,
+    borderTop: "1px solid rgba(255,255,255,0.12)",
+    width: "100%",
+  },
+  scoreBenchmarkLine: {
+    fontSize: 12,
+    opacity: 0.72,
+  },
+  scoreBenchmarkDiff: {
+    marginTop: 6,
+    fontSize: 12,
+    fontWeight: 700,
+  },
   gridThree: {
     display: "grid",
     gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
@@ -418,19 +521,32 @@ const styles: Record<string, React.CSSProperties> = {
     background: "#ffffff",
     border: "1px solid #e7ebf0",
     borderRadius: 24,
-    padding: 26,
+    padding: "26px 26px 26px 22px",
   },
   metricName: {
     fontSize: 16,
     fontWeight: 700,
-    color: "#0f8b7f",
+  },
+  metricSub: {
+    marginTop: 4,
+    color: "#98a2b3",
+    fontSize: 12,
   },
   metricValue: {
     marginTop: 14,
     fontSize: 44,
     lineHeight: 1,
     fontWeight: 800,
-    color: "#111827",
+  },
+  metricPill: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+    padding: "4px 12px",
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 700,
   },
   metricDesc: {
     marginTop: 10,
@@ -574,18 +690,92 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 14,
     lineHeight: 1.7,
   },
-  ctaPanel: {
+  advicePanel: {
     background: "#ffffff",
     border: "1px solid #e7ebf0",
     borderRadius: 24,
     padding: 28,
+    display: "grid",
+    gap: 22,
+  },
+  adviceHead: {
+    display: "grid",
+    gap: 10,
+  },
+  adviceList: {
+    display: "grid",
+    gap: 16,
+  },
+  adviceItem: {
+    background: "#ffffff",
+    border: "1px solid #edf0f4",
+    borderRadius: 18,
+    padding: "18px 18px 18px 20px",
+  },
+  adviceTop: {
     display: "flex",
     justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 16,
+    flexWrap: "wrap",
+  },
+  adviceTitle: {
+    fontSize: 16,
+    fontWeight: 700,
+  },
+  adviceMeta: {
+    display: "flex",
+    gap: 8,
     alignItems: "center",
-    gap: 20,
+    flexWrap: "wrap",
+  },
+  adviceScore: {
+    fontSize: 12,
+    fontWeight: 700,
+  },
+  advicePill: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "4px 10px",
+    borderRadius: 999,
+    fontSize: 11,
+    fontWeight: 700,
+  },
+  priorityPill: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "4px 10px",
+    borderRadius: 999,
+    fontSize: 11,
+    fontWeight: 700,
+    color: "#791F1F",
+    background: "#FCEBEB",
+  },
+  adviceText: {
+    marginTop: 10,
+    color: "#596273",
+    fontSize: 14,
+    lineHeight: 1.8,
+  },
+  adviceDivider: {
+    height: 1,
+    background: "#edf0f4",
+  },
+  adviceCtaArea: {
+    display: "grid",
+    justifyItems: "center",
+    gap: 16,
+    textAlign: "center",
+  },
+  adviceCtaTitle: {
+    margin: 0,
+    fontSize: 18,
+    fontWeight: 700,
   },
   ctaText: {
-    margin: "14px 0 0",
+    margin: 0,
     color: "#667085",
     fontSize: 17,
     lineHeight: 1.75,
@@ -609,6 +799,19 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     textDecoration: "none",
   },
+  ctaPrimaryButton: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: 50,
+    padding: "0 22px",
+    borderRadius: 14,
+    background: "#0fbc8c",
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: 700,
+    textDecoration: "none",
+  },
   secondaryButton: {
     display: "inline-flex",
     alignItems: "center",
@@ -621,6 +824,20 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#111827",
     fontSize: 15,
     fontWeight: 700,
+    textDecoration: "none",
+  },
+  ghostButton: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: 50,
+    padding: "0 22px",
+    borderRadius: 14,
+    background: "#ffffff",
+    border: "1px solid #edf0f4",
+    color: "#667085",
+    fontSize: 15,
+    fontWeight: 600,
     textDecoration: "none",
   },
   secondaryActionButton: {

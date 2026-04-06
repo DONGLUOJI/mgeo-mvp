@@ -1202,6 +1202,35 @@ export async function getReport(taskId: string, userId?: string | null): Promise
   return JSON.parse(row.report_json) as DetectReport;
 }
 
+export async function getReportWithMeta(
+  taskId: string,
+  userId?: string | null
+): Promise<{ report: DetectReport; createdAt: string | null } | null> {
+  if (usePostgres()) {
+    const result = await queryPostgres<{
+      report_json: string;
+      user_id: string | null;
+      created_at: string;
+    }>(`SELECT report_json, user_id, created_at FROM scan_reports WHERE task_id = $1`, [taskId]);
+    const row = result.rows[0];
+    if (!row) return null;
+    if (row.user_id && row.user_id !== userId) return null;
+    return {
+      report: JSON.parse(row.report_json) as DetectReport,
+      createdAt: row.created_at || null,
+    };
+  }
+
+  const stmt = sqlite().prepare(`SELECT report_json, user_id, created_at FROM scan_reports WHERE task_id = ?`);
+  const row = stmt.get(taskId) as { report_json: string; user_id: string | null; created_at: string } | undefined;
+  if (!row) return null;
+  if (row.user_id && row.user_id !== userId) return null;
+  return {
+    report: JSON.parse(row.report_json) as DetectReport,
+    createdAt: row.created_at || null,
+  };
+}
+
 export async function listReports(limit = 20, userId?: string): Promise<ScanReportRecord[]> {
   if (usePostgres()) {
     const result = await queryPostgres<{

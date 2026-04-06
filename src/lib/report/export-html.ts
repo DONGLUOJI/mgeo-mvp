@@ -1,4 +1,6 @@
 import { MODEL_META } from "@/lib/detect/model-meta";
+import { generateAdvice } from "@/lib/report/generate-advice";
+import { getScoreStyle } from "@/lib/report/score-colors";
 import type { DetectReport } from "@/lib/detect/types";
 
 function escapeHtml(value: string) {
@@ -26,6 +28,35 @@ function getRecommendationSummary(signal: DetectReport["results"][number]["recom
 
 export function generateReportHtml(report: DetectReport, taskId: string) {
   const mentionedCount = report.results.filter((item) => item.mentioned).length;
+  const adviceItems = generateAdvice(report.score);
+  const industryAverageMap: Record<string, number> = {
+    新茶饮: 68,
+    餐饮连锁: 72,
+    教培: 60,
+    家政服务: 48,
+    美妆护肤: 65,
+    企业服务: 63,
+  };
+  const benchmark = industryAverageMap[report.input.industry] ?? 64;
+  const benchmarkDiff = report.score.total - benchmark;
+  const scoreCards = [
+    { key: "Consistency", label: "一致性", value: report.score.consistency, desc: "品牌定位与描述一致性" },
+    { key: "Coverage", label: "覆盖度", value: report.score.coverage, desc: "模型提及覆盖度" },
+    { key: "Authority", label: "权威性", value: report.score.authority, desc: "品牌权威支撑表现" },
+  ]
+    .map((item) => {
+      const style = getScoreStyle(item.value);
+      return `
+        <div class="metric metric-colored" style="border-left:4px solid ${style.barColor}">
+          <div class="metric-name" style="color:${style.color}">${item.key}</div>
+          <div class="metric-sub">${item.label}</div>
+          <div class="metric-value" style="color:${style.color}">${item.value}</div>
+          <span class="metric-pill" style="background:${style.bgColor};color:${style.textColor}">${style.level}</span>
+          <div class="metric-desc">${item.desc}</div>
+        </div>
+      `;
+    })
+    .join("");
   const rows = report.results
     .map((item) => {
       const label = MODEL_META[item.model as keyof typeof MODEL_META]?.label || item.model;
@@ -43,6 +74,24 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
             <span class="sub-badge">${getRecommendationSummary(item.recommendationSignal)}</span>
           </div>
           <div class="raw-box">${escapeHtml(item.rawText || "暂无返回内容")}</div>
+        </div>
+      `;
+    })
+    .join("");
+  const adviceHtml = adviceItems
+    .map((advice, index) => {
+      const style = getScoreStyle(advice.score);
+      return `
+        <div class="advice-item" style="border-left:4px solid ${style.barColor}">
+          <div class="advice-head">
+            <div class="advice-title" style="color:${style.color}">${advice.dimensionLabel}（${advice.dimension}）</div>
+            <div class="advice-meta">
+              <span class="advice-score" style="color:${style.color}">当前 ${advice.score} 分</span>
+              <span class="advice-pill" style="background:${style.bgColor};color:${style.textColor}">${advice.level}</span>
+              ${index === 0 ? '<span class="advice-pill advice-priority">最优先</span>' : ""}
+            </div>
+          </div>
+          <div class="advice-text">${escapeHtml(advice.suggestion)}</div>
         </div>
       `;
     })
@@ -77,10 +126,18 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
     .score-value{font-size:68px;line-height:1;font-weight:800}
     .score-label{margin-top:10px;font-size:18px;opacity:.85}
     .score-level{margin-top:8px;font-size:14px;opacity:.75}
+    .score-benchmark{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12)}
+    .score-benchmark-line{font-size:12px;opacity:.72}
+    .score-benchmark-diff{margin-top:6px;font-size:12px;font-weight:700}
+    .score-benchmark-diff.up{color:#86efac}
+    .score-benchmark-diff.down{color:#fca5a5}
     .grid-three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
     .metric{border:1px solid #edf0f4;border-radius:18px;padding:20px;background:#fff}
-    .metric-name{color:#0f8b7f;font-size:15px;font-weight:700}
+    .metric-colored{position:relative;padding-left:22px}
+    .metric-name{font-size:15px;font-weight:700}
+    .metric-sub{margin-top:4px;color:#98a2b3;font-size:12px}
     .metric-value{margin-top:12px;font-size:40px;font-weight:800}
+    .metric-pill{display:inline-flex;margin-top:12px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700}
     .metric-desc{margin-top:8px;color:#667085;font-size:15px}
     .info-list{display:grid;gap:14px}
     .info-item{display:grid;grid-template-columns:140px 1fr;gap:14px;padding-bottom:14px;border-bottom:1px solid #edf0f4}
@@ -104,6 +161,15 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
     .cta-card{border:1px solid #edf0f4;border-radius:20px;padding:20px;background:#f8fafc}
     .cta-card-title{margin:0 0 12px;font-size:18px;color:#111827}
     .cta-card-line{font-size:14px;line-height:1.8;color:#475467}
+    .advice-wrap{display:grid;gap:16px}
+    .advice-item{background:#fff;border:1px solid #edf0f4;border-radius:18px;padding:18px 18px 18px 20px}
+    .advice-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
+    .advice-title{font-size:16px;font-weight:700}
+    .advice-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .advice-score{font-size:12px;font-weight:700}
+    .advice-pill{display:inline-flex;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700}
+    .advice-priority{background:#FCEBEB;color:#791F1F}
+    .advice-text{margin-top:10px;color:#596273;font-size:14px;line-height:1.8}
     .foot{margin-top:22px;color:#667085;font-size:13px;text-align:center}
     @media print{body{background:#fff}.page{padding:0}.panel{break-inside:avoid}}
     @media (max-width:900px){.topbar,.hero,.grid-three,.cta-panel{grid-template-columns:1fr;display:grid}.topbar{display:grid}.info-item{grid-template-columns:1fr}}
@@ -133,7 +199,7 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
         <h1>${escapeHtml(report.input.brandName)} 的 MGEO 检测报告</h1>
         <p class="summary">${escapeHtml(report.summary)}</p>
         <div class="tag-row">
-          <span class="tag">任务编号：${escapeHtml(taskId)}</span>
+          <span class="tag">检测报告</span>
           <span class="tag">行业：${escapeHtml(report.input.industry)}</span>
           <span class="tag">提及模型：${mentionedCount} / ${report.results.length}</span>
           <span class="tag">等级：${escapeHtml(report.score.level)} ${getLevelText(report.score.level)}</span>
@@ -143,28 +209,18 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
         <div class="score-value">${report.score.total}</div>
         <div class="score-label">MGEO Score</div>
         <div class="score-level">${report.score.level} · ${getLevelText(report.score.level)}</div>
+        <div class="score-benchmark">
+          <div class="score-benchmark-line">行业均分：${benchmark}</div>
+          <div class="score-benchmark-diff ${benchmarkDiff >= 0 ? "up" : "down"}">
+            ${benchmarkDiff >= 0 ? `高于行业均分 ${benchmarkDiff} 分` : `低于行业均分 ${Math.abs(benchmarkDiff)} 分`}
+          </div>
+        </div>
       </div>
     </section>
 
     <section class="panel">
       <h2 class="section-title">TCA 评分</h2>
-      <div class="grid-three">
-        <div class="metric">
-          <div class="metric-name">Consistency</div>
-          <div class="metric-value">${report.score.consistency}</div>
-          <div class="metric-desc">品牌定位与描述一致性</div>
-        </div>
-        <div class="metric">
-          <div class="metric-name">Coverage</div>
-          <div class="metric-value">${report.score.coverage}</div>
-          <div class="metric-desc">模型提及覆盖度</div>
-        </div>
-        <div class="metric">
-          <div class="metric-name">Authority</div>
-          <div class="metric-value">${report.score.authority}</div>
-          <div class="metric-desc">品牌权威支撑表现</div>
-        </div>
-      </div>
+      <div class="grid-three">${scoreCards}</div>
     </section>
 
     <section class="panel">
@@ -187,11 +243,7 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
         <p class="cta-text">
           如果您希望进一步理解这份报告，或希望把检测结果转成具体服务动作，建议进入服务沟通环节。我们会根据品牌当前阶段，为您提供对应的增长建议。
         </p>
-        <ul class="cta-list">
-          <li>解读 TCA 三项评分的真实业务含义</li>
-          <li>判断当前更适合先补覆盖、先调一致性还是先做权威支撑</li>
-          <li>匹配适合您的 MGEO 服务方案与执行节奏</li>
-        </ul>
+        <div class="advice-wrap">${adviceHtml}</div>
       </div>
       <div class="cta-card">
         <h3 class="cta-card-title">继续服务沟通</h3>
@@ -199,6 +251,7 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
         <div class="cta-card-line">微信：19925969089</div>
         <div class="cta-card-line">小红书：董逻辑</div>
         <div class="cta-card-line">邮箱：19925969089@163.com</div>
+        <div class="cta-card-line" style="margin-top:10px;font-weight:700;color:#111827">官网：www.dongluoji.com</div>
       </div>
     </section>
 

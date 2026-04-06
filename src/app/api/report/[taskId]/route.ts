@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth/auth-options";
-import { deleteReport, getReport } from "@/lib/db/repository";
+import { deleteReport, getReport, getReportWithMeta } from "@/lib/db/repository";
 import { getMockReport } from "@/lib/mock/report-data";
 
 type Context = {
@@ -14,9 +14,8 @@ type Context = {
 export async function GET(_req: Request, context: Context) {
   const { taskId } = await context.params;
   const session = await getServerSession(authOptions);
-  const report =
-    (await getReport(taskId, session?.user?.id || null)) ??
-    (!session?.user?.id ? getMockReport(taskId) : null);
+  const reportWithMeta = await getReportWithMeta(taskId, session?.user?.id || null);
+  const report = reportWithMeta?.report ?? ((await getReport(taskId, session?.user?.id || null)) ?? (!session?.user?.id ? getMockReport(taskId) : null));
 
   if (!report) {
     return NextResponse.json(
@@ -30,7 +29,12 @@ export async function GET(_req: Request, context: Context) {
 
   return NextResponse.json({
     success: true,
-    data: report,
+    data: {
+      report,
+      meta: {
+        createdAt: reportWithMeta?.createdAt || new Date().toISOString(),
+      },
+    },
   });
 }
 
