@@ -94,6 +94,7 @@ const timeline = [
 const scoreCards = [
   {
     name: "Consistency",
+    theme: "consistency",
     subtitle: "衡量品牌信息统一程度",
     qualified: "60 分",
     excellent: "80 分",
@@ -101,6 +102,7 @@ const scoreCards = [
   },
   {
     name: "Coverage",
+    theme: "coverage",
     subtitle: "衡量平台触达广度",
     qualified: "60 分",
     excellent: "80 分",
@@ -108,6 +110,7 @@ const scoreCards = [
   },
   {
     name: "Authority",
+    theme: "authority",
     subtitle: "衡量信源可信程度",
     qualified: "60 分",
     excellent: "80 分",
@@ -129,6 +132,18 @@ const tagStyles: Record<TagStyle, React.CSSProperties> = {
   authority: {
     background: "#f0ecff",
     color: "#6e44d8",
+  },
+};
+
+const scoreCardThemes: Record<TagStyle, React.CSSProperties> = {
+  consistency: {
+    boxShadow: "inset 0 -6px 0 #0a7c66",
+  },
+  coverage: {
+    boxShadow: "inset 0 -6px 0 #315fd6",
+  },
+  authority: {
+    boxShadow: "inset 0 -6px 0 #6e44d8",
   },
 };
 
@@ -220,7 +235,7 @@ export default function CasesPage() {
 
             <div style={styles.scoreGrid}>
               {scoreCards.map((item) => (
-                <article key={item.name} style={styles.scoreCard}>
+                <article key={item.name} style={{ ...styles.scoreCard, ...scoreCardThemes[item.theme] }}>
                   <h3 style={styles.scoreTitle}>{item.name}</h3>
                   <p style={styles.scoreSubtitle}>{item.subtitle}</p>
                   <div style={styles.scoreRow}>
@@ -329,6 +344,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     flexDirection: "column",
     height: "100%",
+    overflow: "hidden",
   },
   sceneTag: {
     display: "inline-flex",
@@ -381,35 +397,38 @@ const styles: Record<string, React.CSSProperties> = {
   metricsGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 12,
+    gap: 8,
     marginTop: 24,
     minWidth: 0,
+    width: "100%",
   },
   metricCard: {
     background: "#f7f8fb",
     borderRadius: 20,
-    padding: "16px 14px 18px",
-    minHeight: 118,
+    padding: "12px 10px 14px",
+    minHeight: 84,
     display: "grid",
     gridTemplateRows: "auto 1fr",
     alignContent: "stretch",
     justifyItems: "start",
-    gap: 10,
+    gap: 6,
     minWidth: 0,
     overflow: "hidden",
+    width: "100%",
+    boxSizing: "border-box",
   },
   metricLabel: {
     color: "#818897",
-    fontSize: 13,
+    fontSize: 11,
     lineHeight: 1.4,
     whiteSpace: "normal",
     wordBreak: "break-word",
   },
   metricValue: {
     color: "#1d1d1f",
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: 800,
-    lineHeight: 1.3,
+    lineHeight: 1.25,
     letterSpacing: "-0.02em",
     whiteSpace: "normal",
     wordBreak: "break-word",
@@ -481,7 +500,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   timelineTitle: {
     margin: "10px 0 0",
-    fontSize: 28,
+    fontSize: 24,
     lineHeight: 1.22,
     color: "#1d1d1f",
   },
