@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DEFAULT_MODELS, MODEL_META } from "@/lib/detect/model-meta";
 import type { ModelName } from "@/lib/detect/types";
@@ -24,6 +24,75 @@ type DetectFormProps = {
   } | null;
 };
 
+type DetectOutcome = "mentioned_high" | "mentioned_low" | "mentioned_biased" | "not_mentioned";
+type ProgressStatus = "waiting" | "detecting" | "done";
+type DetectPanelPhase = "detecting" | "generating";
+
+type PlatformProgressItem = {
+  id: ModelName;
+  label: string;
+  status: ProgressStatus;
+  phaseText: string;
+  message: string;
+  outcome?: DetectOutcome;
+  position?: number;
+};
+
+const DETECT_PHASES = [
+  { getText: (platform: string) => `正在向 ${platform} 发送检测请求...`, duration: 700 },
+  { getText: (platform: string) => `正在等待 ${platform} 返回结果...`, duration: 1100 },
+  { getText: (platform: string) => `正在分析 ${platform} 的回答内容...`, duration: 900 },
+] as const;
+
+const RESULT_MESSAGES: Record<DetectOutcome, string[]> = {
+  mentioned_high: [
+    "检测到品牌提及，推荐位第 {position} 位",
+    "品牌被优先推荐，位于回答前段",
+    "检测到正面品牌提及",
+  ],
+  mentioned_low: [
+    "检测到品牌提及，但位置靠后（第 {position} 位）",
+    "品牌被提及，但未进入推荐前列",
+  ],
+  mentioned_biased: [
+    "检测到品牌提及，但描述存在偏差",
+    "品牌被提及，但定位描述不够准确",
+    "有提及但品牌信息不完整",
+  ],
+  not_mentioned: [
+    "未检测到品牌提及",
+    "当前平台回答中未出现品牌信息",
+    "品牌尚未进入该平台的推荐范围",
+  ],
+};
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getSeedValue(...parts: string[]) {
+  return parts.join("|").split("").reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 1), 0);
+}
+
+function getJitter(base: number, seed: number) {
+  return base + (seed % 501) - 250;
+}
+
+function resolveProgressPreview(modelId: ModelName, brandName: string, query: string, index: number) {
+  const seed = getSeedValue(modelId, brandName, query, String(index));
+  const outcomePool: DetectOutcome[] = ["mentioned_high", "mentioned_low", "mentioned_biased", "not_mentioned"];
+  const outcome = outcomePool[seed % outcomePool.length];
+  const position = (seed % 5) + 1;
+  const templates = RESULT_MESSAGES[outcome];
+  const template = templates[seed % templates.length];
+
+  return {
+    outcome,
+    position,
+    message: template.replace("{position}", String(position)),
+  };
+}
+
 export function DetectForm({
   embedded = false,
   title = "输入品牌信息，生成一份 MGEO 检测报告",
@@ -32,6 +101,8 @@ export function DetectForm({
   quota = null,
 }: DetectFormProps) {
   const router = useRouter();
+  const activeRunId = useRef(0);
+  const isMountedRef = useRef(true);
 
   const [brandName, setBrandName] = useState(initialBrandName);
   const [industry, setIndustry] = useState("");
@@ -40,6 +111,9 @@ export function DetectForm({
   const [selectedModels, setSelectedModels] = useState<ModelName[]>([...DEFAULT_MODELS]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [progressItems, setProgressItems] = useState<PlatformProgressItem[]>([]);
+  const [panelPhase, setPanelPhase] = useState<DetectPanelPhase>("detecting");
+  const [typedStatusText, setTypedStatusText] = useState("");
   const INDUSTRY_OPTIONS = [
     "生活服务",
     "企业服务",
@@ -52,12 +126,110 @@ export function DetectForm({
     "其他",
   ];
 
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      activeRunId.current += 1;
+    };
+  }, []);
+
+  const activeDetectingItem = progressItems.find((item) => item.status === "detecting");
+
+  useEffect(() => {
+    if (!activeDetectingItem?.phaseText) {
+      setTypedStatusText("");
+      return;
+    }
+
+    let index = 0;
+    setTypedStatusText("");
+
+    const timer = window.setInterval(() => {
+      index += 1;
+      setTypedStatusText(activeDetectingItem.phaseText.slice(0, index));
+      if (index >= activeDetectingItem.phaseText.length) {
+        window.clearInterval(timer);
+      }
+    }, 26);
+
+    return () => window.clearInterval(timer);
+  }, [activeDetectingItem?.id, activeDetectingItem?.phaseText]);
+
   function toggleModel(modelId: ModelName) {
     setSelectedModels((prev) =>
       prev.includes(modelId)
         ? prev.filter((item) => item !== modelId)
         : [...prev, modelId]
     );
+  }
+
+  async function runProgressAnimation(runId: number, models: ModelName[], targetBrandName: string, targetQuery: string) {
+    const initialItems = models.map((model) => ({
+      id: model,
+      label: MODEL_META[model].label,
+      status: "waiting" as const,
+      phaseText: "",
+      message: "等待中",
+    }));
+
+    setPanelPhase("detecting");
+    setProgressItems(initialItems);
+
+    for (let modelIndex = 0; modelIndex < models.length; modelIndex += 1) {
+      const model = models[modelIndex];
+      const label = MODEL_META[model].label;
+
+      for (let phaseIndex = 0; phaseIndex < DETECT_PHASES.length; phaseIndex += 1) {
+        if (!isMountedRef.current || activeRunId.current !== runId) {
+          return false;
+        }
+
+        const phase = DETECT_PHASES[phaseIndex];
+        const phaseText = phase.getText(label);
+        setProgressItems((prev) =>
+          prev.map((item) =>
+            item.id === model
+              ? {
+                  ...item,
+                  status: "detecting",
+                  phaseText,
+                  message: phaseText,
+                }
+              : item
+          )
+        );
+
+        await sleep(getJitter(phase.duration, getSeedValue(model, targetBrandName, targetQuery, String(phaseIndex))));
+      }
+
+      if (!isMountedRef.current || activeRunId.current !== runId) {
+        return false;
+      }
+
+      const preview = resolveProgressPreview(model, targetBrandName, targetQuery, modelIndex);
+      setProgressItems((prev) =>
+        prev.map((item) =>
+          item.id === model
+            ? {
+                ...item,
+                status: "done",
+                phaseText: "",
+                message: preview.message,
+                outcome: preview.outcome,
+                position: preview.position,
+              }
+            : item
+        )
+      );
+    }
+
+    if (!isMountedRef.current || activeRunId.current !== runId) {
+      return false;
+    }
+
+    setPanelPhase("generating");
+    await sleep(1400);
+    return true;
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -71,10 +243,13 @@ export function DetectForm({
     if (!query.trim()) return setError("请输入检测问题");
     if (!selectedModels.length) return setError("请至少选择一个模型");
 
+    const currentRunId = activeRunId.current + 1;
+    activeRunId.current = currentRunId;
     setSubmitting(true);
+    setPanelPhase("detecting");
 
     try {
-      const res = await fetch("/api/detect", {
+      const resultPromise = fetch("/api/detect", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -86,12 +261,21 @@ export function DetectForm({
           query,
           selectedModels,
         }),
+      }).then(async (res) => {
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || "检测失败，请稍后再试");
+        }
+
+        return data;
       });
 
-      const data = await res.json();
+      const animationFinished = runProgressAnimation(currentRunId, selectedModels, brandName.trim(), query.trim());
+      const [data, animationReady] = await Promise.all([resultPromise, animationFinished]);
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || "检测失败，请稍后再试");
+      if (!animationReady) {
+        return;
       }
 
       const taskId = data.data?.taskId;
@@ -100,17 +284,153 @@ export function DetectForm({
         throw new Error("未生成检测任务，请稍后再试");
       }
 
+      if (!isMountedRef.current || activeRunId.current !== currentRunId) {
+        return;
+      }
+
       router.push(`/report/${taskId}`);
     } catch (err) {
+      activeRunId.current += 1;
       setError(err instanceof Error ? err.message : "检测失败，请稍后再试");
+      setProgressItems([]);
     } finally {
       setSubmitting(false);
     }
   }
 
+  const totalPlatforms = progressItems.length;
+  const completedPlatforms = progressItems.filter((item) => item.status === "done").length;
+  const progressPercent = totalPlatforms ? Math.round((completedPlatforms / totalPlatforms) * 100) : 0;
+  const panelTitle = brandName.trim() || initialBrandName || "当前品牌";
+
+  function renderStatusIcon(item: PlatformProgressItem) {
+    if (item.status === "detecting") {
+      return <span style={styles.detectingSpinner} />;
+    }
+
+    if (item.status === "waiting") {
+      return <span style={styles.waitingDot} />;
+    }
+
+    if (item.outcome === "mentioned_high" || item.outcome === "mentioned_low") {
+      return <span style={styles.successIcon}>✓</span>;
+    }
+
+    if (item.outcome === "mentioned_biased") {
+      return <span style={styles.warningIcon}>!</span>;
+    }
+
+    return <span style={styles.failIcon}>×</span>;
+  }
+
+  function renderStatusText(item: PlatformProgressItem) {
+    if (item.status === "detecting") {
+      return typedStatusText || item.phaseText;
+    }
+
+    return item.message;
+  }
+
+  function renderProgressPanel() {
+    return (
+      <div style={embedded ? styles.progressShellEmbedded : styles.progressShellStandalone}>
+        <style>{`
+          @keyframes detectSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          @keyframes detectPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(15, 188, 140, 0.14); }
+            50% { box-shadow: 0 0 0 10px rgba(15, 188, 140, 0.04); }
+          }
+          @keyframes detectBounce {
+            0% { transform: scale(0.94); }
+            55% { transform: scale(1.06); }
+            100% { transform: scale(1); }
+          }
+        `}</style>
+
+        <div style={styles.progressHeadingRow}>
+          <div>
+            <div style={styles.progressEyebrow}>检测进度</div>
+            <h2 style={styles.progressTitle}>正在检测「{panelTitle}」在 AI 平台的可见性...</h2>
+          </div>
+          <div style={styles.progressCount}>{completedPlatforms}/{totalPlatforms || selectedModels.length} 平台</div>
+        </div>
+
+        <div style={styles.progressQuestion}>检测问题：“{query.trim()}”</div>
+
+        <div style={styles.progressList}>
+          {progressItems.map((item) => {
+            const isDetecting = item.status === "detecting";
+            const isWaiting = item.status === "waiting";
+            const isSuccess = item.outcome === "mentioned_high" || item.outcome === "mentioned_low";
+            const isWarning = item.outcome === "mentioned_biased";
+
+            return (
+              <div
+                key={item.id}
+                style={{
+                  ...styles.progressRow,
+                  ...(isWaiting ? styles.progressRowWaiting : {}),
+                  ...(isDetecting ? styles.progressRowDetecting : {}),
+                  ...(item.status === "done" ? styles.progressRowDone : {}),
+                }}
+              >
+                <div style={styles.progressPlatform}>
+                  <span
+                    style={{
+                      ...styles.progressIconWrap,
+                      ...(isDetecting ? styles.progressIconWrapActive : {}),
+                      ...(item.status === "done" ? styles.progressIconWrapDone : {}),
+                    }}
+                  >
+                    {renderStatusIcon(item)}
+                  </span>
+                  <span style={styles.progressPlatformName}>{item.label}</span>
+                </div>
+                <div
+                  style={{
+                    ...styles.progressMessage,
+                    ...(isSuccess ? styles.progressMessageSuccess : {}),
+                    ...(isWarning ? styles.progressMessageWarning : {}),
+                    ...(item.outcome === "not_mentioned" ? styles.progressMessageMuted : {}),
+                  }}
+                >
+                  {renderStatusText(item)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={styles.progressBarBlock}>
+          <div style={styles.progressBarTrack}>
+            <div style={{ ...styles.progressBarFill, width: `${progressPercent}%` }} />
+          </div>
+          <div style={styles.progressBarText}>{completedPlatforms}/{totalPlatforms || selectedModels.length} 平台已完成</div>
+        </div>
+
+        <div style={styles.progressHint}>
+          <span style={styles.progressHintEmoji}>💡</span>
+          <span>
+            {panelPhase === "generating"
+              ? "平台检测已完成，正在生成 TCA 报告并整理品牌一致性、覆盖度与权威性结果。"
+              : "检测过程中，AI 正在向各平台发送您的搜索问题，并分析回答内容中是否提及您的品牌。"}
+          </span>
+        </div>
+
+        {panelPhase === "generating" ? <div style={styles.generatingText}>正在生成 TCA 报告...</div> : null}
+      </div>
+    );
+  }
+
   return (
     <section style={embedded ? styles.embeddedCard : styles.card}>
       {embedded ? (
+        submitting ? (
+          renderProgressPanel()
+        ) : (
         <form onSubmit={handleSubmit} style={styles.embeddedForm}>
           <div style={styles.stepBlock}>
             <div style={styles.stepHead}>
@@ -207,6 +527,7 @@ export function DetectForm({
           </button>
           <div style={styles.compactTip}>约 30 秒出结果 · 无需注册 · 获取 TCA 评分与平台覆盖报告</div>
         </form>
+        )
       ) : (
         <>
           <div style={styles.heroBadge}>免费检测</div>
@@ -222,6 +543,7 @@ export function DetectForm({
             <div style={styles.quotaBarMuted}>登录后可查看剩余额度并保存你的客户、任务和历史记录。</div>
           )}
 
+          {submitting ? renderProgressPanel() : (
           <form onSubmit={handleSubmit} style={styles.form}>
             <div style={styles.gridTwo}>
               <label style={styles.field}>
@@ -307,6 +629,7 @@ export function DetectForm({
               </p>
             </div>
           </form>
+          )}
         </>
       )}
     </section>
@@ -330,6 +653,200 @@ const styles: Record<string, React.CSSProperties> = {
   embeddedForm: {
     display: "grid",
     gap: 26,
+  },
+  progressShellEmbedded: {
+    display: "grid",
+    gap: 22,
+  },
+  progressShellStandalone: {
+    display: "grid",
+    gap: 22,
+    marginTop: 28,
+  },
+  progressHeadingRow: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 18,
+    flexWrap: "wrap",
+  },
+  progressEyebrow: {
+    fontSize: 13,
+    fontWeight: 700,
+    color: "#0f8b7f",
+  },
+  progressTitle: {
+    margin: "10px 0 0",
+    fontSize: 30,
+    lineHeight: 1.2,
+    color: "#111827",
+    letterSpacing: "-0.03em",
+  },
+  progressCount: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 38,
+    padding: "0 16px",
+    borderRadius: 999,
+    background: "#edf8f6",
+    color: "#0f8b7f",
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  progressQuestion: {
+    padding: "14px 18px",
+    borderRadius: 16,
+    background: "#f8fafc",
+    border: "1px solid #e4e9f0",
+    color: "#4b5563",
+    fontSize: 15,
+    lineHeight: 1.7,
+  },
+  progressList: {
+    display: "grid",
+    gap: 12,
+    paddingTop: 6,
+  },
+  progressRow: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 230px) minmax(0, 1fr)",
+    gap: 16,
+    alignItems: "center",
+    borderRadius: 18,
+    padding: "14px 16px",
+    background: "#ffffff",
+    border: "1px solid #e9edf3",
+    transition: "all 0.25s ease",
+  },
+  progressRowWaiting: {
+    opacity: 0.52,
+    background: "#fbfcfd",
+  },
+  progressRowDetecting: {
+    border: "1px solid rgba(15, 188, 140, 0.3)",
+    background: "#f7fffc",
+    animation: "detectPulse 1.8s ease-in-out infinite",
+  },
+  progressRowDone: {
+    animation: "detectBounce 0.3s ease-out",
+  },
+  progressPlatform: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+  },
+  progressIconWrap: {
+    width: 24,
+    height: 24,
+    borderRadius: 999,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    border: "1px solid #d1d5db",
+    background: "#ffffff",
+    flexShrink: 0,
+  },
+  progressIconWrapActive: {
+    border: "1px solid rgba(15, 188, 140, 0.22)",
+    background: "#ecfdf6",
+  },
+  progressIconWrapDone: {
+    border: "1px solid transparent",
+  },
+  waitingDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+    background: "#c9d0d8",
+  },
+  detectingSpinner: {
+    width: 12,
+    height: 12,
+    borderRadius: 999,
+    border: "2px solid rgba(15, 188, 140, 0.22)",
+    borderTopColor: "#0fbc8c",
+    animation: "detectSpin 0.8s linear infinite",
+  },
+  successIcon: {
+    color: "#0fbc8c",
+    fontSize: 14,
+    fontWeight: 800,
+  },
+  warningIcon: {
+    color: "#EF9F27",
+    fontSize: 14,
+    fontWeight: 800,
+  },
+  failIcon: {
+    color: "#EF9F27",
+    fontSize: 14,
+    fontWeight: 800,
+  },
+  progressPlatformName: {
+    color: "#111827",
+    fontSize: 16,
+    fontWeight: 700,
+  },
+  progressMessage: {
+    color: "#667085",
+    fontSize: 15,
+    lineHeight: 1.7,
+  },
+  progressMessageSuccess: {
+    color: "#0f8b7f",
+    fontWeight: 600,
+  },
+  progressMessageWarning: {
+    color: "#EF9F27",
+    fontWeight: 600,
+  },
+  progressMessageMuted: {
+    color: "#c17c15",
+    fontWeight: 600,
+  },
+  progressBarBlock: {
+    display: "grid",
+    gap: 10,
+  },
+  progressBarTrack: {
+    width: "100%",
+    height: 6,
+    borderRadius: 999,
+    background: "#eef1f4",
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    borderRadius: 999,
+    background: "#0fbc8c",
+    transition: "width 0.5s ease",
+  },
+  progressBarText: {
+    color: "#98a2b3",
+    fontSize: 13,
+    textAlign: "right",
+  },
+  progressHint: {
+    display: "flex",
+    gap: 10,
+    alignItems: "flex-start",
+    padding: "16px 18px",
+    borderRadius: 16,
+    background: "#f8fafc",
+    color: "#667085",
+    fontSize: 14,
+    lineHeight: 1.75,
+    border: "1px solid #e7ebf0",
+  },
+  progressHintEmoji: {
+    flexShrink: 0,
+  },
+  generatingText: {
+    color: "#0f8b7f",
+    fontSize: 16,
+    fontWeight: 700,
+    textAlign: "center",
   },
   stepBlock: {
     display: "grid",
