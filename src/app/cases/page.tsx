@@ -5,35 +5,132 @@ import { SiteShell } from "@/components/marketing/SiteShell";
 
 export const metadata: Metadata = {
   title: "方法与效果 - 董逻辑MGEO",
-  description: "从问题识别、优化动作到预期效果，查看 MGEO 方法论在不同品牌场景中的典型应用路径。",
+  description: "品牌在 AI 搜索中的问题各不相同，但解决路径是系统化的。查看 MGEO 方法论应对三类典型问题场景的方式。",
 };
 
-const cases = [
+const scenarioCards = [
   {
-    tag: "企业服务",
-    title: "当品牌在不同 AI 平台的描述互相矛盾",
-    summary: "30 天内品牌理解一致性明显提升，稳定提及平台增加 3 个。",
-    detail: "通过统一品牌叙事、补齐关键内容支撑和诊断报告解读，让多模型对品牌的理解从泛化服务商收敛到明确的 AI 搜索增长服务。",
-    metrics: ["Consistency +22%", "覆盖平台 +3", "报告转化率 41%"],
-    bullets: ["统一品牌关键词与一句话定位", "补齐平台可引用内容入口", "把检测报告改造成服务沟通材料"],
+    tag: "Consistency 一致性",
+    tagStyle: "consistency",
+    title: "当品牌在各 AI 平台的描述互相矛盾",
+    description:
+      "用户在豆包上搜到的品牌介绍和 DeepSeek 上完全不同。品牌定位越模糊，AI 越不敢推荐你。",
+    steps: [
+      "检测 6 大平台对品牌的描述，量化冲突率",
+      "建立统一的品牌叙事框架",
+      "在各平台可抓取的内容源中统一品牌信息",
+      "持续监测 Consistency 分数变化",
+    ],
+    outcomes: [
+      { label: "典型提升", value: "15-30 分" },
+      { label: "冲突率", value: "10% 以内" },
+      { label: "周期", value: "2-4 周" },
+    ],
+    cta: "你的品牌描述一致吗？",
   },
   {
-    tag: "本地生活",
-    title: "当品牌只在 1-2 个平台被提及",
-    summary: "重点问题场景覆盖提升 48%，区域推荐出现率进入 Top 3。",
-    detail: "围绕本地场景、用户决策问题和门店关键词补齐内容入口，缩短从被识别到被推荐的距离。",
-    metrics: ["覆盖场景 +48%", "区域推荐 Top3", "线索成本 -18%"],
-    bullets: ["围绕门店与区域问题补内容", "强化高频问答中的品牌提及", "持续看推荐位而不只看提及数"],
+    tag: "Coverage 覆盖度",
+    tagStyle: "coverage",
+    title: "当品牌只在 1-2 个 AI 平台被提及",
+    description:
+      "你的品牌在文心里能搜到，但在豆包、DeepSeek、Kimi 上完全不存在。你只触达了不到 20% 的 AI 搜索用户。",
+    steps: [
+      "检测品牌在 6 大平台的覆盖情况",
+      "分析缺失平台的内容偏好",
+      "针对缺失平台生产适配内容",
+      "持续监测 Coverage 分数变化",
+    ],
+    outcomes: [
+      { label: "覆盖平台", value: "4-5 个" },
+      { label: "典型提升", value: "20-40 分" },
+      { label: "周期", value: "3-6 周" },
+    ],
+    cta: "你的品牌覆盖了几个平台？",
   },
   {
-    tag: "品牌增长",
+    tag: "Authority 权威性",
+    tagStyle: "authority",
     title: "当品牌被提及但引用来源不够权威",
-    summary: "权威性评分提升 2.1 分，高质量引用入口增加 4 个。",
-    detail: "通过补强外部支撑内容和可信引用结构，让模型对品牌给出更稳定、更可信的表达与推荐。",
-    metrics: ["Authority +2.1", "外部引用 +4", "推荐稳定性提升"],
-    bullets: ["重建可信引用链路", "补足权威内容与案例信源", "把内容分发到更适合的平台生态"],
+    description:
+      "AI 提到了你的品牌，但引用的来源是论坛帖子或低质量博客。权威信源的内容会被优先引用和推荐。",
+    steps: [
+      "检测品牌当前被引用的信源质量",
+      "制定高权重信源布局策略",
+      "在目标信源平台发布结构化内容",
+      "持续监测 Authority 分数变化",
+    ],
+    outcomes: [
+      { label: "高权重信源", value: "3-8 个" },
+      { label: "典型提升", value: "10-25 分" },
+      { label: "周期", value: "4-8 周" },
+    ],
+    cta: "你的品牌信源够权威吗？",
   },
 ] as const;
+
+const timeline = [
+  {
+    phase: "第 1 周",
+    title: "检测 + 诊断",
+    bullets: ["TCA 基准评分", "找出核心问题", "制定优化方案"],
+  },
+  {
+    phase: "第 2-3 周",
+    title: "内容适配 + 发布",
+    bullets: ["统一品牌叙事", "按平台生产内容", "发布到高权重平台"],
+  },
+  {
+    phase: "第 4 周",
+    title: "效果监测",
+    bullets: ["跟踪 6 平台变化", "对比优化前后", "异常预警"],
+  },
+  {
+    phase: "持续",
+    title: "复盘迭代",
+    bullets: ["每周数据报告", "策略调整", "下一轮优化"],
+  },
+] as const;
+
+const scoreCards = [
+  {
+    name: "Consistency",
+    subtitle: "衡量品牌信息统一程度",
+    qualified: "60 分",
+    excellent: "80 分",
+    typical: "2-4 周 +15~30 分",
+  },
+  {
+    name: "Coverage",
+    subtitle: "衡量平台触达广度",
+    qualified: "60 分",
+    excellent: "80 分",
+    typical: "3-6 周 +20~40 分",
+  },
+  {
+    name: "Authority",
+    subtitle: "衡量信源可信程度",
+    qualified: "60 分",
+    excellent: "80 分",
+    typical: "4-8 周 +10~25 分",
+  },
+] as const;
+
+type TagStyle = "consistency" | "coverage" | "authority";
+
+const tagStyles: Record<TagStyle, React.CSSProperties> = {
+  consistency: {
+    background: "#e7f7f1",
+    color: "#0a7c66",
+  },
+  coverage: {
+    background: "#ebf2ff",
+    color: "#315fd6",
+  },
+  authority: {
+    background: "#f0ecff",
+    color: "#6e44d8",
+  },
+};
 
 export default function CasesPage() {
   return (
@@ -42,47 +139,102 @@ export default function CasesPage() {
         <section style={styles.hero}>
           <div style={styles.heroPanel}>
             <h1 style={styles.heroTitle}>方法与效果</h1>
-            <p style={styles.heroText}>每个行业的品牌都可能面临以下 AI 可见性问题，以下是 MGEO 方法论的典型应用路径。</p>
+            <p style={styles.heroText}>
+              品牌在 AI 搜索中的问题各不相同，但解决路径是系统化的。以下是最常见的三类问题场景，以及 MGEO 方法论的应对方式。
+            </p>
+          </div>
+        </section>
+
+        <section style={styles.section}>
+          <div style={styles.sectionHeader}>
+            <div style={styles.sectionEyebrow}>三种典型问题场景</div>
+          </div>
+          <div style={styles.cardGrid}>
+            {scenarioCards.map((item) => (
+              <article key={item.title} style={styles.sceneCard}>
+                <span style={{ ...styles.sceneTag, ...tagStyles[item.tagStyle] }}>{item.tag}</span>
+                <h2 style={styles.sceneTitle}>{item.title}</h2>
+                <p style={styles.sceneDescription}>{item.description}</p>
+
+                <div style={styles.stepsBlock}>
+                  <div style={styles.stepsTitle}>MGEO 方法</div>
+                  <ol style={styles.stepsList}>
+                    {item.steps.map((step) => (
+                      <li key={step} style={styles.stepItem}>
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                <div style={styles.metricsGrid}>
+                  {item.outcomes.map((metric) => (
+                    <div key={metric.label} style={styles.metricCard}>
+                      <div style={styles.metricLabel}>{metric.label}</div>
+                      <div style={styles.metricValue}>{metric.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <Link href="/#detector" style={styles.sceneCta}>
+                  {item.cta}
+                </Link>
+              </article>
+            ))}
           </div>
         </section>
 
         <section style={styles.section}>
           <div style={styles.sectionCard}>
-            <div style={styles.sectionHeader}>
-              <h2 style={styles.sectionTitle}>方法论不是抽象概念，而是一条可落地的优化路径</h2>
-              <p style={styles.sectionText}>围绕典型问题场景，把问题识别、优化动作和结果方向拆成可以理解、可以执行的路径。</p>
+            <div style={styles.blockHeader}>
+              <h2 style={styles.blockTitle}>无论哪种问题，解决路径都是清晰的</h2>
             </div>
 
-            <div style={styles.caseGrid}>
-              {cases.map((item) => (
-                <article key={item.title} style={styles.caseCard}>
-                  <span style={styles.caseTag}>{item.tag}</span>
-                  <h3 style={styles.caseTitle}>{item.title}</h3>
-                  <p style={styles.caseSummary}>{item.summary}</p>
-                  <p style={styles.caseMeta}>{item.detail}</p>
-
-                  <div style={styles.caseMetrics}>
-                    {item.metrics.map((metric) => (
-                      <div key={metric} style={styles.caseMetric}>
-                        <strong>{metric.split(" ")[0]}</strong>
-                        <span>{metric.slice(metric.indexOf(" ") + 1)}</span>
-                      </div>
-                    ))}
+            <div style={styles.timeline}>
+              {timeline.map((item, index) => (
+                <article key={item.phase} style={styles.timelineItem}>
+                  <div style={styles.timelineTop}>
+                    <span style={styles.timelineDot} />
+                    {index < timeline.length - 1 ? <span style={styles.timelineLine} /> : null}
                   </div>
-
-                  <ul style={styles.caseList}>
+                  <div style={styles.timelinePhase}>{item.phase}</div>
+                  <h3 style={styles.timelineTitle}>{item.title}</h3>
+                  <ul style={styles.timelineList}>
                     {item.bullets.map((bullet) => (
-                      <li key={bullet} style={styles.caseListItem}>
+                      <li key={bullet} style={styles.timelineBullet}>
                         {bullet}
                       </li>
                     ))}
                   </ul>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
 
-                  <div style={styles.caseDisclaimer}>以上为 MGEO 方法论的典型应用路径，具体效果因品牌和行业差异而异。</div>
+        <section style={styles.section}>
+          <div style={styles.sectionCard}>
+            <div style={styles.blockHeader}>
+              <h2 style={styles.blockTitle}>我们用数据衡量效果，而不是感觉</h2>
+            </div>
 
-                  <Link href="/#detector" style={styles.caseLink}>
-                    先检测我的品牌
-                  </Link>
+            <div style={styles.scoreGrid}>
+              {scoreCards.map((item) => (
+                <article key={item.name} style={styles.scoreCard}>
+                  <h3 style={styles.scoreTitle}>{item.name}</h3>
+                  <p style={styles.scoreSubtitle}>{item.subtitle}</p>
+                  <div style={styles.scoreRow}>
+                    <span>合格线</span>
+                    <strong>{item.qualified}</strong>
+                  </div>
+                  <div style={styles.scoreRow}>
+                    <span>优秀线</span>
+                    <strong>{item.excellent}</strong>
+                  </div>
+                  <div style={styles.scoreTypical}>
+                    <span style={styles.scoreTypicalLabel}>典型提升</span>
+                    <strong style={styles.scoreTypicalValue}>{item.typical}</strong>
+                  </div>
                 </article>
               ))}
             </div>
@@ -91,9 +243,9 @@ export default function CasesPage() {
 
         <section style={styles.ctaSection}>
           <div style={styles.ctaCard}>
-            <div>
-              <h2 style={styles.ctaTitle}>想看看你的品牌属于哪种情况？</h2>
-              <p style={styles.ctaText}>先做一次免费检测，再判断当前更应该先补一致性、覆盖度还是权威性。</p>
+            <div style={styles.ctaBody}>
+              <h2 style={styles.ctaTitle}>你的品牌属于哪种情况？</h2>
+              <p style={styles.ctaText}>先做一次免费检测，30 秒内拿到 TCA 评分，就知道应该优先解决什么。</p>
             </div>
             <div style={styles.ctaActions}>
               <Link href="/#detector" style={styles.ctaPrimary}>
@@ -102,6 +254,9 @@ export default function CasesPage() {
               <Link href="/#contact" style={styles.ctaSecondary}>
                 联系我们获取定制方案
               </Link>
+            </div>
+            <div style={styles.ctaNote}>
+              以上预期效果基于 MGEO 方法论的典型应用场景，具体效果因品牌和行业差异而异。
             </div>
           </div>
         </section>
@@ -134,7 +289,7 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: "-0.04em",
   },
   heroText: {
-    maxWidth: 860,
+    maxWidth: 900,
     margin: "16px 0 0",
     fontSize: 19,
     lineHeight: 1.75,
@@ -145,113 +300,231 @@ const styles: Record<string, React.CSSProperties> = {
     margin: "0 auto 28px",
     padding: "0 24px",
   },
-  sectionCard: {
-    background: "#ffffff",
-    borderRadius: 32,
-    padding: 46,
-    boxShadow: "0 12px 36px rgba(15, 23, 42, 0.06)",
-  },
   sectionHeader: {
-    maxWidth: 760,
-    marginBottom: 24,
+    display: "grid",
+    justifyItems: "center",
+    textAlign: "center",
+    marginBottom: 22,
   },
-  sectionTitle: {
-    margin: 0,
-    fontSize: 40,
-    lineHeight: 1.15,
-    letterSpacing: "-0.03em",
+  sectionEyebrow: {
+    color: "#0a7c66",
+    fontSize: 18,
+    fontWeight: 700,
+    lineHeight: 1.5,
   },
-  sectionText: {
-    margin: "12px 0 0",
-    fontSize: 17,
-    lineHeight: 1.65,
-    color: "#6e6e73",
-  },
-  caseGrid: {
+  cardGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
     gap: 18,
   },
-  caseCard: {
-    background: "#fbfbfc",
-    border: "1px solid #ececf0",
-    borderRadius: 26,
-    padding: 26,
+  sceneCard: {
+    background: "#ffffff",
+    border: "1px solid #e6e9ef",
+    borderRadius: 30,
+    padding: 28,
+    boxShadow: "0 12px 32px rgba(15, 23, 42, 0.05)",
     display: "grid",
     alignContent: "start",
   },
-  caseTag: {
-    display: "inline-block",
-    marginBottom: 14,
-    padding: "6px 12px",
-    borderRadius: 999,
-    background: "#e9f7f3",
-    color: "#0a7c66",
-    fontSize: 13,
-    fontWeight: 700,
-    width: "fit-content",
-  },
-  caseTitle: {
-    margin: 0,
-    fontSize: 24,
-    lineHeight: 1.35,
-    color: "#1d1d1f",
-  },
-  caseSummary: {
-    margin: "12px 0 0",
-    fontSize: 18,
-    lineHeight: 1.6,
-    color: "#0a7c66",
-    fontWeight: 600,
-  },
-  caseMeta: {
-    margin: "14px 0 0",
-    fontSize: 15,
-    lineHeight: 1.7,
-    color: "#1d1d1f",
-  },
-  caseMetrics: {
-    display: "flex",
-    gap: 12,
-    flexWrap: "wrap",
-    marginTop: 18,
-    marginBottom: 18,
-  },
-  caseMetric: {
-    display: "inline-flex",
-    alignItems: "baseline",
-    gap: 6,
-    padding: "8px 12px",
-    borderRadius: 14,
-    background: "#ffffff",
-    border: "1px solid #ececf0",
-  },
-  caseList: {
-    listStyle: "none",
-    margin: 0,
-    padding: 0,
-  },
-  caseListItem: {
-    fontSize: 15,
-    lineHeight: 1.6,
-    padding: "12px 0",
-    borderTop: "1px solid #ececf0",
-  },
-  caseDisclaimer: {
-    marginTop: 18,
-    fontSize: 13,
-    lineHeight: 1.7,
-    color: "#8a909d",
-    borderTop: "1px dashed #dfe4ec",
-    paddingTop: 14,
-  },
-  caseLink: {
+  sceneTag: {
     display: "inline-flex",
     alignItems: "center",
-    marginTop: 18,
+    justifyContent: "center",
+    width: "fit-content",
+    borderRadius: 999,
+    padding: "8px 14px",
+    fontSize: 13,
+    fontWeight: 700,
+    marginBottom: 18,
+  },
+  sceneTitle: {
+    margin: 0,
+    fontSize: 28,
+    lineHeight: 1.25,
+    color: "#1d1d1f",
+    letterSpacing: "-0.03em",
+  },
+  sceneDescription: {
+    margin: "14px 0 0",
+    fontSize: 14,
+    lineHeight: 1.8,
+    color: "#4f5562",
+  },
+  stepsBlock: {
+    marginTop: 22,
+    paddingLeft: 18,
+    borderLeft: "2px solid #dde4ed",
+  },
+  stepsTitle: {
+    fontSize: 14,
+    fontWeight: 700,
+    color: "#202226",
+    marginBottom: 12,
+  },
+  stepsList: {
+    margin: 0,
+    paddingLeft: 18,
+    display: "grid",
+    gap: 10,
+  },
+  stepItem: {
+    color: "#2f3440",
+    fontSize: 15,
+    lineHeight: 1.7,
+    paddingLeft: 2,
+  },
+  metricsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 10,
+    marginTop: 22,
+  },
+  metricCard: {
+    background: "#f7f8fb",
+    borderRadius: 18,
+    padding: "14px 14px 16px",
+    minHeight: 88,
+  },
+  metricLabel: {
+    color: "#818897",
+    fontSize: 12,
+    lineHeight: 1.4,
+  },
+  metricValue: {
+    marginTop: 10,
+    color: "#1d1d1f",
+    fontSize: 22,
+    fontWeight: 800,
+    lineHeight: 1.2,
+    letterSpacing: "-0.03em",
+  },
+  sceneCta: {
+    display: "inline-flex",
+    alignItems: "center",
+    marginTop: 22,
     color: "#0a7c66",
     textDecoration: "none",
+    fontSize: 15,
     fontWeight: 700,
+  },
+  sectionCard: {
+    background: "#ffffff",
+    borderRadius: 32,
+    padding: 42,
+    boxShadow: "0 12px 36px rgba(15, 23, 42, 0.06)",
+  },
+  blockHeader: {
+    maxWidth: 760,
+    marginBottom: 26,
+  },
+  blockTitle: {
+    margin: 0,
+    fontSize: 40,
+    lineHeight: 1.15,
+    letterSpacing: "-0.03em",
+    color: "#1d1d1f",
+  },
+  timeline: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+    gap: 20,
+  },
+  timelineItem: {
+    position: "relative",
+  },
+  timelineTop: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    minHeight: 20,
+    marginBottom: 18,
+  },
+  timelineDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 999,
+    background: "#0a7c66",
+    boxShadow: "0 0 0 6px rgba(10, 124, 102, 0.12)",
+    flexShrink: 0,
+    position: "relative",
+    zIndex: 2,
+  },
+  timelineLine: {
+    height: 2,
+    flex: 1,
+    background: "#dbe3eb",
+    marginLeft: 10,
+  },
+  timelinePhase: {
+    color: "#0a7c66",
+    fontSize: 14,
+    fontWeight: 700,
+  },
+  timelineTitle: {
+    margin: "10px 0 0",
+    fontSize: 24,
+    lineHeight: 1.3,
+    color: "#1d1d1f",
+  },
+  timelineList: {
+    listStyle: "none",
+    margin: "14px 0 0",
+    padding: 0,
+    display: "grid",
+    gap: 10,
+  },
+  timelineBullet: {
+    color: "#5a6270",
+    fontSize: 15,
+    lineHeight: 1.65,
+  },
+  scoreGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 18,
+  },
+  scoreCard: {
+    background: "#f7f8fb",
+    borderRadius: 26,
+    padding: 28,
+  },
+  scoreTitle: {
+    margin: 0,
+    fontSize: 30,
+    lineHeight: 1.15,
+    color: "#1d1d1f",
+  },
+  scoreSubtitle: {
+    margin: "12px 0 0",
+    fontSize: 15,
+    lineHeight: 1.7,
+    color: "#667085",
+  },
+  scoreRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 18,
+    fontSize: 15,
+    color: "#475467",
+  },
+  scoreTypical: {
+    marginTop: 22,
+    paddingTop: 18,
+    borderTop: "1px solid #e4e7ec",
+  },
+  scoreTypicalLabel: {
+    display: "block",
+    color: "#818897",
+    fontSize: 12,
+  },
+  scoreTypicalValue: {
+    display: "block",
+    marginTop: 10,
+    color: "#1d1d1f",
+    fontSize: 22,
+    lineHeight: 1.35,
   },
   ctaSection: {
     maxWidth: 1240,
@@ -260,24 +533,24 @@ const styles: Record<string, React.CSSProperties> = {
   },
   ctaCard: {
     borderRadius: 28,
-    padding: "30px 34px",
+    padding: "34px 36px",
     background: "#111827",
     color: "#ffffff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 20,
-    flexWrap: "wrap",
+    display: "grid",
+    gap: 18,
+  },
+  ctaBody: {
+    maxWidth: 820,
   },
   ctaTitle: {
     margin: 0,
-    fontSize: 34,
-    lineHeight: 1.15,
+    fontSize: 36,
+    lineHeight: 1.12,
   },
   ctaText: {
-    margin: "10px 0 0",
-    fontSize: 16,
-    lineHeight: 1.7,
+    margin: "12px 0 0",
+    fontSize: 17,
+    lineHeight: 1.75,
     color: "rgba(255,255,255,0.72)",
   },
   ctaActions: {
@@ -289,11 +562,11 @@ const styles: Record<string, React.CSSProperties> = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 54,
-    padding: "0 18px",
+    minHeight: 56,
+    padding: "0 20px",
     borderRadius: 14,
-    background: "#ffffff",
-    color: "#111827",
+    background: "#0fbc8c",
+    color: "#ffffff",
     textDecoration: "none",
     fontWeight: 700,
   },
@@ -301,12 +574,17 @@ const styles: Record<string, React.CSSProperties> = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 54,
-    padding: "0 18px",
+    minHeight: 56,
+    padding: "0 20px",
     borderRadius: 14,
-    border: "1px solid rgba(255,255,255,0.18)",
+    border: "1px solid rgba(255,255,255,0.28)",
     color: "#ffffff",
     textDecoration: "none",
     fontWeight: 700,
+  },
+  ctaNote: {
+    color: "rgba(255,255,255,0.62)",
+    fontSize: 13,
+    lineHeight: 1.7,
   },
 };
