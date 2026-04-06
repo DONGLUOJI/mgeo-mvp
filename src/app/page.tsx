@@ -128,7 +128,7 @@ export default function MarketingHomePage() {
 
         <section style={styles.reportSection}>
           <div style={styles.sectionHead}>
-            <div style={styles.sectionAccent}>品牌诊断报告</div>
+            <div style={{ ...styles.sectionAccent, ...styles.reportAccent }}>品牌诊断报告</div>
             <p style={styles.sectionTextWide}>
               聚焦品牌在多模型环境中的真实问题，帮助客户快速理解风险、判断优先级，启动针对性优化。
             </p>
@@ -480,6 +480,10 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     lineHeight: 1.7,
     maxWidth: 1240,
+  },
+  reportAccent: {
+    fontSize: 24,
+    lineHeight: 1.6,
   },
   sectionText: {
     margin: 0,
