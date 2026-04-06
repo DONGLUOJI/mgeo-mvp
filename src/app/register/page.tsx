@@ -60,11 +60,11 @@ export default function RegisterPage() {
                 <input type="checkbox" />
                 <span>
                   我已阅读并同意
-                  <Link href="#" style={styles.inlineLink}>
+                  <Link href="/terms" style={styles.inlineLink}>
                     《用户协议》
                   </Link>
                   与
-                  <Link href="#" style={styles.inlineLink}>
+                  <Link href="/privacy" style={styles.inlineLink}>
                     《隐私政策》
                   </Link>
                 </span>

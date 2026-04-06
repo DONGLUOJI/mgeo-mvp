@@ -70,7 +70,12 @@ const reportRows = [
   ["百度文心", "negative", "-", "品牌内容仍未进入稳定推荐场景"],
 ];
 
-const legalLinks = ["隐私政策", "用户协议", "退款政策", "网站地图"];
+const legalLinks = [
+  { label: "隐私政策", href: "/privacy" },
+  { label: "用户协议", href: "/terms" },
+  { label: "退款政策", href: "/refund" },
+  { label: "网站地图", href: "/sitemap.xml" },
+];
 
 export default function MarketingHomePage() {
   return (
@@ -274,9 +279,9 @@ export default function MarketingHomePage() {
       <footer style={styles.footer}>
         <div style={styles.footerLinks}>
           {legalLinks.map((item) => (
-            <span key={item} style={styles.footerLink}>
-              {item}
-            </span>
+            <Link key={item.label} href={item.href} style={styles.footerLink}>
+              {item.label}
+            </Link>
           ))}
         </div>
         <div style={styles.footerCopyright}>Copyright © 2026 董逻辑MGEO. 保留所有权利。</div>
