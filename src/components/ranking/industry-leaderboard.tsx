@@ -280,21 +280,25 @@ export function IndustryLeaderboard({
 
                           return (
                             <div key={platform.key} style={styles.platformRow}>
-                              <span
-                                style={{
-                                  ...styles.platformStatusDot,
-                                  background: detail.mentioned ? "#0fbc8c" : "#ffffff",
-                                  borderColor: detail.mentioned ? "#0fbc8c" : "#D3D1C7",
-                                }}
-                              />
-                              <span style={styles.platformName}>{platform.label}</span>
+                              <div style={styles.platformMain}>
+                                <span
+                                  style={{
+                                    ...styles.platformStatusDot,
+                                    background: detail.mentioned ? "#0fbc8c" : "#ffffff",
+                                    borderColor: detail.mentioned ? "#0fbc8c" : "#D3D1C7",
+                                  }}
+                                />
+                                <span style={styles.platformName}>{platform.label}</span>
+                              </div>
                               {detail.mentioned ? (
-                                <>
+                                <div style={styles.platformMeta}>
                                   <span style={styles.platformPosition}>第 {detail.position} 位</span>
                                   <span style={{ ...styles.sentimentTag, ...sentiment }}>{sentimentLabel(detail.sentiment)}</span>
-                                </>
+                                </div>
                               ) : (
-                                <span style={styles.platformMiss}>未被提及</span>
+                                <div style={styles.platformMeta}>
+                                  <span style={styles.platformMiss}>未被提及</span>
+                                </div>
                               )}
                             </div>
                           );
@@ -561,15 +565,32 @@ const styles: Record<string, React.CSSProperties> = {
   },
   platformGrid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
     gap: 12,
   },
   platformRow: {
     display: "grid",
-    gridTemplateColumns: "12px 54px 1fr auto",
-    alignItems: "center",
     gap: 8,
-    minHeight: 34,
+    minHeight: 54,
+    minWidth: 0,
+    padding: "10px 12px",
+    borderRadius: 14,
+    background: "#ffffff",
+    border: "1px solid #eceae3",
+  },
+  platformMain: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 10,
+    minWidth: 0,
+  },
+  platformMeta: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    minWidth: 0,
+    flexWrap: "wrap",
   },
   platformStatusDot: {
     width: 8,
@@ -582,15 +603,18 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 14,
     fontWeight: 700,
     color: "#111827",
+    lineHeight: 1.3,
   },
   platformPosition: {
     fontSize: 13,
     color: "#4b5563",
+    whiteSpace: "nowrap",
   },
   platformMiss: {
     fontSize: 13,
     color: "#b42318",
     fontWeight: 700,
+    whiteSpace: "nowrap",
   },
   sentimentTag: {
     display: "inline-flex",
@@ -600,6 +624,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 999,
     fontSize: 12,
     fontWeight: 700,
+    whiteSpace: "nowrap",
   },
   expandFooter: {
     display: "flex",
