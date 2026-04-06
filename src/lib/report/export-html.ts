@@ -188,7 +188,7 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
           <div class="contact-title">服务联系信息</div>
           <div class="contact-line">微信咨询：19925969089</div>
           <div class="contact-line">小红书：董逻辑</div>
-          <div class="contact-line">商务邮箱：19925969089@163.com</div>
+          <div class="contact-line">商务邮箱：dongluoji2026@163.com</div>
         </div>
       </div>
     </section>
@@ -250,7 +250,7 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
         <div class="cta-card-line">建议操作：预约解读 / 获取服务方案 / 进入一轮优化</div>
         <div class="cta-card-line">微信：19925969089</div>
         <div class="cta-card-line">小红书：董逻辑</div>
-        <div class="cta-card-line">邮箱：19925969089@163.com</div>
+        <div class="cta-card-line">邮箱：dongluoji2026@163.com</div>
         <div class="cta-card-line" style="margin-top:10px;font-weight:700;color:#111827">官网：www.dongluoji.com</div>
       </div>
     </section>
