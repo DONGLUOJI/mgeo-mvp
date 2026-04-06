@@ -111,6 +111,7 @@ export type RankedBrand = {
   brandName: string;
   industry: string;
   city: string;
+  marketScope: "local" | "national";
   tcaTotal: number;
   tcaConsistency: number;
   tcaCoverage: number;

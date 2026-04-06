@@ -6,21 +6,38 @@ type IndustryTopChartProps = {
   data: Array<{
     brandName: string;
     tcaTotal: number;
+    marketScope?: "local" | "national";
   }>;
+  currentCity?: string;
 };
 
-export function IndustryTopChart({ data }: IndustryTopChartProps) {
+export function IndustryTopChart({ data, currentCity = "全国" }: IndustryTopChartProps) {
   const chartData = data.map((item, index) => ({
     name: item.brandName,
     score: item.tcaTotal,
-    fill: index < 3 ? "#0fbc8c" : "#9FE1CB",
+    fill:
+      currentCity !== "全国"
+        ? item.marketScope === "local"
+          ? index < 3
+            ? "#0f9b84"
+            : "#8FD8C8"
+          : index < 3
+            ? "#35506C"
+            : "#C9D7E5"
+        : index < 3
+          ? "#0fbc8c"
+          : "#9FE1CB",
   }));
 
   return (
     <section style={styles.card}>
       <div style={styles.head}>
-        <h3 style={styles.title}>TOP 10 品牌分布</h3>
-        <div style={styles.caption}>只在选定行业时显示，帮助快速对比头部梯队差距。</div>
+        <h3 style={styles.title}>{currentCity === "全国" ? "TOP 10 品牌分布" : `${currentCity} 本地商家榜 TOP 10`}</h3>
+        <div style={styles.caption}>
+          {currentCity === "全国"
+            ? "只在选定行业时显示，帮助快速对比头部梯队差距。"
+            : "绿色代表本地品牌，蓝灰代表全国连锁，帮助快速看出城市搜索场景里的本地竞争格局。"}
+        </div>
       </div>
       <div style={styles.chartWrap}>
         <ResponsiveContainer width="100%" height={320}>

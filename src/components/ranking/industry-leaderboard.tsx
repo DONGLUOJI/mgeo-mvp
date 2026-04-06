@@ -21,6 +21,7 @@ type IndustryLeaderboardProps = {
   currentIndustry: string;
   currentDays: number;
   focusBrand?: string;
+  cityQueryHints?: string[];
   overview: {
     topRiser: RankedBrand | null;
     topFaller: RankedBrand | null;
@@ -52,9 +53,22 @@ export function IndustryLeaderboard({
   currentIndustry,
   currentDays,
   focusBrand,
+  cityQueryHints = [],
   overview,
 }: IndustryLeaderboardProps) {
   const selectedIndustry = currentIndustry !== "全部";
+  const localBrandCount = brands.filter((brand) => brand.marketScope === "local").length;
+  const nationalBrandCount = brands.filter((brand) => brand.marketScope === "national").length;
+  const localBrandShare = brands.length ? Math.round((localBrandCount / brands.length) * 100) : 0;
+  const displayHints =
+    cityQueryHints.length > 0
+      ? cityQueryHints
+      : currentCity !== "全国"
+        ? [
+            `${currentCity}${currentIndustry === "全部" ? "本地品牌推荐" : currentIndustry + "推荐"}`,
+            `${currentCity}${currentIndustry === "全部" ? "热门商家排行" : currentIndustry + "哪家好"}`,
+          ]
+        : [];
 
   return (
     <section style={styles.section}>
@@ -96,15 +110,17 @@ export function IndustryLeaderboard({
         </article>
 
         <article style={styles.overviewCard}>
-          <div style={styles.overviewLabel}>{currentCity === "全国" ? "当前行业均分" : `${currentCity}均分`}</div>
-          <div style={styles.overviewMainLarge}>{overview.averageScore.current.toFixed(1)}</div>
+          <div style={styles.overviewLabel}>{currentCity === "全国" ? "当前行业均分" : `${currentCity}本地品牌占比`}</div>
+          <div style={styles.overviewMainLarge}>{currentCity === "全国" ? overview.averageScore.current.toFixed(1) : `${localBrandShare}%`}</div>
           <div
             style={{
               ...styles.overviewAccentNeutral,
-              color: overview.averageScore.change >= 0 ? "#0fbc8c" : "#E24B4A",
+              color: currentCity === "全国" ? (overview.averageScore.change >= 0 ? "#0fbc8c" : "#E24B4A") : "#35506C",
             }}
           >
-            较上周 {overview.averageScore.change >= 0 ? "↑" : "↓"} {Math.abs(overview.averageScore.change).toFixed(1)}
+            {currentCity === "全国"
+              ? `较上周 ${overview.averageScore.change >= 0 ? "↑" : "↓"} ${Math.abs(overview.averageScore.change).toFixed(1)}`
+              : `本地品牌 ${localBrandCount} 个 / 连锁品牌 ${nationalBrandCount} 个`}
           </div>
           <div style={styles.overviewMeta}>
             {overview.averageScore.totalIndustries} 个行业 {overview.averageScore.totalBrands} 个品牌
@@ -122,6 +138,22 @@ export function IndustryLeaderboard({
           ) : null}
         </div>
       </div>
+
+      {currentCity !== "全国" ? (
+        <div style={styles.localSignals}>
+          <div style={styles.localSignalsHead}>
+            <div style={styles.localSignalsTitle}>本地搜索场景</div>
+            <div style={styles.localSignalsText}>这些更接近用户在城市里真实会问的问题，也更能体现本地商家在 AI 搜索中的存在感。</div>
+          </div>
+          <div style={styles.localSignalChips}>
+            {displayHints.map((hint) => (
+              <span key={hint} style={styles.localSignalChip}>
+                {hint}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div style={styles.filters}>
         {industries.map((industry) => {
@@ -175,11 +207,11 @@ export function IndustryLeaderboard({
         })}
       </div>
 
-      {selectedIndustry ? <IndustryTopChart data={brands.slice(0, 10)} /> : null}
+      {selectedIndustry ? <IndustryTopChart data={brands.slice(0, 10)} currentCity={currentCity} /> : null}
 
       <div style={styles.tableCard}>
         <div style={styles.tableHead}>
-          <span>排名</span>
+          <span>{currentCity === "全国" ? "排名" : "城市排名"}</span>
           <span>品牌</span>
           <span>行业</span>
           <span>TCA 综合分</span>
@@ -207,6 +239,11 @@ export function IndustryLeaderboard({
                   <span style={styles.brandCell}>
                     <span style={styles.brandName}>{brand.brandName}</span>
                     {brand.city !== "全国" ? <CityTag city={brand.city} /> : null}
+                    {currentCity !== "全国" ? (
+                      <span style={{ ...styles.scopeTag, ...(brand.marketScope === "local" ? styles.scopeTagLocal : styles.scopeTagNational) }}>
+                        {brand.marketScope === "local" ? "本地品牌" : "全国连锁"}
+                      </span>
+                    ) : null}
                   </span>
                   <span>
                     <IndustryTag industry={brand.industry} />
@@ -370,6 +407,45 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.75,
     color: "#6b7280",
   },
+  localSignals: {
+    display: "grid",
+    gap: 12,
+    padding: "18px 20px",
+    borderRadius: 20,
+    background: "linear-gradient(180deg, #f7fbfa 0%, #eef8f5 100%)",
+    border: "1px solid #d8efe8",
+  },
+  localSignalsHead: {
+    display: "grid",
+    gap: 4,
+  },
+  localSignalsTitle: {
+    fontSize: 15,
+    fontWeight: 800,
+    color: "#0a7c66",
+  },
+  localSignalsText: {
+    fontSize: 14,
+    lineHeight: 1.7,
+    color: "#62707f",
+  },
+  localSignalChips: {
+    display: "flex",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+  localSignalChip: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "8px 12px",
+    borderRadius: 999,
+    background: "#ffffff",
+    border: "1px solid #cfe7df",
+    color: "#135f52",
+    fontSize: 13,
+    fontWeight: 700,
+  },
   filters: {
     display: "flex",
     gap: 10,
@@ -433,6 +509,24 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 17,
     fontWeight: 800,
     color: "#111827",
+  },
+  scopeTag: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "3px 8px",
+    borderRadius: 999,
+    fontSize: 11,
+    fontWeight: 800,
+    whiteSpace: "nowrap",
+  },
+  scopeTagLocal: {
+    background: "#e8faf4",
+    color: "#0a7c66",
+  },
+  scopeTagNational: {
+    background: "#eef3f8",
+    color: "#35506C",
   },
   actions: {
     fontSize: 13,

@@ -237,6 +237,12 @@ const PLATFORM_PREFERENCES: Record<string, PlatformKey[]> = {
   企业服务: ["deepseek", "kimi", "qianwen", "doubao", "wenxin", "yuanbao"],
 };
 
+const CITY_QUERY_HINTS: Record<string, string[]> = {
+  深圳: ["深圳推荐好喝的奶茶品牌", "深圳哪家奶茶好喝", "深圳附近家政推荐"],
+  杭州: ["杭州推荐好喝的奶茶品牌", "杭州少儿编程培训机构推荐", "杭州企业协同工具推荐"],
+  成都: ["成都火锅品牌推荐", "成都本地奶茶推荐", "成都家政公司哪家靠谱"],
+};
+
 function brandHash(input: string) {
   return Array.from(input).reduce((sum, char) => sum + char.charCodeAt(0), 0);
 }
@@ -308,7 +314,7 @@ async function getLatestSnapshots(days = 30, city: string = "全国") {
   return Array.from(deduped.values());
 }
 
-function enrichRankingRows(rows: RankingSnapshotBase[]) {
+function enrichRankingRows(rows: RankingSnapshotBase[], nationalBrandNames: Set<string>) {
   return rows
     .sort((left, right) => right.tcaTotal - left.tcaTotal)
     .map((row, index) => ({
@@ -316,6 +322,7 @@ function enrichRankingRows(rows: RankingSnapshotBase[]) {
       brandName: row.brandName,
       industry: row.industry,
       city: row.city,
+      marketScope: row.city !== "全国" && !nationalBrandNames.has(row.brandName) ? ("local" as const) : ("national" as const),
       tcaTotal: row.tcaTotal,
       tcaConsistency: row.tcaConsistency,
       tcaCoverage: row.tcaCoverage,
@@ -339,6 +346,8 @@ export async function getIndustryRankingData(options?: {
 }) {
   const { industry, city = "全国", days = 30, limit = 50, offset = 0, q } = options || {};
   const snapshots = await getLatestSnapshots(days, city);
+  const nationalSnapshots = city === "全国" ? snapshots : await getLatestSnapshots(days, "全国");
+  const nationalBrandNames = new Set(nationalSnapshots.map((item) => item.brandName));
   const keyword = q?.trim().toLowerCase();
 
   const filtered = snapshots.filter((row) => {
@@ -347,13 +356,14 @@ export async function getIndustryRankingData(options?: {
     return matchIndustry && matchQuery;
   });
 
-  const brands = enrichRankingRows(filtered);
+  const brands = enrichRankingRows(filtered, nationalBrandNames);
   const paged = brands.slice(offset, offset + limit);
 
   return {
     total: brands.length,
     snapshotDate: brands[0]?.snapshotDate || "2026-04-05",
     city,
+    cityQueryHints: CITY_QUERY_HINTS[city] || [],
     overview: {
       topRiser: brands[0]
         ? [...brands].sort((left, right) => right.change7d - left.change7d)[0]

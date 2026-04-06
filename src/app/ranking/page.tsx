@@ -264,6 +264,7 @@ export default async function RankingPage({
                   currentIndustry={currentIndustry}
                   currentDays={currentDays}
                   focusBrand={focusBrand}
+                  cityQueryHints={industryData.cityQueryHints}
                   overview={industryData.overview}
                 />
               ) : null}
