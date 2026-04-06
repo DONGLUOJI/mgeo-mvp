@@ -545,6 +545,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: "grid",
     gridTemplateColumns: "1.1fr 1fr",
     gap: 18,
+    alignItems: "start",
   },
   metricBlock: {
     borderRadius: 18,
@@ -553,6 +554,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 18,
     display: "grid",
     gap: 16,
+    alignContent: "start",
   },
   metricLabel: {
     fontSize: 15,
