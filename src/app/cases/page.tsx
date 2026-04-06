@@ -168,8 +168,10 @@ export default function CasesPage() {
             {scenarioCards.map((item) => (
               <article key={item.title} style={styles.sceneCard}>
                 <span style={{ ...styles.sceneTag, ...tagStyles[item.tagStyle] }}>{item.tag}</span>
-                <h2 style={styles.sceneTitle}>{item.title}</h2>
-                <p style={styles.sceneDescription}>{item.description}</p>
+                <div style={styles.sceneIntro}>
+                  <h2 style={styles.sceneTitle}>{item.title}</h2>
+                  <p style={styles.sceneDescription}>{item.description}</p>
+                </div>
 
                 <div style={styles.stepsBlock}>
                   <div style={styles.stepsTitle}>MGEO 方法</div>
@@ -365,6 +367,9 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: "-0.02em",
     fontWeight: 800,
   },
+  sceneIntro: {
+    minHeight: 238,
+  },
   sceneDescription: {
     margin: "14px 0 0",
     fontSize: 16,
@@ -375,6 +380,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginTop: 24,
     paddingLeft: 20,
     borderLeft: "2px solid #dde4ed",
+    minHeight: 320,
   },
   stepsTitle: {
     fontSize: 15,
