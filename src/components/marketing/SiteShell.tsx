@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 export const MARKETING_NAV_ITEMS = [
+  { href: "/#detector", label: "免费检测" },
   { href: "/ranking", label: "排名" },
   { href: "/pricing", label: "服务方案" },
   { href: "/cases", label: "方法与效果" },
@@ -22,8 +23,8 @@ export function SiteShell({
   children,
   current,
   navItems = MARKETING_NAV_ITEMS,
-  ctaHref = "/#detector",
-  ctaLabel = "免费检测",
+  ctaHref = "/register",
+  ctaLabel = "注册",
   hideFooter = false,
 }: SiteShellProps) {
   return (
