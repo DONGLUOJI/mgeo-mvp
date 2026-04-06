@@ -193,9 +193,10 @@ export default function MarketingHomePage() {
 
         <section style={styles.workflowSection}>
           <div style={styles.sectionHead}>
-            <h2 style={styles.sectionTitle}>从一次检测到持续增长的 6 步路径</h2>
+            <h2 style={styles.sectionTitle}>6步闭环服务</h2>
+            <div style={styles.sectionAccent}>步步有交付，全程可追踪</div>
             <p style={styles.sectionText}>
-              先检测，再诊断，再执行。每一步都服务于品牌在 AI 场景中的长期可见性增长。
+              每一步都有明确交付标准，形成完整优化闭环，让增长可预期、可追踪。
             </p>
           </div>
           <div style={styles.workflowGrid}>
