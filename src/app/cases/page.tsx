@@ -50,7 +50,7 @@ export default function CasesPage() {
           <div style={styles.sectionCard}>
             <div style={styles.sectionHeader}>
               <h2 style={styles.sectionTitle}>方法论不是抽象概念，而是一条可落地的优化路径</h2>
-              <p style={styles.sectionText}>真实品牌在 AI 搜索中的问题识别、优化动作与结果变化。</p>
+              <p style={styles.sectionText}>围绕典型问题场景，把问题识别、优化动作和结果方向拆成可以理解、可以执行的路径。</p>
             </div>
 
             <div style={styles.caseGrid}>
@@ -93,7 +93,7 @@ export default function CasesPage() {
           <div style={styles.ctaCard}>
             <div>
               <h2 style={styles.ctaTitle}>想看看你的品牌属于哪种情况？</h2>
-              <p style={styles.ctaText}>先做一次免费检测，再决定更适合从一致性、覆盖度还是权威性开始补。</p>
+              <p style={styles.ctaText}>先做一次免费检测，再判断当前更应该先补一致性、覆盖度还是权威性。</p>
             </div>
             <div style={styles.ctaActions}>
               <Link href="/#detector" style={styles.ctaPrimary}>

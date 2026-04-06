@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 export const MARKETING_NAV_ITEMS = [
   { href: "/ranking", label: "排名" },
   { href: "/pricing", label: "服务方案" },
-  { href: "/cases", label: "案例成果" },
+  { href: "/cases", label: "方法与效果" },
   { href: "/#contact", label: "联系我们" },
   { href: "/whitepaper", label: "MGEO白皮书" },
 ];
@@ -80,7 +80,7 @@ export function SiteShell({
                 服务方案
               </Link>
               <Link href="/cases" style={styles.footerLink}>
-                案例成果
+                方法与效果
               </Link>
               <Link href="/ranking" style={styles.footerLink}>
                 排名

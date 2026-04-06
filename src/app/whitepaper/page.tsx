@@ -16,6 +16,12 @@ const toc = [
   { id: "ch6", title: "第六章：MGEO评估体系" },
 ];
 
+const previewPoints = [
+  "6 章核心目录，帮助快速理解 MGEO 的方法框架",
+  "TCA 三支柱模型，明确一致性、覆盖度、权威性的诊断逻辑",
+  "适合先读摘要，再回到免费检测查看自己品牌的真实问题",
+];
+
 export default function WhitepaperPage() {
   return (
     <SiteShell current="/whitepaper" hideFooter>
@@ -30,12 +36,21 @@ export default function WhitepaperPage() {
 
         <div style={styles.mainContent}>
           <section style={styles.toc}>
-            <h2 style={styles.tocTitle}>目录</h2>
+            <div style={styles.tocHead}>
+              <div>
+                <h2 style={styles.tocTitle}>目录</h2>
+                <p style={styles.tocText}>当前页保留核心摘要，帮助你先快速理解 MGEO 的理论框架与评分逻辑。</p>
+              </div>
+              <span style={styles.previewBadge}>摘要预览</span>
+            </div>
             <ul style={styles.tocList}>
               {toc.map((item) => (
                 <li key={item.id} style={styles.tocItem}>
                   <a href={`#${item.id}`} style={styles.tocLink}>
-                    <span>{item.title}</span>
+                    <span style={styles.tocTitleRow}>
+                      <span>{item.title}</span>
+                      <span style={styles.summaryPill}>摘要</span>
+                    </span>
                     <span>→</span>
                   </a>
                 </li>
@@ -43,8 +58,36 @@ export default function WhitepaperPage() {
             </ul>
           </section>
 
+          <section style={styles.previewPanel}>
+            <div style={styles.previewCopy}>
+              <div style={styles.previewEyebrow}>阅读建议</div>
+              <h2 style={styles.previewTitle}>先看摘要，再回到检测页验证自己的品牌问题</h2>
+              <p style={styles.previewText}>
+                白皮书页当前更适合作为方法框架预览。你可以先理解 MGEO 的核心概念、评分方式和实施思路，再结合品牌检测结果做判断。
+              </p>
+            </div>
+            <div style={styles.previewMeta}>
+              {previewPoints.map((point) => (
+                <div key={point} style={styles.previewItem}>
+                  {point}
+                </div>
+              ))}
+              <div style={styles.previewActions}>
+                <Link href="/#detector" style={styles.previewPrimary}>
+                  回到免费检测
+                </Link>
+                <Link href="/pricing" style={styles.previewSecondary}>
+                  查看服务方案
+                </Link>
+              </div>
+            </div>
+          </section>
+
           <section id="ch1" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>第一章：前言与背景</h2>
+            <h2 style={styles.chapterTitle}>
+              第一章：前言与背景
+              <span style={styles.chapterBadge}>摘要</span>
+            </h2>
             <h3 style={styles.chapterSubtitle}>1.1 生成式AI的范式转移</h3>
             <ul style={styles.list}>
               <li style={styles.listItem}>从搜索引擎到生成式引擎</li>
@@ -60,7 +103,10 @@ export default function WhitepaperPage() {
           </section>
 
           <section id="ch2" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>第二章：MGEO基础理论</h2>
+            <h2 style={styles.chapterTitle}>
+              第二章：MGEO基础理论
+              <span style={styles.chapterBadge}>摘要</span>
+            </h2>
             <h3 style={styles.chapterSubtitle}>2.1 核心定义</h3>
             <div style={styles.quoteBox}>
               <p style={styles.quoteText}>
@@ -102,7 +148,10 @@ export default function WhitepaperPage() {
           </section>
 
           <section id="ch3" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>第三章：MGEO三支柱模型（TCA Model）</h2>
+            <h2 style={styles.chapterTitle}>
+              第三章：MGEO三支柱模型（TCA Model）
+              <span style={styles.chapterBadge}>摘要</span>
+            </h2>
             <h3 style={styles.chapterSubtitle}>3.1 Consistency（一致性）</h3>
             <p style={styles.paragraph}>定义：品牌信息在不同 AI 模型中的描述统一度。</p>
             <h3 style={styles.chapterSubtitle}>3.2 Coverage（覆盖度）</h3>
@@ -112,7 +161,10 @@ export default function WhitepaperPage() {
           </section>
 
           <section id="ch4" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>第四章：MGEO技术架构</h2>
+            <h2 style={styles.chapterTitle}>
+              第四章：MGEO技术架构
+              <span style={styles.chapterBadge}>摘要</span>
+            </h2>
             <ul style={styles.list}>
               <li style={styles.listItem}>多模型监测体系：主流模型 API 接入、实时查询与结果抓取、结构化数据存储与分析。</li>
               <li style={styles.listItem}>一致性分析引擎：NLP 语义相似度计算、实体识别与对齐、冲突检测与预警。</li>
@@ -121,7 +173,10 @@ export default function WhitepaperPage() {
           </section>
 
           <section id="ch5" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>第五章：MGEO实施标准</h2>
+            <h2 style={styles.chapterTitle}>
+              第五章：MGEO实施标准
+              <span style={styles.chapterBadge}>摘要</span>
+            </h2>
             <h3 style={styles.chapterSubtitle}>5.1 MGEO成熟度等级</h3>
             <table style={styles.table}>
               <thead>
@@ -156,7 +211,10 @@ export default function WhitepaperPage() {
           </section>
 
           <section id="ch6" style={styles.chapter}>
-            <h2 style={styles.chapterTitle}>第六章：MGEO评估体系</h2>
+            <h2 style={styles.chapterTitle}>
+              第六章：MGEO评估体系
+              <span style={styles.chapterBadge}>摘要</span>
+            </h2>
             <h3 style={styles.chapterSubtitle}>6.1 MGEO Score（综合评分）</h3>
             <div style={styles.formula}>MGEO Score = (Consistency × 0.4) + (Coverage × 0.3) + (Authority × 0.3)</div>
             <p style={styles.paragraph}>满分 100 分，合格线 60 分，优秀线 80 分。它不是单看“是否被提及”，而是把品牌在模型里的稳定理解与推荐基础一起考虑。</p>
@@ -229,11 +287,37 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 32,
     marginBottom: 60,
   },
+  tocHead: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 18,
+    flexWrap: "wrap",
+  },
   tocTitle: {
     fontSize: 24,
     fontWeight: 600,
     margin: 0,
     color: "#1d1d1f",
+  },
+  tocText: {
+    margin: "10px 0 0",
+    maxWidth: 560,
+    color: "#667085",
+    fontSize: 15,
+    lineHeight: 1.7,
+  },
+  previewBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 34,
+    padding: "0 14px",
+    borderRadius: 999,
+    background: "#e9f7f3",
+    color: "#0a7c66",
+    fontWeight: 700,
+    fontSize: 13,
   },
   tocList: {
     listStyle: "none",
@@ -250,17 +334,132 @@ const styles: Record<string, React.CSSProperties> = {
     textDecoration: "none",
     display: "flex",
     justifyContent: "space-between",
+    alignItems: "center",
+    gap: 16,
+  },
+  tocTitleRow: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+  summaryPill: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 24,
+    padding: "0 10px",
+    borderRadius: 999,
+    background: "#ffffff",
+    border: "1px solid #d7dde5",
+    color: "#667085",
+    fontSize: 12,
+    fontWeight: 700,
+  },
+  previewPanel: {
+    display: "grid",
+    gridTemplateColumns: "1.2fr 1fr",
+    gap: 22,
+    padding: "30px 32px",
+    borderRadius: 24,
+    background: "#f8f8f6",
+    border: "1px solid #ece8df",
+    marginBottom: 60,
+  },
+  previewCopy: {
+    display: "grid",
+    alignContent: "start",
+    gap: 14,
+  },
+  previewEyebrow: {
+    fontSize: 13,
+    fontWeight: 700,
+    color: "#0a7c66",
+  },
+  previewTitle: {
+    margin: 0,
+    fontSize: 34,
+    lineHeight: 1.18,
+    color: "#1d1d1f",
+    letterSpacing: "-0.03em",
+  },
+  previewText: {
+    margin: 0,
+    fontSize: 16,
+    lineHeight: 1.8,
+    color: "#667085",
+  },
+  previewMeta: {
+    display: "grid",
+    gap: 12,
+    alignContent: "start",
+  },
+  previewItem: {
+    padding: "14px 16px",
+    borderRadius: 16,
+    background: "#ffffff",
+    border: "1px solid #e7e2d9",
+    color: "#3f4652",
+    fontSize: 14,
+    lineHeight: 1.7,
+  },
+  previewActions: {
+    display: "flex",
+    gap: 12,
+    flexWrap: "wrap",
+    marginTop: 8,
+  },
+  previewPrimary: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 48,
+    padding: "0 18px",
+    borderRadius: 14,
+    background: "#0fbc8c",
+    color: "#ffffff",
+    textDecoration: "none",
+    fontWeight: 700,
+  },
+  previewSecondary: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 48,
+    padding: "0 18px",
+    borderRadius: 14,
+    background: "#ffffff",
+    color: "#111827",
+    textDecoration: "none",
+    fontWeight: 700,
+    border: "1px solid #d7dde5",
   },
   chapter: {
     marginBottom: 80,
   },
   chapterTitle: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    flexWrap: "wrap",
     fontSize: 32,
     fontWeight: 700,
     color: "#1d1d1f",
     margin: 0,
     paddingBottom: 16,
     borderBottom: "2px solid #1d1d1f",
+  },
+  chapterBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 28,
+    padding: "0 12px",
+    borderRadius: 999,
+    background: "#eef3f8",
+    color: "#455468",
+    fontSize: 12,
+    fontWeight: 700,
   },
   chapterSubtitle: {
     fontSize: 24,

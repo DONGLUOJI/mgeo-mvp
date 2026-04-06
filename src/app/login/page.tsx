@@ -16,9 +16,9 @@ export default async function LoginPage() {
       <main style={styles.page}>
         <section style={styles.card}>
           <span style={styles.badge}>邮箱登录</span>
-          <h1 style={styles.title}>继续进入 MGEO 内部工作台</h1>
+          <h1 style={styles.title}>登录 MGEO 账户</h1>
           <p style={styles.text}>
-            输入邮箱即可登录并进入工作台，继续查看客户、任务、检测历史与服务状态。
+            登录后可继续查看检测历史、品牌资料、排名变化与服务进度，把一次检测延续成长期监测与优化流程。
           </p>
           <LoginForm />
         </section>
