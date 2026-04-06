@@ -1,5 +1,5 @@
 import { PLATFORM_OPTIONS, type PlatformDetail } from "@/lib/ranking/data";
-import { getIndustryTheme } from "@/lib/ranking/shared";
+import { getCityMeta, getIndustryTheme } from "@/lib/ranking/shared";
 
 function getScoreColor(value: number) {
   if (value >= 80) return "#0fbc8c";
@@ -37,6 +37,16 @@ export function IndustryTag({ industry }: { industry: string }) {
       }}
     >
       {industry}
+    </span>
+  );
+}
+
+export function CityTag({ city }: { city: string }) {
+  const meta = getCityMeta(city);
+
+  return (
+    <span style={styles.cityTag}>
+      {meta.name}
     </span>
   );
 }
@@ -142,6 +152,20 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "3px 10px",
     borderRadius: 8,
     border: "1px solid transparent",
+    fontSize: 12,
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+  },
+  cityTag: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "fit-content",
+    padding: "3px 10px",
+    borderRadius: 8,
+    border: "1px solid #d4d9e2",
+    background: "#f8fafc",
+    color: "#4b5563",
     fontSize: 12,
     fontWeight: 700,
     whiteSpace: "nowrap",

@@ -20,6 +20,7 @@ import {
   PLATFORM_LABELS,
   RANKING_TABS,
   buildRankingHref,
+  getCityMeta,
   isSupportedCity,
   type PlatformKey,
   type RankingTabKey,
@@ -50,6 +51,17 @@ function getTabHref(
     platform: tab === "platform" ? currentPlatform : undefined,
     coverage: tab === "platform" ? currentCoverage : undefined,
   });
+}
+
+function groupCitiesByRegion() {
+  return SUPPORTED_CITIES.filter((item) => !FEATURED_CITY_NAMES.includes(item.name as (typeof FEATURED_CITY_NAMES)[number])).reduce(
+    (groups, city) => {
+      groups[city.region] = groups[city.region] || [];
+      groups[city.region].push(city);
+      return groups;
+    },
+    {} as Record<string, (typeof SUPPORTED_CITIES)[number][]>,
+  );
 }
 
 export default async function RankingPage({
@@ -123,9 +135,13 @@ export default async function RankingPage({
     topFaller: moversData.fallers[0] ? `${moversData.fallers[0].brandName} ↓ ${Math.abs(moversData.fallers[0].change).toFixed(1)}` : "-",
     trackedWeeks: moversData.industryTrends[0]?.data.length || 12,
   };
-  const currentCityMeta = SUPPORTED_CITIES.find((item) => item.name === currentCity) || SUPPORTED_CITIES[0];
+  const currentCityMeta = getCityMeta(currentCity);
   const hasCityData = currentCity === "全国" || industryData.total > 0;
   const moreCities = SUPPORTED_CITIES.filter((item) => !FEATURED_CITY_NAMES.includes(item.name as (typeof FEATURED_CITY_NAMES)[number]));
+  const groupedMoreCities = groupCitiesByRegion();
+  const citySummary = currentCity === "全国"
+    ? "查看全国品牌在 AI 搜索中的综合表现，适合观察行业头部与整体趋势。"
+    : `切换到 ${currentCity} 后，榜单会优先反映本地推荐场景，更适合本地品牌和区域连锁判断自己在城市搜索中的位置。`;
 
   return (
     <SiteShell current="/ranking">
@@ -166,7 +182,23 @@ export default async function RankingPage({
             </div>
 
             <div style={styles.cityFilterShell}>
-              <div style={styles.cityLabel}>城市</div>
+              <div style={styles.cityHeader}>
+                <div>
+                  <div style={styles.cityLabel}>城市 / 区域维度</div>
+                  <div style={styles.cityTitleRow}>
+                    <h2 style={styles.cityTitle}>{currentCityMeta.name}</h2>
+                    <span style={{ ...styles.cityStatus, ...(currentCityMeta.hasData ? styles.cityStatusLive : styles.cityStatusSoon) }}>
+                      {currentCityMeta.hasData ? "已上线" : "收录中"}
+                    </span>
+                  </div>
+                  <p style={styles.citySummary}>{citySummary}</p>
+                </div>
+                <div style={styles.cityMetaCard}>
+                  <div style={styles.cityMetaLabel}>当前区域</div>
+                  <div style={styles.cityMetaValue}>{currentCityMeta.region}</div>
+                  <div style={styles.cityMetaSub}>{currentCityMeta.hasData ? "城市榜单已可查看" : "预计 1-2 周内补齐数据"}</div>
+                </div>
+              </div>
               <div style={styles.cityRow}>
                 {FEATURED_CITY_NAMES.map((cityName) => {
                   const active = cityName === currentCity;
@@ -185,15 +217,24 @@ export default async function RankingPage({
                   <details style={styles.moreCities}>
                     <summary style={styles.cityChip}>更多 ▾</summary>
                     <div style={styles.morePanel}>
-                      {moreCities.map((city) => (
-                        <Link
-                          key={city.name}
-                          href={buildRankingHref({ tab: currentTab, city: city.name, industry: currentIndustry, days: currentDays, platform: currentPlatform, coverage: currentCoverage })}
-                          style={styles.moreLink}
-                        >
-                          {city.name}
-                          <span style={styles.moreRegion}>{city.region}</span>
-                        </Link>
+                      {Object.entries(groupedMoreCities).map(([region, cities]) => (
+                        <div key={region} style={styles.moreGroup}>
+                          <div style={styles.moreGroupTitle}>{region}</div>
+                          <div style={styles.moreGroupGrid}>
+                            {cities.map((city) => (
+                              <Link
+                                key={city.name}
+                                href={buildRankingHref({ tab: currentTab, city: city.name, industry: currentIndustry, days: currentDays, platform: currentPlatform, coverage: currentCoverage })}
+                                style={styles.moreLink}
+                              >
+                                <span>{city.name}</span>
+                                <span style={{ ...styles.moreState, color: city.hasData ? "#0a7c66" : "#8a8a8a" }}>
+                                  {city.hasData ? "可查看" : "收录中"}
+                                </span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </details>
@@ -354,17 +395,95 @@ const styles: Record<string, React.CSSProperties> = {
     display: "grid",
     gap: 10,
     marginBottom: 22,
+    padding: "18px 18px 16px",
+    borderRadius: 22,
+    background: "linear-gradient(180deg, #fbfcfd 0%, #f6f8fb 100%)",
+    border: "1px solid #e7ebf1",
+  },
+  cityHeader: {
+    display: "grid",
+    gridTemplateColumns: "1fr 220px",
+    gap: 18,
+    alignItems: "start",
   },
   cityLabel: {
     fontSize: 13,
     color: "#6b7280",
     fontWeight: 800,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+  },
+  cityTitleRow: {
+    marginTop: 8,
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+  cityTitle: {
+    margin: 0,
+    fontSize: 34,
+    lineHeight: 1.05,
+    letterSpacing: "-0.04em",
+    color: "#111827",
+  },
+  cityStatus: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 30,
+    padding: "0 12px",
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 800,
+  },
+  cityStatusLive: {
+    background: "#e9faf4",
+    color: "#0a7c66",
+  },
+  cityStatusSoon: {
+    background: "#f3f4f6",
+    color: "#6b7280",
+  },
+  citySummary: {
+    margin: "10px 0 0",
+    maxWidth: 760,
+    fontSize: 15,
+    lineHeight: 1.8,
+    color: "#667085",
+  },
+  cityMetaCard: {
+    padding: "16px 18px",
+    borderRadius: 18,
+    background: "#ffffff",
+    border: "1px solid #e5e7eb",
+    boxShadow: "0 10px 24px rgba(15, 23, 42, 0.04)",
+  },
+  cityMetaLabel: {
+    fontSize: 12,
+    fontWeight: 800,
+    color: "#8a8a8a",
+  },
+  cityMetaValue: {
+    marginTop: 8,
+    fontSize: 24,
+    lineHeight: 1.1,
+    fontWeight: 800,
+    color: "#111827",
+  },
+  cityMetaSub: {
+    marginTop: 6,
+    fontSize: 13,
+    lineHeight: 1.6,
+    color: "#6b7280",
   },
   cityRow: {
     display: "flex",
     gap: 10,
     alignItems: "center",
     flexWrap: "wrap",
+    overflowX: "auto",
+    paddingBottom: 2,
   },
   cityChip: {
     display: "inline-flex",
@@ -374,18 +493,20 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "6px 16px",
     borderRadius: 999,
     textDecoration: "none",
-    background: "transparent",
+    background: "#ffffff",
     border: "1px solid #d8dde5",
     color: "#666666",
     fontSize: 13,
     fontWeight: 700,
     cursor: "pointer",
     listStyle: "none",
+    boxShadow: "0 1px 0 rgba(15, 23, 42, 0.02)",
   },
   cityChipActive: {
-    background: "#333333",
+    background: "linear-gradient(135deg, #202328 0%, #353a42 100%)",
     color: "#ffffff",
-    borderColor: "#333333",
+    borderColor: "#202328",
+    boxShadow: "0 10px 24px rgba(17, 24, 39, 0.18)",
   },
   moreCities: {
     position: "relative",
@@ -394,15 +515,30 @@ const styles: Record<string, React.CSSProperties> = {
     position: "absolute",
     top: "calc(100% + 10px)",
     left: 0,
-    minWidth: 220,
-    padding: 10,
-    borderRadius: 18,
+    minWidth: 320,
+    padding: 14,
+    borderRadius: 20,
     border: "1px solid #e5e7eb",
     background: "#ffffff",
     boxShadow: "0 18px 40px rgba(15, 23, 42, 0.08)",
     display: "grid",
-    gap: 6,
+    gap: 12,
     zIndex: 10,
+  },
+  moreGroup: {
+    display: "grid",
+    gap: 8,
+  },
+  moreGroupTitle: {
+    fontSize: 12,
+    fontWeight: 800,
+    color: "#8a8a8a",
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+  },
+  moreGroupGrid: {
+    display: "grid",
+    gap: 6,
   },
   moreLink: {
     display: "flex",
@@ -416,8 +552,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     background: "#f8fafc",
   },
-  moreRegion: {
-    color: "#8a8a8a",
+  moreState: {
     fontSize: 12,
     fontWeight: 700,
   },

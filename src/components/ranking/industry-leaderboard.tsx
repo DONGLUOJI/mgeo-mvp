@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { IndustryTopChart } from "@/components/ranking/industry-top-chart";
 import {
+  CityTag,
   ChangeBadge,
   DetailTcaBar,
   IndustryTag,
@@ -64,7 +65,16 @@ export function IndustryLeaderboard({
           <div style={styles.overviewAccentUp}>
             {overview.topRiser ? `↑ ${overview.topRiser.change7d.toFixed(1)}` : "-"}
           </div>
-          <div style={styles.overviewMeta}>{overview.topRiser?.industry || "暂无数据"}</div>
+          <div style={styles.overviewMeta}>
+            {overview.topRiser ? (
+              <span style={styles.metaWrap}>
+                <IndustryTag industry={overview.topRiser.industry} />
+                {currentCity !== "全国" ? <CityTag city={currentCity} /> : null}
+              </span>
+            ) : (
+              "暂无数据"
+            )}
+          </div>
         </article>
 
         <article style={styles.overviewCard}>
@@ -73,7 +83,16 @@ export function IndustryLeaderboard({
           <div style={styles.overviewAccentDown}>
             {overview.topFaller ? `↓ ${Math.abs(overview.topFaller.change7d).toFixed(1)}` : "-"}
           </div>
-          <div style={styles.overviewMeta}>{overview.topFaller?.industry || "暂无数据"}</div>
+          <div style={styles.overviewMeta}>
+            {overview.topFaller ? (
+              <span style={styles.metaWrap}>
+                <IndustryTag industry={overview.topFaller.industry} />
+                {currentCity !== "全国" ? <CityTag city={currentCity} /> : null}
+              </span>
+            ) : (
+              "暂无数据"
+            )}
+          </div>
         </article>
 
         <article style={styles.overviewCard}>
@@ -94,7 +113,14 @@ export function IndustryLeaderboard({
       </div>
 
       <div style={styles.sectionHead}>
-        <h2 style={styles.title}>{currentCity === "全国" ? "行业 AI 可见性排行榜" : `${currentCity} AI 可见性排行榜`}</h2>
+        <div style={styles.titleWrap}>
+          <h2 style={styles.title}>{currentCity === "全国" ? "行业 AI 可见性排行榜" : `${currentCity} AI 可见性排行榜`}</h2>
+          {currentCity !== "全国" ? (
+            <p style={styles.cityLead}>
+              本地搜索场景会放大城市品牌差异。这里展示的是品牌在 <strong>{currentCity}</strong> 相关问答中的实际可见性表现。
+            </p>
+          ) : null}
+        </div>
       </div>
 
       <div style={styles.filters}>
@@ -178,7 +204,10 @@ export function IndustryLeaderboard({
                   <span>
                     <RankBadge rank={brand.rank} />
                   </span>
-                  <span style={styles.brandName}>{brand.brandName}</span>
+                  <span style={styles.brandCell}>
+                    <span style={styles.brandName}>{brand.brandName}</span>
+                    {brand.city !== "全国" ? <CityTag city={brand.city} /> : null}
+                  </span>
                   <span>
                     <IndustryTag industry={brand.industry} />
                   </span>
@@ -311,11 +340,21 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 12,
     color: "#aaaaaa",
   },
+  metaWrap: {
+    display: "inline-flex",
+    gap: 8,
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
   sectionHead: {
     display: "flex",
     justifyContent: "space-between",
     gap: 16,
     flexWrap: "wrap",
+  },
+  titleWrap: {
+    display: "grid",
+    gap: 8,
   },
   title: {
     margin: 0,
@@ -323,6 +362,13 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.08,
     letterSpacing: "-0.04em",
     color: "#111827",
+  },
+  cityLead: {
+    margin: 0,
+    maxWidth: 760,
+    fontSize: 15,
+    lineHeight: 1.75,
+    color: "#6b7280",
   },
   filters: {
     display: "flex",
@@ -376,6 +422,12 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "18px 20px",
     alignItems: "center",
     transition: "background 0.15s ease",
+  },
+  brandCell: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap",
   },
   brandName: {
     fontSize: 17,
