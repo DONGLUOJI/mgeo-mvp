@@ -194,7 +194,6 @@ export default function MarketingHomePage() {
         <section style={styles.workflowSection}>
           <div style={styles.sectionHead}>
             <h2 style={styles.sectionTitle}>从一次检测到持续增长的 6 步路径</h2>
-            <div style={styles.sectionAccent}>保留流程，但不再重复讲同一件事</div>
             <p style={styles.sectionText}>
               先检测，再诊断，再执行。每一步都服务于品牌在 AI 场景中的长期可见性增长。
             </p>
