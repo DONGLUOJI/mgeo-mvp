@@ -118,11 +118,6 @@ export async function ensurePostgresSchema() {
     `);
 
     await client.query(`
-      CREATE INDEX IF NOT EXISTS idx_ranking_city_industry_date
-      ON ranking_snapshots(city, industry, snapshot_date);
-    `);
-
-    await client.query(`
       CREATE TABLE IF NOT EXISTS supported_cities (
         city_code TEXT PRIMARY KEY,
         city_name TEXT NOT NULL,
@@ -203,6 +198,11 @@ export async function ensurePostgresSchema() {
       ALTER TABLE scan_reports ADD COLUMN IF NOT EXISTS user_id TEXT REFERENCES users(id);
       ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_ranking_city_industry_date
+      ON ranking_snapshots(city, industry, snapshot_date);
     `);
 
     await client.query(`
