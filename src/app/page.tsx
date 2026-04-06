@@ -193,7 +193,7 @@ export default function MarketingHomePage() {
 
         <section style={styles.workflowSection}>
           <div style={styles.sectionHead}>
-            <h2 style={styles.sectionTitle}>6步闭环服务</h2>
+            <h2 style={styles.sectionTitle}>六步闭环服务</h2>
             <div style={styles.sectionAccent}>步步有交付，全程可追踪</div>
             <p style={styles.sectionText}>
               每一步都有明确交付标准，形成完整优化闭环，让增长可预期、可追踪。
@@ -250,16 +250,12 @@ export default function MarketingHomePage() {
                 <div style={styles.contactValue}>19925969089</div>
               </div>
               <div style={styles.contactLineBlock}>
-                <div style={styles.contactLabel}>联系电话</div>
-                <div style={styles.contactValue}>199 2596 9089</div>
-              </div>
-              <div style={styles.contactLineBlock}>
                 <div style={styles.contactLabel}>小红书</div>
                 <div style={styles.contactValue}>董逻辑</div>
               </div>
               <div style={styles.contactLineBlockLast}>
                 <div style={styles.contactLabel}>商务邮箱</div>
-                <div style={styles.contactValue}>19925969089@163.com</div>
+                <div style={styles.contactValue}>dongluoji2026@163.com</div>
               </div>
             </article>
 
