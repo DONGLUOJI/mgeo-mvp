@@ -29,6 +29,50 @@ function getRecommendationSummary(signal: ResultItem["recommendationSignal"]) {
   return "暂无推荐信号";
 }
 
+function getResultTone(item: ResultItem) {
+  if (!item.mentioned) {
+    return {
+      label: "未检测到",
+      border: "#EF9F27",
+      badgeBg: "#FAEEDA",
+      badgeText: "#854F0B",
+      panelBg: "#FFF9F0",
+      summary: "当前平台回答中还没有稳定出现品牌信息。",
+    };
+  }
+
+  if (!item.positioningMatch || !item.descriptionConsistent) {
+    return {
+      label: "描述待修正",
+      border: "#EF9F27",
+      badgeBg: "#FAEEDA",
+      badgeText: "#854F0B",
+      panelBg: "#FFF8EE",
+      summary: "品牌已经被提及，但定位和描述还不够稳定。",
+    };
+  }
+
+  if (!item.authoritySignal) {
+    return {
+      label: "信源待补强",
+      border: "#378ADD",
+      badgeBg: "#E6F1FB",
+      badgeText: "#0C447C",
+      panelBg: "#F5FAFF",
+      summary: "平台能识别品牌，但权威支撑还不够强。",
+    };
+  }
+
+  return {
+    label: "表现稳定",
+    border: "#0fbc8c",
+    badgeBg: "#E1F5EE",
+    badgeText: "#085041",
+    panelBg: "#F4FCF8",
+    summary: "平台已经形成较稳定的品牌理解与推荐信号。",
+  };
+}
+
 function getModelLabel(model: string) {
   return MODEL_META[model as keyof typeof MODEL_META]?.label || model;
 }
@@ -137,6 +181,16 @@ export default function ReportDetailPage() {
   const industryAverage = report ? INDUSTRY_AVERAGES[report.input.industry] ?? 64 : 64;
   const averageDiff = report ? report.score.total - industryAverage : 0;
   const adviceList = report ? generateAdvice(report.score) : [];
+  const weakestDimension = report
+    ? [
+        { label: "一致性", value: report.score.consistency },
+        { label: "覆盖度", value: report.score.coverage },
+        { label: "权威性", value: report.score.authority },
+      ].sort((a, b) => a.value - b.value)[0]
+    : null;
+  const strongestSignalCount = report
+    ? report.results.filter((item) => item.recommendationSignal === "high" || item.recommendationSignal === "medium").length
+    : 0;
   const scoreCards = report
     ? [
         { key: "Consistency", label: "一致性", value: report.score.consistency, desc: "品牌定位与描述一致性" },
@@ -254,6 +308,26 @@ export default function ReportDetailPage() {
           })}
         </section>
 
+        <section style={styles.snapshotGrid}>
+          <article style={styles.snapshotCard}>
+            <div style={styles.snapshotLabel}>当前最短板</div>
+            <div style={styles.snapshotValue}>{weakestDimension?.label || "-"}</div>
+            <div style={styles.snapshotText}>
+              {weakestDimension ? `${weakestDimension.value} 分，需要优先处理。` : "等待检测结果。"}
+            </div>
+          </article>
+          <article style={styles.snapshotCard}>
+            <div style={styles.snapshotLabel}>平台提及覆盖</div>
+            <div style={styles.snapshotValue}>{mentionCount} / {report.results.length}</div>
+            <div style={styles.snapshotText}>当前已有 {mentionCount} 个平台可以识别到你的品牌。</div>
+          </article>
+          <article style={styles.snapshotCard}>
+            <div style={styles.snapshotLabel}>推荐信号</div>
+            <div style={styles.snapshotValue}>{strongestSignalCount} 个</div>
+            <div style={styles.snapshotText}>已有推荐倾向的平台数量，决定后续内容放大的起点。</div>
+          </article>
+        </section>
+
         <section style={styles.panel}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>检测输入</h2>
@@ -280,33 +354,79 @@ export default function ReportDetailPage() {
           </div>
 
           <div style={styles.resultList}>
-            {report.results.map((item) => (
-              <article key={item.model} style={styles.resultCard}>
+            {report.results.map((item) => {
+              const resultTone = getResultTone(item);
+              return (
+              <article
+                key={item.model}
+                style={{
+                  ...styles.resultCard,
+                  borderLeft: `4px solid ${resultTone.border}`,
+                }}
+              >
                 <div style={styles.resultTop}>
-                  <h3 style={styles.resultModel}>{getModelLabel(item.model)}</h3>
-                  <span style={item.mentioned ? styles.goodBadge : styles.weakBadge}>
-                    {item.mentioned ? "已提及" : "未提及"}
-                  </span>
-                </div>
-
-                <div style={styles.resultFlags}>
-                  <span style={item.positioningMatch ? styles.flagGood : styles.flagNeutral}>
-                    定位{item.positioningMatch ? "匹配" : "偏差"}
-                  </span>
+                  <div style={styles.resultTitleWrap}>
+                    <h3 style={styles.resultModel}>{getModelLabel(item.model)}</h3>
+                    <p style={styles.resultSummary}>{resultTone.summary}</p>
+                  </div>
                   <span
-                    style={item.descriptionConsistent ? styles.flagGood : styles.flagNeutral}
+                    style={{
+                      ...styles.resultToneBadge,
+                      background: resultTone.badgeBg,
+                      color: resultTone.badgeText,
+                    }}
                   >
-                    描述{item.descriptionConsistent ? "一致" : "不稳"}
-                  </span>
-                  <span style={item.authoritySignal ? styles.flagGood : styles.flagNeutral}>
-                    权威性{item.authoritySignal ? "较好" : "偏弱"}
-                  </span>
-                  <span style={styles.flagNeutral}>
-                    {getRecommendationSummary(item.recommendationSignal)}
+                    {resultTone.label}
                   </span>
                 </div>
 
-                <div style={styles.rawBox}>{item.rawText || "暂无返回内容"}</div>
+                <div style={styles.resultBody}>
+                  <div>
+                    <div style={styles.resultFlags}>
+                      <span style={item.mentioned ? styles.goodBadge : styles.weakBadge}>
+                        {item.mentioned ? "已提及" : "未提及"}
+                      </span>
+                      <span style={item.positioningMatch ? styles.flagGood : styles.flagNeutral}>
+                        定位{item.positioningMatch ? "匹配" : "偏差"}
+                      </span>
+                      <span
+                        style={item.descriptionConsistent ? styles.flagGood : styles.flagNeutral}
+                      >
+                        描述{item.descriptionConsistent ? "一致" : "不稳"}
+                      </span>
+                      <span style={item.authoritySignal ? styles.flagGood : styles.flagNeutral}>
+                        权威性{item.authoritySignal ? "较好" : "偏弱"}
+                      </span>
+                      <span style={styles.flagNeutral}>
+                        {getRecommendationSummary(item.recommendationSignal)}
+                      </span>
+                    </div>
+
+                    <div style={styles.rawLabel}>平台返回内容</div>
+                    <div style={styles.rawBox}>{item.rawText || "暂无返回内容"}</div>
+                  </div>
+
+                  <aside
+                    style={{
+                      ...styles.resultInsightBox,
+                      background: resultTone.panelBg,
+                    }}
+                  >
+                    <div style={styles.resultInsightTitle}>诊断摘要</div>
+                    <div style={styles.resultInsightLine}>
+                      <span>品牌提及</span>
+                      <strong>{item.mentioned ? "已建立" : "未建立"}</strong>
+                    </div>
+                    <div style={styles.resultInsightLine}>
+                      <span>定位一致性</span>
+                      <strong>{item.positioningMatch && item.descriptionConsistent ? "较稳定" : "需修正"}</strong>
+                    </div>
+                    <div style={styles.resultInsightLine}>
+                      <span>推荐倾向</span>
+                      <strong>{getRecommendationSummary(item.recommendationSignal)}</strong>
+                    </div>
+                  </aside>
+                </div>
 
                 {item.notes?.length ? (
                   <div style={styles.notes}>
@@ -318,7 +438,8 @@ export default function ReportDetailPage() {
                   </div>
                 ) : null}
               </article>
-            ))}
+            );
+            })}
           </div>
         </section>
 
@@ -553,6 +674,36 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 16,
     color: "#6b7280",
   },
+  snapshotGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 18,
+  },
+  snapshotCard: {
+    background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
+    border: "1px solid #e7ebf0",
+    borderRadius: 22,
+    padding: 22,
+    boxShadow: "0 10px 28px rgba(15, 23, 42, 0.04)",
+  },
+  snapshotLabel: {
+    color: "#667085",
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  snapshotValue: {
+    marginTop: 12,
+    fontSize: 30,
+    lineHeight: 1.1,
+    fontWeight: 800,
+    color: "#111827",
+  },
+  snapshotText: {
+    marginTop: 10,
+    color: "#667085",
+    fontSize: 14,
+    lineHeight: 1.8,
+  },
   panel: {
     background: "#ffffff",
     border: "1px solid #e7ebf0",
@@ -594,7 +745,8 @@ const styles: Record<string, React.CSSProperties> = {
   resultCard: {
     border: "1px solid #edf0f4",
     borderRadius: 20,
-    padding: 22,
+    padding: "22px 22px 22px 20px",
+    background: "linear-gradient(180deg, #ffffff 0%, #fcfdff 100%)",
   },
   resultTop: {
     display: "flex",
@@ -603,10 +755,33 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 12,
     marginBottom: 16,
   },
+  resultTitleWrap: {
+    display: "grid",
+    gap: 8,
+  },
   resultModel: {
     margin: 0,
     fontSize: 22,
     color: "#111827",
+  },
+  resultSummary: {
+    margin: 0,
+    color: "#667085",
+    fontSize: 14,
+    lineHeight: 1.7,
+  },
+  resultToneBadge: {
+    borderRadius: 999,
+    padding: "6px 12px",
+    fontSize: 13,
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+  },
+  resultBody: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1.35fr) minmax(260px, 0.65fr)",
+    gap: 18,
+    alignItems: "start",
   },
   goodBadge: {
     borderRadius: 999,
@@ -654,6 +829,34 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 15,
     lineHeight: 1.8,
     whiteSpace: "pre-wrap",
+  },
+  rawLabel: {
+    marginBottom: 10,
+    color: "#667085",
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  resultInsightBox: {
+    borderRadius: 16,
+    border: "1px solid #edf0f4",
+    padding: 16,
+    display: "grid",
+    gap: 12,
+  },
+  resultInsightTitle: {
+    fontSize: 14,
+    fontWeight: 800,
+    color: "#111827",
+  },
+  resultInsightLine: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 12,
+    alignItems: "center",
+    color: "#596273",
+    fontSize: 13,
+    paddingTop: 10,
+    borderTop: "1px solid rgba(17,24,39,0.06)",
   },
   notes: {
     display: "grid",
