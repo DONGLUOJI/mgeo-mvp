@@ -39,9 +39,9 @@ type PlatformProgressItem = {
 };
 
 const DETECT_PHASES = [
-  { getText: (platform: string) => `正在向 ${platform} 发送检测请求...`, duration: 700 },
-  { getText: (platform: string) => `正在等待 ${platform} 返回结果...`, duration: 1100 },
-  { getText: (platform: string) => `正在分析 ${platform} 的回答内容...`, duration: 900 },
+  { getText: (platform: string) => `正在向 ${platform} 发送检测请求...`, duration: 320 },
+  { getText: (platform: string) => `正在等待 ${platform} 返回结果...`, duration: 520 },
+  { getText: (platform: string) => `正在分析 ${platform} 的回答内容...`, duration: 420 },
 ] as const;
 
 const RESULT_MESSAGES: Record<DetectOutcome, string[]> = {
@@ -75,7 +75,7 @@ function getSeedValue(...parts: string[]) {
 }
 
 function getJitter(base: number, seed: number) {
-  return base + (seed % 501) - 250;
+  return base + (seed % 241) - 120;
 }
 
 function resolveProgressPreview(modelId: ModelName, brandName: string, query: string, index: number) {
@@ -228,7 +228,7 @@ export function DetectForm({
     }
 
     setPanelPhase("generating");
-    await sleep(1400);
+    await sleep(900);
     return true;
   }
 
