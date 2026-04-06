@@ -129,7 +129,6 @@ export default function MarketingHomePage() {
         </section>
 
         <section style={styles.coveredIndustriesSection}>
-          <div style={styles.coveredIndustriesLabel}>已覆盖行业</div>
           <div style={styles.coveredIndustriesWrap}>
             {coveredIndustries.map((item) => (
               <span key={item} style={styles.coveredIndustryTag}>
@@ -244,10 +243,10 @@ export default function MarketingHomePage() {
           <div style={styles.sectionHead}>
             <h2 style={styles.contactHeading}>联系我们</h2>
             <div style={styles.sectionAccent}>
-              如果您是品牌负责人，希望系统学习董逻辑MGEO增长方法，欢迎联系我们；如果您希望由我们协助运营、制定方案并推进执行，也欢迎直接沟通。
+              面向品牌负责人，我们提供两种合作方式：学习 MGEO增长方法论 · 委托 全案运营服务
             </div>
             <p style={styles.sectionTextWide}>
-              您可以通过产品咨询、服务沟通或合作洽谈与我们取得联系，我们会根据品牌当前阶段，为您提供相应建议。
+              告诉我们您当前的品牌阶段，我们将提供针对性的解决方案
             </p>
           </div>
 
