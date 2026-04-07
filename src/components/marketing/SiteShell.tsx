@@ -32,7 +32,7 @@ export function SiteShell({
       <header style={styles.header}>
         <div style={styles.navWrap}>
           <Link href="/" style={styles.brand}>
-            董逻辑
+            董逻辑MGEO
           </Link>
 
           <nav style={styles.nav}>
