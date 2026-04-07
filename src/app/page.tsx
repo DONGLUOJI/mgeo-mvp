@@ -105,6 +105,9 @@ export default function MarketingHomePage() {
               <span>多模式生成式引擎</span>
             </div>
             <h1 style={styles.heroTitle}>帮助品牌在AI搜索中被看见</h1>
+            <p style={styles.heroSubtitle}>
+              董逻辑提出 MGEO 方法论，帮助品牌在多模型 AI 中被提及、被说对、被推荐。
+            </p>
             <div style={styles.metricRow}>
               <div style={{ ...styles.metricItem, borderLeft: "none" }}>
                 <strong style={styles.metricValue}>多平台</strong>
@@ -303,7 +306,7 @@ const styles: Record<string, React.CSSProperties> = {
   hero: {
     background:
       "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.3), transparent), linear-gradient(180deg, #000000 0%, #1d1d1f 100%)",
-    padding: "120px 24px 180px",
+    padding: "88px 24px 180px",
     color: "#ffffff",
     position: "relative",
     overflow: "hidden",
@@ -322,7 +325,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 12,
     height: 58,
     padding: "0 28px",
-    margin: "-8px auto 22px",
+    margin: "-20px auto 20px",
     borderRadius: 999,
     border: "1px solid rgba(9, 140, 116, 0.42)",
     background: "rgba(9, 140, 116, 0.12)",
@@ -366,9 +369,17 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 800,
     color: "#f5f5f7",
   },
+  heroSubtitle: {
+    margin: "18px 0 0",
+    maxWidth: 920,
+    fontSize: 20,
+    lineHeight: 1.8,
+    color: "rgba(255,255,255,0.72)",
+    letterSpacing: "-0.01em",
+  },
   metricRow: {
     width: "min(920px, 100%)",
-    margin: "24px auto 0",
+    margin: "36px auto 0",
     display: "grid",
     gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
     alignItems: "center",
