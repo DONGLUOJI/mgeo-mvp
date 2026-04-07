@@ -146,6 +146,7 @@ export default function MarketingHomePage() {
           <div style={styles.reportCard}>
             <div style={styles.reportTop}>
               <div>
+                <div style={styles.reportExampleLabel}>示例报告</div>
                 <h2 style={styles.reportTitle}>您的品牌 MGEO 健康度：42 分</h2>
                 <p style={styles.reportSummary}>
                   L1 基础级。当前品牌在多模型场景中的描述一致性不足，影响推荐稳定性与可见性表现。
@@ -555,6 +556,13 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.14,
     color: "#202226",
     letterSpacing: "-0.04em",
+  },
+  reportExampleLabel: {
+    color: "#ff3b30",
+    fontSize: 14,
+    lineHeight: 1.4,
+    fontWeight: 800,
+    letterSpacing: "0.02em",
   },
   reportSummary: {
     margin: "18px 0 0",
