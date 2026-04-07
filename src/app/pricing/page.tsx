@@ -5,46 +5,46 @@ import { SiteShell } from "@/components/marketing/SiteShell";
 
 export const metadata: Metadata = {
   title: "服务方案 - 董逻辑MGEO",
-  description: "从免费检测到持续监控，再到完整交付闭环，选择适合品牌当前阶段的 MGEO 服务路径。",
+  description: "从学习、训练到企业诊断与年度服务，选择适合当前阶段的 MGEO 服务路径。",
 };
 
 const plans = [
   {
-    name: "免费检测版",
-    price: "0",
-    period: "/月",
-    desc: "适合先验证品牌在 AI 搜索中是否被提及",
-    features: ["每月 3 次检测", "TCA 基础评分", "基础报告导出"],
-    action: "先做免费检测",
-    href: "/#detector",
-  },
-  {
-    name: "基础监控版",
-    price: "299",
-    period: "/月",
-    annual: "年付 ¥2,388（省 ¥1,200）",
-    desc: "适合持续追踪品牌 AI 可见性变化",
-    features: ["5 个关键词每日自动监控", "排名变化趋势图", "月度 TCA 诊断报告", "1 个竞品对比", "每周邮件通知"],
-    action: "开通基础版",
-    href: "/register",
-    featured: true,
-  },
-  {
-    name: "标准服务版",
-    price: "2999",
-    period: "/月",
-    desc: "适合需要完整交付闭环的团队",
-    features: ["基础版全部功能", "30 个关键词监控", "无限竞品对比", "月度诊断与内容建议", "重点问题池整理", "平台适配与发布节奏建议"],
-    action: "进入服务沟通",
+    name: "知识星球年度会员",
+    price: "1999",
+    period: "/年",
+    desc: "适合想系统学习 MGEO 的超级个体、小团队与品牌操盘手",
+    features: ["方法论持续更新", "案例拆解与实操 SOP", "品牌 AI 可见性认知框架", "进入知识星球学习社群"],
+    action: "进入知识星球",
     href: "/#contact",
   },
   {
-    name: "深度增长版",
-    price: "8999",
-    period: "/月",
-    desc: "适合长期监测与多平台内容适配",
-    features: ["标准版全部功能", "完整 30 天交付闭环", "多平台持续监测", "媒体发布执行", "复盘报告与下一轮策略建议", "专属客户成功经理"],
-    action: "预约深度方案",
+    name: "MGEO 线下实战营",
+    price: "12800",
+    period: "/期",
+    annual: "推荐",
+    desc: "适合想把 MGEO 方法真正落到自己业务上的高意愿用户",
+    features: ["线下高密度实战训练", "品牌问题拆解与路径设计", "方法论到业务动作的转化", "小范围同频交流"],
+    action: "申请实战营",
+    href: "/#contact",
+    featured: true,
+  },
+  {
+    name: "企业诊断",
+    price: "16800",
+    period: "/次",
+    desc: "适合希望先看清品牌在 AI 场景中问题与机会的企业客户",
+    features: ["品牌 AI 可见性诊断", "TCA 缺口识别", "核心问题与优先级建议", "阶段性优化路线图"],
+    action: "申请企业诊断",
+    href: "/#contact",
+  },
+  {
+    name: "企业年框",
+    price: "128000",
+    period: "/年起",
+    desc: "适合需要长期建设品牌 AI 可见性与生成式内容能力的企业",
+    features: ["年度顾问与持续优化", "内容与信源建设建议", "多模型监测与阶段复盘", "品牌 AI 可见性长期策略"],
+    action: "预约企业年框",
     href: "/#contact",
   },
 ] as Array<{
@@ -73,7 +73,7 @@ export default function PricingPage() {
         <section style={styles.hero}>
           <div style={styles.heroPanel}>
             <h1 style={styles.heroTitle}>服务方案</h1>
-            <p style={styles.heroText}>从免费检测开始，根据品牌当前阶段选择适合的服务路径。</p>
+            <p style={styles.heroText}>从学习、训练到企业诊断与年度服务，选择适合你当前阶段的 MGEO 路径。</p>
             <div style={styles.heroActions}>
               <Link href="/#detector" style={styles.primaryButton}>
                 先做免费检测
@@ -108,7 +108,7 @@ export default function PricingPage() {
           <div style={styles.sectionCard}>
             <div style={styles.sectionHeader}>
               <h2 style={styles.sectionTitle}>当前可选择的方案</h2>
-              <p style={styles.sectionText}>从免费验证、低门槛监控到完整交付闭环，先选最适合你当前阶段的一档。</p>
+              <p style={styles.sectionText}>从学习、训练到企业诊断与年度服务，选择适合你当前阶段的 MGEO 路径。</p>
             </div>
 
             <div style={styles.planGrid}>
