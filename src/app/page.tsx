@@ -106,7 +106,7 @@ export default function MarketingHomePage() {
             </div>
             <h1 style={styles.heroTitle}>帮助品牌在AI搜索中被看见</h1>
             <p style={styles.heroSubtitle}>
-              董逻辑提出 MGEO 方法论，帮助品牌在多模型 AI 中被提及、被说对、被推荐。
+              董逻辑提出 MGEO 方法论，让品牌在多模型 AI 中被提及、被说对、被推荐。
             </p>
             <div style={styles.metricRow}>
               <div style={{ ...styles.metricItem, borderLeft: "none" }}>
