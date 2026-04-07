@@ -10,19 +10,18 @@ export const metadata: Metadata = {
 
 const plans = [
   {
-    name: "知识星球年度会员",
+    name: "MGEO 年度会员",
     price: "1999",
     period: "/年",
     desc: "适合想系统学习 MGEO 的超级个体、小团队与品牌操盘手",
     features: ["方法论持续更新", "案例拆解与实操 SOP", "品牌 AI 可见性认知框架", "进入知识星球学习社群"],
-    action: "进入知识星球",
+    action: "咨询加入方式",
     href: "/#contact",
   },
   {
     name: "MGEO 线下实战营",
     price: "12800",
     period: "/期",
-    annual: "推荐",
     desc: "适合想把 MGEO 方法真正落到自己业务上的高意愿用户",
     features: ["线下高密度实战训练", "品牌问题拆解与路径设计", "方法论到业务动作的转化", "小范围同频交流"],
     action: "申请实战营",
@@ -325,6 +324,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "baseline",
     gap: 6,
+    flexWrap: "nowrap",
   },
   priceSymbol: {
     fontSize: 20,
@@ -338,6 +338,7 @@ const styles: Record<string, React.CSSProperties> = {
   pricePeriod: {
     color: "#6e6e73",
     fontSize: 16,
+    whiteSpace: "nowrap",
   },
   annualNote: {
     fontSize: 13,
