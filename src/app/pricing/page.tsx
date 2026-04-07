@@ -289,8 +289,8 @@ const styles: Record<string, React.CSSProperties> = {
     border: "1px solid #ececf0",
     borderRadius: 24,
     padding: 28,
-    display: "grid",
-    alignContent: "start",
+    display: "flex",
+    flexDirection: "column",
     gap: 16,
   },
   planCardFeatured: {
@@ -315,10 +315,12 @@ const styles: Record<string, React.CSSProperties> = {
   planHead: {
     display: "grid",
     gap: 10,
+    minHeight: 132,
   },
   planTitle: {
     margin: 0,
-    fontSize: 28,
+    fontSize: 24,
+    lineHeight: 1.25,
   },
   priceRow: {
     display: "flex",
@@ -327,17 +329,17 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: "nowrap",
   },
   priceSymbol: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 700,
   },
   priceValue: {
-    fontSize: 40,
+    fontSize: 36,
     lineHeight: 1,
     fontWeight: 700,
   },
   pricePeriod: {
     color: "#6e6e73",
-    fontSize: 16,
+    fontSize: 14,
     whiteSpace: "nowrap",
   },
   annualNote: {
@@ -353,11 +355,13 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#6e6e73",
     fontSize: 16,
     lineHeight: 1.7,
+    minHeight: 110,
   },
   featureList: {
     listStyle: "none",
     margin: 0,
     padding: 0,
+    flex: 1,
   },
   featureItem: {
     fontSize: 15,
@@ -375,7 +379,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#ffffff",
     textDecoration: "none",
     fontWeight: 700,
-    marginTop: 6,
+    marginTop: "auto",
   },
   planButtonFeatured: {
     background: "#0fbc8c",
