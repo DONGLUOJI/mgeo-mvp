@@ -12,7 +12,7 @@ export const PLAN_CONFIG: Record<PlanName, PlanConfig> = {
     name: "免费版",
     monthlyDetectLimit: 3,
     maxKeywords: 0,
-    features: ["每月 3 次检测", "TCA 基础评分", "HTML / PDF 报告导出"],
+    features: ["每周 3 次检测", "TCA 基础评分", "HTML / PDF 报告导出"],
   },
   basic: {
     name: "基础版",
@@ -37,4 +37,3 @@ export const PLAN_CONFIG: Record<PlanName, PlanConfig> = {
 export function getPlanConfig(plan?: string) {
   return PLAN_CONFIG[(plan as PlanName) || "free"] || PLAN_CONFIG.free;
 }
-

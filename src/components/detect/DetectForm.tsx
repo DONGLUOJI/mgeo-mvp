@@ -21,6 +21,7 @@ type DetectFormProps = {
     remaining: number;
     plan: string;
     allowed: boolean;
+    periodLabel: "本周" | "本月";
   } | null;
 };
 
@@ -65,6 +66,23 @@ const RESULT_MESSAGES: Record<DetectOutcome, string[]> = {
     "品牌尚未进入该平台的推荐范围",
   ],
 };
+
+function buildNarrativeKeywords(brandName: string, industry: string, businessSummary: string) {
+  const seeds = [brandName, industry, ...businessSummary.split(/[，。；、,.;\n]/)]
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return Array.from(new Set(seeds)).slice(0, 6);
+}
+
+function buildBrandNarrativePayload(brandName: string, industry: string, businessSummary: string) {
+  return {
+    oneLiner: businessSummary,
+    coreKeywords: buildNarrativeKeywords(brandName, industry, businessSummary),
+    forbiddenClaims: [],
+    commonConflicts: [],
+  };
+}
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -249,17 +267,36 @@ export function DetectForm({
     setPanelPhase("detecting");
 
     try {
+      const normalizedBrandName = brandName.trim();
+      const normalizedIndustry = industry.trim();
+      const normalizedQuery = query.trim();
+      const normalizedPlatform = selectedModels.length === 1 ? selectedModels[0] : "multi-model";
+      const normalizedLocale = "zh-CN";
+      const brandNarrative = buildBrandNarrativePayload(
+        normalizedBrandName,
+        normalizedIndustry,
+        finalBusinessSummary
+      );
+
       const resultPromise = fetch("/api/detect", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          brandName,
-          industry,
+          brandName: normalizedBrandName,
+          companyName: normalizedBrandName,
+          industry: normalizedIndustry,
           businessSummary: finalBusinessSummary,
-          query,
+          businessDescription: finalBusinessSummary,
+          query: normalizedQuery,
+          searchQuery: normalizedQuery,
           selectedModels,
+          models: selectedModels,
+          platform: normalizedPlatform,
+          locale: normalizedLocale,
+          brandNarrative,
+          competitors: [],
         }),
       }).then(async (res) => {
         const data = await res.json();
@@ -536,11 +573,11 @@ export function DetectForm({
 
           {quota ? (
             <div style={styles.quotaBar}>
-              当前套餐：{quota.plan}，本月已用 {quota.used}/{quota.limit} 次，剩余 {quota.remaining} 次
-              {!quota.allowed ? "。当前额度已用完，请先升级套餐。" : ""}
+              当前套餐：{quota.plan}，{quota.periodLabel}已用 {quota.used}/{quota.limit} 次，剩余 {quota.remaining} 次
+              {!quota.allowed ? "。当前额度已用完，请提交咨询或申请企业诊断。" : ""}
             </div>
           ) : (
-            <div style={styles.quotaBarMuted}>登录后可查看剩余额度并保存你的客户、任务和历史记录。</div>
+            <div style={styles.quotaBarMuted}>未登录用户可体验 1 次，登录后每周可检测 3 次，并可保存客户、任务和历史记录。</div>
           )}
 
           {submitting ? renderProgressPanel() : (

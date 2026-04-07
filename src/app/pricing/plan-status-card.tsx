@@ -10,6 +10,7 @@ type BillingStatusData = {
     limit: number;
     used: number;
     remaining: number;
+    periodLabel: "本周" | "本月";
   } | null;
   updatedAt: string;
 };
@@ -70,7 +71,7 @@ export function PlanStatusCard({
           <h2 style={styles.title}>当前账号已开通 {PLAN_LABEL[data.plan] || data.plan}</h2>
           <p style={styles.text}>
             账号：{data.email}
-            {data.quota ? `，本月已使用 ${data.quota.used}/${data.quota.limit} 次检测，剩余 ${data.quota.remaining} 次。` : "。"}
+            {data.quota ? `，${data.quota.periodLabel}已使用 ${data.quota.used}/${data.quota.limit} 次检测，剩余 ${data.quota.remaining} 次。` : "。"}
           </p>
         </div>
         <button type="button" onClick={refreshStatus} disabled={loading} style={styles.button}>

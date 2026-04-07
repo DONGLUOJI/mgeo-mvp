@@ -40,7 +40,7 @@ export default async function DashboardEntryPage({
       <div style={styles.container}>
         <section style={styles.hero}>
           <div style={styles.badge}>用户 Dashboard</div>
-          <h1 style={styles.title}>查看关键词监控、TCA 变化与本月检测额度</h1>
+          <h1 style={styles.title}>查看关键词监控、TCA 变化与当前检测额度</h1>
           <p style={styles.text}>
             当前账号：{summary.user?.email || session.user.email}。这里聚合了你的关键词监控状态、最近趋势和账户检测配额。
           </p>
@@ -92,7 +92,7 @@ export default async function DashboardEntryPage({
               <div style={styles.planValue}>{planLabelMap[summary.user?.plan || "free"] || "免费版"}</div>
               <div style={styles.planHint}>
                 {summary.quota
-                  ? `本月已使用 ${summary.quota.used}/${summary.quota.limit} 次检测，剩余 ${summary.quota.remaining} 次。`
+                  ? `${summary.quota.periodLabel}已使用 ${summary.quota.used}/${summary.quota.limit} 次检测，剩余 ${summary.quota.remaining} 次。`
                   : "当前账号暂无额度信息。"}
               </div>
             </article>
@@ -199,7 +199,7 @@ export default async function DashboardEntryPage({
             accent={summary.weeklyDelta >= 0 ? "#0f8b7f" : "#b42318"}
           />
           <ScoreCard
-            label="本月检测次数"
+            label={`${summary.quota?.periodLabel || "本月"}检测次数`}
             value={`${summary.quota?.used ?? 0}/${summary.quota?.limit ?? 0}`}
             hint={`剩余 ${summary.quota?.remaining ?? 0} 次`}
           />

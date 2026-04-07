@@ -2,6 +2,7 @@ import type { DetectReport } from "@/lib/detect/types";
 import { getPlanConfig } from "@/lib/auth/plans";
 import { queryPostgres } from "@/lib/db/postgres";
 import { getSqliteDb, sqliteHasColumn } from "@/lib/db/sqlite";
+import { normalizeDetectReport } from "@/lib/detect/report-shape";
 
 type ScanReportRecord = {
   taskId: string;
@@ -115,6 +116,7 @@ type DetectQuotaRecord = {
   used: number;
   remaining: number;
   plan: string;
+  periodLabel: "本周" | "本月";
 };
 
 const rankingSeedCatalog = [
@@ -347,9 +349,79 @@ function getCurrentMonthAnchor() {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 }
 
-function shouldResetUsage(resetAt: string | null) {
+function getCurrentChinaWeekAnchor() {
+  const chinaOffsetMs = 8 * 60 * 60 * 1000;
+  const chinaNow = new Date(Date.now() + chinaOffsetMs);
+  const weekDay = chinaNow.getUTCDay() || 7;
+  chinaNow.setUTCDate(chinaNow.getUTCDate() - weekDay + 1);
+  chinaNow.setUTCHours(0, 0, 0, 0);
+  return new Date(chinaNow.getTime() - chinaOffsetMs).toISOString();
+}
+
+function getQuotaPolicy(plan: string) {
+  if (plan === "free") {
+    return {
+      limit: 3,
+      periodLabel: "本周" as const,
+      anchor: getCurrentChinaWeekAnchor(),
+    };
+  }
+
+  return {
+    limit: getMonthlyLimit(plan),
+    periodLabel: "本月" as const,
+    anchor: getCurrentMonthAnchor(),
+  };
+}
+
+function shouldResetUsage(resetAt: string | null, anchor: string) {
   if (!resetAt) return true;
-  return new Date(resetAt).getTime() < new Date(getCurrentMonthAnchor()).getTime();
+  return new Date(resetAt).getTime() < new Date(anchor).getTime();
+}
+
+function normalizeDetectLookupValue(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function normalizeSerializedReport(reportJson: string, createdAt?: string | null) {
+  const report = normalizeDetectReport(JSON.parse(reportJson) as DetectReport, {
+    createdAt: createdAt || null,
+  });
+  const normalizedJson = JSON.stringify(report);
+
+  return {
+    report,
+    normalizedJson,
+    needsBackfill: normalizedJson !== reportJson,
+  };
+}
+
+async function backfillScanReportJson(taskId: string, reportJson: string, userId?: string | null) {
+  if (usePostgres()) {
+    await queryPostgres(
+      `UPDATE scan_reports SET report_json = $2 WHERE task_id = $1 ${userId ? "AND user_id = $3" : ""}`,
+      userId ? [taskId, reportJson, userId] : [taskId, reportJson]
+    );
+    return;
+  }
+
+  sqlite()
+    .prepare(`UPDATE scan_reports SET report_json = ? WHERE task_id = ? ${userId ? "AND user_id = ?" : ""}`)
+    .run(...(userId ? [reportJson, taskId, userId] : [reportJson, taskId]));
+}
+
+async function backfillMonitorResultJson(id: string, resultJson: string, userId?: string | null) {
+  if (usePostgres()) {
+    await queryPostgres(
+      `UPDATE monitor_results SET result_json = $2 WHERE id = $1 ${userId ? "AND user_id = $3" : ""}`,
+      userId ? [id, resultJson, userId] : [id, resultJson]
+    );
+    return;
+  }
+
+  sqlite()
+    .prepare(`UPDATE monitor_results SET result_json = ? WHERE id = ? ${userId ? "AND user_id = ?" : ""}`)
+    .run(...(userId ? [resultJson, id, userId] : [resultJson, id]));
 }
 
 function mapReportRow(row: {
@@ -359,12 +431,14 @@ function mapReportRow(row: {
   user_id: string | null;
   created_at: string;
 }): ScanReportRecord {
+  const normalizedReport = normalizeSerializedReport(row.report_json, row.created_at).report;
+
   return {
     taskId: row.task_id,
     brandName: row.brand_name,
     createdAt: row.created_at,
     userId: row.user_id,
-    report: JSON.parse(row.report_json) as DetectReport,
+    report: normalizedReport,
   };
 }
 
@@ -476,6 +550,8 @@ function mapMonitorResultRow(row: {
   result_json: string;
   checked_at: string;
 }): MonitorResultRecord {
+  const normalizedResult = normalizeSerializedReport(row.result_json, row.checked_at).report;
+
   return {
     id: row.id,
     keywordId: row.keyword_id,
@@ -485,7 +561,7 @@ function mapMonitorResultRow(row: {
     tcaCoverage: Number(row.tca_coverage),
     tcaAuthority: Number(row.tca_authority),
     tcaLevel: row.tca_level,
-    result: JSON.parse(row.result_json) as DetectReport,
+    result: normalizedResult,
     checkedAt: row.checked_at,
   };
 }
@@ -615,18 +691,18 @@ export async function consumeDetectQuota(userId: string): Promise<DetectQuotaRec
     throw new Error("未找到当前用户");
   }
 
-  const monthAnchor = getCurrentMonthAnchor();
-  const limit = getMonthlyLimit(user.plan);
-  const shouldReset = shouldResetUsage(user.monthlyDetectResetAt);
+  const policy = getQuotaPolicy(user.plan);
+  const shouldReset = shouldResetUsage(user.monthlyDetectResetAt, policy.anchor);
   const currentUsed = shouldReset ? 0 : user.monthlyDetectCount;
 
-  if (currentUsed >= limit) {
+  if (currentUsed >= policy.limit) {
     return {
       allowed: false,
-      limit,
+      limit: policy.limit,
       used: currentUsed,
       remaining: 0,
       plan: user.plan,
+      periodLabel: policy.periodLabel,
     };
   }
 
@@ -642,7 +718,7 @@ export async function consumeDetectQuota(userId: string): Promise<DetectQuotaRec
             updated_at = $4
         WHERE id = $1
       `,
-      [userId, nextUsed, monthAnchor, now]
+      [userId, nextUsed, policy.anchor, now]
     );
   } else {
     const stmt = sqlite().prepare(`
@@ -652,15 +728,16 @@ export async function consumeDetectQuota(userId: string): Promise<DetectQuotaRec
           updated_at = ?
       WHERE id = ?
     `);
-    stmt.run(nextUsed, monthAnchor, now, userId);
+    stmt.run(nextUsed, policy.anchor, now, userId);
   }
 
   return {
     allowed: true,
-    limit,
+    limit: policy.limit,
     used: nextUsed,
-    remaining: Math.max(limit - nextUsed, 0),
+    remaining: Math.max(policy.limit - nextUsed, 0),
     plan: user.plan,
+    periodLabel: policy.periodLabel,
   };
 }
 
@@ -668,15 +745,74 @@ export async function getDetectQuotaStatus(userId: string): Promise<DetectQuotaR
   const user = await getUserById(userId);
   if (!user) return null;
 
-  const limit = getMonthlyLimit(user.plan);
-  const used = shouldResetUsage(user.monthlyDetectResetAt) ? 0 : user.monthlyDetectCount;
+  const policy = getQuotaPolicy(user.plan);
+  const used = shouldResetUsage(user.monthlyDetectResetAt, policy.anchor) ? 0 : user.monthlyDetectCount;
   return {
-    allowed: used < limit,
-    limit,
+    allowed: used < policy.limit,
+    limit: policy.limit,
     used,
-    remaining: Math.max(limit - used, 0),
+    remaining: Math.max(policy.limit - used, 0),
     plan: user.plan,
+    periodLabel: policy.periodLabel,
   };
+}
+
+export async function findRecentDetectTask(input: {
+  userId: string;
+  brandName: string;
+  query: string;
+  hours?: number;
+}): Promise<{ taskId: string; createdAt: string } | null> {
+  const hours = input.hours ?? 24;
+  const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+  const normalizedBrandName = normalizeDetectLookupValue(input.brandName);
+  const normalizedQuery = normalizeDetectLookupValue(input.query);
+
+  if (usePostgres()) {
+    const result = await queryPostgres<{ task_id: string; created_at: string }>(
+      `
+        SELECT task_id, created_at
+        FROM scan_tasks
+        WHERE user_id = $1
+          AND LOWER(TRIM(brand_name)) = $2
+          AND LOWER(TRIM(query)) = $3
+          AND created_at >= $4
+        ORDER BY created_at DESC
+        LIMIT 1
+      `,
+      [input.userId, normalizedBrandName, normalizedQuery, since]
+    );
+
+    const row = result.rows[0];
+    return row
+      ? {
+          taskId: row.task_id,
+          createdAt: row.created_at,
+        }
+      : null;
+  }
+
+  const row = sqlite()
+    .prepare(`
+      SELECT task_id, created_at
+      FROM scan_tasks
+      WHERE user_id = ?
+        AND lower(trim(brand_name)) = ?
+        AND lower(trim(query)) = ?
+        AND datetime(created_at) >= datetime(?)
+      ORDER BY datetime(created_at) DESC
+      LIMIT 1
+    `)
+    .get(input.userId, normalizedBrandName, normalizedQuery, since) as
+    | { task_id: string; created_at: string }
+    | undefined;
+
+  return row
+    ? {
+        taskId: row.task_id,
+        createdAt: row.created_at,
+      }
+    : null;
 }
 
 export async function updateUserPlan(
@@ -839,6 +975,7 @@ export async function saveMonitorResult(input: {
 }) {
   const id = `mon_${Math.random().toString(36).slice(2, 10)}`;
   const checkedAt = new Date().toISOString();
+  const report = normalizeDetectReport(input.report, { createdAt: checkedAt });
 
   if (usePostgres()) {
     await queryPostgres(
@@ -852,12 +989,12 @@ export async function saveMonitorResult(input: {
         id,
         input.keywordId,
         input.userId,
-        input.report.score.total,
-        input.report.score.consistency,
-        input.report.score.coverage,
-        input.report.score.authority,
-        input.report.score.level,
-        JSON.stringify(input.report),
+        report.score.total,
+        report.score.consistency,
+        report.score.coverage,
+        report.score.authority,
+        report.score.level,
+        JSON.stringify(report),
         checkedAt,
       ]
     );
@@ -872,12 +1009,12 @@ export async function saveMonitorResult(input: {
     id,
     input.keywordId,
     input.userId,
-    input.report.score.total,
-    input.report.score.consistency,
-    input.report.score.coverage,
-    input.report.score.authority,
-    input.report.score.level,
-    JSON.stringify(input.report),
+    report.score.total,
+    report.score.consistency,
+    report.score.coverage,
+    report.score.authority,
+    report.score.level,
+    JSON.stringify(report),
     checkedAt
   );
   return id;
@@ -905,7 +1042,18 @@ export async function listMonitorResults(keywordId: string, userId: string): Pro
       `,
       [keywordId, userId]
     );
-    return result.rows.map(mapMonitorResultRow);
+    return Promise.all(
+      result.rows.map(async (row) => {
+        const normalized = normalizeSerializedReport(row.result_json, row.checked_at);
+        if (normalized.needsBackfill) {
+          await backfillMonitorResultJson(row.id, normalized.normalizedJson, row.user_id);
+        }
+        return mapMonitorResultRow({
+          ...row,
+          result_json: normalized.normalizedJson,
+        });
+      })
+    );
   }
 
   const rows = sqlite()
@@ -928,7 +1076,18 @@ export async function listMonitorResults(keywordId: string, userId: string): Pro
     checked_at: string;
   }>;
 
-  return rows.map(mapMonitorResultRow);
+  return Promise.all(
+    rows.map(async (row) => {
+      const normalized = normalizeSerializedReport(row.result_json, row.checked_at);
+      if (normalized.needsBackfill) {
+        await backfillMonitorResultJson(row.id, normalized.normalizedJson, row.user_id);
+      }
+      return mapMonitorResultRow({
+        ...row,
+        result_json: normalized.normalizedJson,
+      });
+    })
+  );
 }
 
 export async function listMonitorTrend(userId: string, days = 30): Promise<MonitorTrendPoint[]> {
@@ -1109,8 +1268,9 @@ export type { UserRecord, MonitoredKeywordRecord, MonitorResultRecord, DetectQuo
 
 export async function saveReport(taskId: string, report: DetectReport, userId?: string | null) {
   const createdAt = new Date().toISOString();
-  const customerId = buildCustomerId(report.input.brandName);
-  const executionMode = report.debug?.mode || "mock";
+  const normalizedReport = normalizeDetectReport(report, { createdAt });
+  const customerId = buildCustomerId(normalizedReport.input.brandName);
+  const executionMode = normalizedReport.debug?.mode || "mock";
 
   if (usePostgres()) {
     await queryPostgres(
@@ -1128,9 +1288,9 @@ export async function saveReport(taskId: string, report: DetectReport, userId?: 
       `,
       [
         customerId,
-        report.input.brandName,
-        report.input.industry,
-        report.input.businessSummary,
+        normalizedReport.input.brandName,
+        normalizedReport.input.industry,
+        normalizedReport.input.businessSummary,
         userId || null,
         createdAt,
         createdAt,
@@ -1140,14 +1300,15 @@ export async function saveReport(taskId: string, report: DetectReport, userId?: 
     await queryPostgres(
       `
         INSERT INTO scan_tasks (
-          task_id, customer_id, brand_name, industry, query, selected_models_json, execution_mode, user_id, created_at
+          task_id, customer_id, brand_name, industry, city, query, selected_models_json, execution_mode, user_id, created_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         ON CONFLICT (task_id)
         DO UPDATE SET
           customer_id = EXCLUDED.customer_id,
           brand_name = EXCLUDED.brand_name,
           industry = EXCLUDED.industry,
+          city = EXCLUDED.city,
           query = EXCLUDED.query,
           selected_models_json = EXCLUDED.selected_models_json,
           execution_mode = EXCLUDED.execution_mode,
@@ -1156,10 +1317,11 @@ export async function saveReport(taskId: string, report: DetectReport, userId?: 
       [
         taskId,
         customerId,
-        report.input.brandName,
-        report.input.industry,
-        report.input.query,
-        JSON.stringify(report.input.selectedModels),
+        normalizedReport.input.brandName,
+        normalizedReport.input.industry,
+        normalizedReport.input.locale || "全国",
+        normalizedReport.input.query,
+        JSON.stringify(normalizedReport.input.selectedModels),
         executionMode,
         userId || null,
         createdAt,
@@ -1177,7 +1339,7 @@ export async function saveReport(taskId: string, report: DetectReport, userId?: 
           user_id = EXCLUDED.user_id,
           created_at = EXCLUDED.created_at
       `,
-      [taskId, report.input.brandName, JSON.stringify(report), userId || null, createdAt]
+      [taskId, normalizedReport.input.brandName, JSON.stringify(normalizedReport), userId || null, createdAt]
     );
     return;
   }
@@ -1213,6 +1375,7 @@ export async function saveReport(taskId: string, report: DetectReport, userId?: 
       customer_id,
       brand_name,
       industry,
+      city,
       query,
       selected_models_json,
       execution_mode,
@@ -1223,6 +1386,7 @@ export async function saveReport(taskId: string, report: DetectReport, userId?: 
       @customer_id,
       @brand_name,
       @industry,
+      @city,
       @query,
       @selected_models_json,
       @execution_mode,
@@ -1249,9 +1413,9 @@ export async function saveReport(taskId: string, report: DetectReport, userId?: 
 
   upsertCustomerStmt.run({
     customer_id: customerId,
-    brand_name: report.input.brandName,
-    industry: report.input.industry,
-    business_summary: report.input.businessSummary,
+    brand_name: normalizedReport.input.brandName,
+    industry: normalizedReport.input.industry,
+    business_summary: normalizedReport.input.businessSummary,
     user_id: userId || null,
     created_at: createdAt,
     updated_at: createdAt,
@@ -1260,10 +1424,11 @@ export async function saveReport(taskId: string, report: DetectReport, userId?: 
   upsertTaskStmt.run({
     task_id: taskId,
     customer_id: customerId,
-    brand_name: report.input.brandName,
-    industry: report.input.industry,
-    query: report.input.query,
-    selected_models_json: JSON.stringify(report.input.selectedModels),
+    brand_name: normalizedReport.input.brandName,
+    industry: normalizedReport.input.industry,
+    city: normalizedReport.input.locale || "全国",
+    query: normalizedReport.input.query,
+    selected_models_json: JSON.stringify(normalizedReport.input.selectedModels),
     execution_mode: executionMode,
     user_id: userId || null,
     created_at: createdAt,
@@ -1271,8 +1436,8 @@ export async function saveReport(taskId: string, report: DetectReport, userId?: 
 
   upsertReportStmt.run({
     task_id: taskId,
-    brand_name: report.input.brandName,
-    report_json: JSON.stringify(report),
+    brand_name: normalizedReport.input.brandName,
+    report_json: JSON.stringify(normalizedReport),
     user_id: userId || null,
     created_at: createdAt,
   });
@@ -1287,14 +1452,22 @@ export async function getReport(taskId: string, userId?: string | null): Promise
     const row = result.rows[0];
     if (!row) return null;
     if (row.user_id && row.user_id !== userId) return null;
-    return JSON.parse(row.report_json) as DetectReport;
+    const normalized = normalizeSerializedReport(row.report_json);
+    if (normalized.needsBackfill) {
+      await backfillScanReportJson(taskId, normalized.normalizedJson, row.user_id);
+    }
+    return normalized.report;
   }
 
   const stmt = sqlite().prepare(`SELECT report_json, user_id FROM scan_reports WHERE task_id = ?`);
   const row = stmt.get(taskId) as { report_json: string; user_id: string | null } | undefined;
   if (!row) return null;
   if (row.user_id && row.user_id !== userId) return null;
-  return JSON.parse(row.report_json) as DetectReport;
+  const normalized = normalizeSerializedReport(row.report_json);
+  if (normalized.needsBackfill) {
+    await backfillScanReportJson(taskId, normalized.normalizedJson, row.user_id);
+  }
+  return normalized.report;
 }
 
 export async function getReportWithMeta(
@@ -1310,8 +1483,12 @@ export async function getReportWithMeta(
     const row = result.rows[0];
     if (!row) return null;
     if (row.user_id && row.user_id !== userId) return null;
+    const normalized = normalizeSerializedReport(row.report_json, row.created_at);
+    if (normalized.needsBackfill) {
+      await backfillScanReportJson(taskId, normalized.normalizedJson, row.user_id);
+    }
     return {
-      report: JSON.parse(row.report_json) as DetectReport,
+      report: normalized.report,
       createdAt: row.created_at || null,
     };
   }
@@ -1320,8 +1497,12 @@ export async function getReportWithMeta(
   const row = stmt.get(taskId) as { report_json: string; user_id: string | null; created_at: string } | undefined;
   if (!row) return null;
   if (row.user_id && row.user_id !== userId) return null;
+  const normalized = normalizeSerializedReport(row.report_json, row.created_at);
+  if (normalized.needsBackfill) {
+    await backfillScanReportJson(taskId, normalized.normalizedJson, row.user_id);
+  }
   return {
-    report: JSON.parse(row.report_json) as DetectReport,
+    report: normalized.report,
     createdAt: row.created_at || null,
   };
 }
@@ -1345,7 +1526,18 @@ export async function listReports(limit = 20, userId?: string): Promise<ScanRepo
       userId ? [limit, userId] : [limit]
     );
 
-    return result.rows.map(mapReportRow);
+    return Promise.all(
+      result.rows.map(async (row) => {
+        const normalized = normalizeSerializedReport(row.report_json, row.created_at);
+        if (normalized.needsBackfill) {
+          await backfillScanReportJson(row.task_id, normalized.normalizedJson, row.user_id);
+        }
+        return mapReportRow({
+          ...row,
+          report_json: normalized.normalizedJson,
+        });
+      })
+    );
   }
 
   const stmt = sqlite().prepare(`
@@ -1364,7 +1556,18 @@ export async function listReports(limit = 20, userId?: string): Promise<ScanRepo
     created_at: string;
   }>;
 
-  return rows.map(mapReportRow);
+  return Promise.all(
+    rows.map(async (row) => {
+      const normalized = normalizeSerializedReport(row.report_json, row.created_at);
+      if (normalized.needsBackfill) {
+        await backfillScanReportJson(row.task_id, normalized.normalizedJson, row.user_id);
+      }
+      return mapReportRow({
+        ...row,
+        report_json: normalized.normalizedJson,
+      });
+    })
+  );
 }
 
 export async function deleteReport(taskId: string, userId?: string) {

@@ -62,7 +62,7 @@ export default async function BillingManagePage() {
             <div style={styles.value}>{planConfig.name}</div>
             <div style={styles.hint}>
               {quota
-                ? `本月已使用 ${quota.used}/${quota.limit} 次检测，剩余 ${quota.remaining} 次。`
+                ? `${quota.periodLabel}已使用 ${quota.used}/${quota.limit} 次检测，剩余 ${quota.remaining} 次。`
                 : "当前未拿到额度信息。"}
             </div>
           </article>
