@@ -9,8 +9,6 @@ import { generateReportHtml } from "@/lib/report/export-html";
 import { getScoreStyle } from "@/lib/report/score-colors";
 import type { DetectReport, ResultItem, Score } from "@/lib/detect/types";
 
-const SHOW_DEBUG_PANEL = process.env.NODE_ENV !== "production";
-
 function getLevelText(level: Score["level"]) {
   if (level === "L1") return "基础级";
   if (level === "L2") return "优化级";
@@ -27,6 +25,12 @@ function getRecommendationSummary(signal: ResultItem["recommendationSignal"]) {
   if (signal === "medium") return "有一定推荐倾向";
   if (signal === "low") return "仅基础提及";
   return "暂无推荐信号";
+}
+
+function getConfidenceLabel(level?: DetectReport["confidence"]["level"]) {
+  if (level === "high") return "高";
+  if (level === "medium") return "中";
+  return "低";
 }
 
 function getResultTone(item: ResultItem) {
@@ -75,12 +79,6 @@ function getResultTone(item: ResultItem) {
 
 function getModelLabel(model: string) {
   return MODEL_META[model as keyof typeof MODEL_META]?.label || model;
-}
-
-function getDebugModeLabel(mode: "real" | "mock" | "hybrid") {
-  if (mode === "real") return "真实调用";
-  if (mode === "hybrid") return "混合模式";
-  return "Mock 模式";
 }
 
 function formatReportTime(value?: string | null) {
@@ -178,14 +176,19 @@ export default function ReportDetailPage() {
     if (!report) return 0;
     return getMentionCount(report.results);
   }, [report]);
+  const effectiveScores = report ? report.scores || report.score : null;
+  const effectiveLevel = report ? report.score.level : null;
+  const effectiveSummary = report ? report.structuredSummary?.headline || report.summary : "";
+  const effectiveNextAction = report?.structuredSummary?.nextAction || "";
+  const effectiveExecutedAt = report?.meta?.executedAt || createdAt;
   const industryAverage = report ? INDUSTRY_AVERAGES[report.input.industry] ?? 64 : 64;
-  const averageDiff = report ? report.score.total - industryAverage : 0;
-  const adviceList = report ? generateAdvice(report.score) : [];
+  const averageDiff = report && effectiveScores ? effectiveScores.total - industryAverage : 0;
+  const adviceList = effectiveScores ? generateAdvice(effectiveScores) : [];
   const weakestDimension = report
     ? [
-        { label: "一致性", value: report.score.consistency },
-        { label: "覆盖度", value: report.score.coverage },
-        { label: "权威性", value: report.score.authority },
+        { label: "一致性", value: effectiveScores?.consistency || 0, key: "consistency" },
+        { label: "覆盖度", value: effectiveScores?.coverage || 0, key: "coverage" },
+        { label: "权威性", value: effectiveScores?.authority || 0, key: "authority" },
       ].sort((a, b) => a.value - b.value)[0]
     : null;
   const strongestSignalCount = report
@@ -193,9 +196,9 @@ export default function ReportDetailPage() {
     : 0;
   const scoreCards = report
     ? [
-        { key: "Consistency", label: "一致性", value: report.score.consistency, desc: "品牌定位与描述一致性" },
-        { key: "Coverage", label: "覆盖度", value: report.score.coverage, desc: "模型提及覆盖度" },
-        { key: "Authority", label: "权威性", value: report.score.authority, desc: "品牌权威支撑表现" },
+        { key: "Consistency", label: "一致性", value: effectiveScores?.consistency || 0, desc: "品牌定位与描述一致性" },
+        { key: "Coverage", label: "覆盖度", value: effectiveScores?.coverage || 0, desc: "模型提及覆盖度" },
+        { key: "Authority", label: "权威性", value: effectiveScores?.authority || 0, desc: "品牌权威支撑表现" },
       ]
     : [];
 
@@ -235,15 +238,17 @@ export default function ReportDetailPage() {
       <div style={styles.container}>
         <section style={styles.hero}>
           <div>
-            <div style={styles.heroMeta}>检测时间：{formatReportTime(createdAt)}</div>
+            <div style={styles.heroMeta}>检测时间：{formatReportTime(effectiveExecutedAt)}</div>
             <h1 style={styles.heroTitle}>
               {report.input.brandName} 的 AI 可见性检测报告
             </h1>
-            <p style={styles.heroText}>{report.summary}</p>
+            <p style={styles.heroText}>{effectiveSummary}</p>
             <div style={styles.heroTags}>
               <span style={styles.tag}>行业：{report.input.industry}</span>
               <span style={styles.tag}>提及模型：{mentionCount} / {report.results.length}</span>
-              <span style={styles.tag}>等级：{report.score.level} {getLevelText(report.score.level)}</span>
+              <span style={styles.tag}>等级：{effectiveLevel || report.score.level} {getLevelText(effectiveLevel || report.score.level)}</span>
+              <span style={styles.tag}>置信度：{getConfidenceLabel(report.confidence?.level)}</span>
+              {report.meta?.provider ? <span style={styles.tag}>Provider：{report.meta.provider}</span> : null}
             </div>
             <div style={styles.exportRow} className="no-print">
               <button type="button" onClick={handleExportPdf} style={styles.primaryButton}>
@@ -260,10 +265,10 @@ export default function ReportDetailPage() {
           </div>
 
           <div style={styles.scoreCard}>
-            <div style={styles.scoreValue}>{report.score.total}</div>
+            <div style={styles.scoreValue}>{effectiveScores?.total || report.score.total}</div>
             <div style={styles.scoreLabel}>MGEO Score</div>
             <div style={styles.scoreLevel}>
-              {report.score.level} · {getLevelText(report.score.level)}
+              {(effectiveLevel || report.score.level)} · {getLevelText(effectiveLevel || report.score.level)}
             </div>
             <div style={styles.scoreBenchmark}>
               <div style={styles.scoreBenchmarkLine}>行业均分：{industryAverage}</div>
@@ -328,6 +333,25 @@ export default function ReportDetailPage() {
           </article>
         </section>
 
+        <section style={styles.noticePanel}>
+          <div style={styles.noticeTitle}>结果说明</div>
+          <div style={styles.noticeText}>
+            {report.disclaimer || "本次评分为启发式评分，不代表平台官方排名或官方权威判断。"}
+          </div>
+          {effectiveNextAction ? (
+            <div style={styles.noticeNextAction}>下一步建议：{effectiveNextAction}</div>
+          ) : null}
+          {report.confidence?.reasons?.length ? (
+            <div style={styles.noticeReasons}>
+              {report.confidence.reasons.map((reason, index) => (
+                <span key={index} style={styles.noticeReason}>
+                  {reason}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </section>
+
         <section style={styles.panel}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>检测输入</h2>
@@ -338,12 +362,32 @@ export default function ReportDetailPage() {
               <span style={styles.infoValue}>{report.input.brandName}</span>
             </div>
             <div style={styles.infoItem}>
+              <span style={styles.infoLabel}>检测平台</span>
+              <span style={styles.infoValue}>{report.input.platform || "multi-model"}</span>
+            </div>
+            <div style={styles.infoItem}>
+              <span style={styles.infoLabel}>检测地区</span>
+              <span style={styles.infoValue}>{report.input.locale || "zh-CN"}</span>
+            </div>
+            <div style={styles.infoItem}>
               <span style={styles.infoLabel}>核心业务</span>
               <span style={styles.infoValue}>{report.input.businessSummary}</span>
             </div>
             <div style={styles.infoItem}>
+              <span style={styles.infoLabel}>品牌叙事</span>
+              <span style={styles.infoValue}>
+                {report.input.brandNarrative?.oneLiner || report.input.businessSummary}
+              </span>
+            </div>
+            <div style={styles.infoItem}>
               <span style={styles.infoLabel}>检测问题</span>
               <span style={styles.infoValue}>{report.input.query}</span>
+            </div>
+            <div style={styles.infoItem}>
+              <span style={styles.infoLabel}>竞品参考</span>
+              <span style={styles.infoValue}>
+                {report.input.competitors?.length ? report.input.competitors.join("、") : "未提供"}
+              </span>
             </div>
           </div>
         </section>
@@ -403,7 +447,9 @@ export default function ReportDetailPage() {
                     </div>
 
                     <div style={styles.rawLabel}>平台返回内容</div>
-                    <div style={styles.rawBox}>{item.rawText || "暂无返回内容"}</div>
+                    <div style={styles.rawBox}>
+                      {item.raw?.coverageResponse || item.rawText || "暂无返回内容"}
+                    </div>
                   </div>
 
                   <aside
@@ -425,6 +471,10 @@ export default function ReportDetailPage() {
                       <span>推荐倾向</span>
                       <strong>{getRecommendationSummary(item.recommendationSignal)}</strong>
                     </div>
+                    <div style={styles.resultInsightLine}>
+                      <span>结果置信度</span>
+                      <strong>{getConfidenceLabel(item.confidence?.level)}</strong>
+                    </div>
                   </aside>
                 </div>
 
@@ -442,30 +492,6 @@ export default function ReportDetailPage() {
             })}
           </div>
         </section>
-
-        {SHOW_DEBUG_PANEL && report.debug ? (
-          <section style={styles.panel}>
-            <div style={styles.sectionHeader}>
-              <h2 style={styles.sectionTitle}>调试面板</h2>
-            </div>
-            <div style={styles.debugMeta}>
-              当前运行方式：{getDebugModeLabel(report.debug.mode)}
-            </div>
-            <div style={styles.debugList}>
-              {report.debug.providers.map((item) => (
-                <div key={item.model} style={styles.debugItem}>
-                  <div style={styles.debugHead}>
-                    <strong>{getModelLabel(item.model)}</strong>
-                    <span style={item.source === "real" ? styles.flagGood : styles.flagNeutral}>
-                      {item.source === "real" ? "真实 API" : "Mock 回退"}
-                    </span>
-                  </div>
-                  <div style={styles.debugText}>{item.note}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null}
 
         <section style={styles.advicePanel}>
           <div style={styles.adviceHead}>
@@ -704,6 +730,46 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 14,
     lineHeight: 1.8,
   },
+  noticePanel: {
+    background: "#fffdfa",
+    border: "1px solid #f2ddbc",
+    borderRadius: 20,
+    padding: 20,
+  },
+  noticeTitle: {
+    fontSize: 15,
+    fontWeight: 700,
+    color: "#8a4b08",
+  },
+  noticeText: {
+    marginTop: 8,
+    color: "#8a4b08",
+    fontSize: 14,
+    lineHeight: 1.7,
+  },
+  noticeNextAction: {
+    marginTop: 12,
+    color: "#0f8b7f",
+    fontSize: 14,
+    lineHeight: 1.7,
+    fontWeight: 700,
+  },
+  noticeReasons: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
+  },
+  noticeReason: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "6px 10px",
+    borderRadius: 999,
+    background: "#fff0db",
+    color: "#8a4b08",
+    fontSize: 12,
+    fontWeight: 600,
+  },
   panel: {
     background: "#ffffff",
     border: "1px solid #e7ebf0",
@@ -866,32 +932,6 @@ const styles: Record<string, React.CSSProperties> = {
   noteItem: {
     color: "#b42318",
     fontSize: 14,
-  },
-  debugMeta: {
-    marginBottom: 16,
-    color: "#596273",
-    fontSize: 15,
-  },
-  debugList: {
-    display: "grid",
-    gap: 12,
-  },
-  debugItem: {
-    border: "1px solid #edf0f4",
-    borderRadius: 16,
-    padding: 16,
-  },
-  debugHead: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 8,
-  },
-  debugText: {
-    color: "#667085",
-    fontSize: 14,
-    lineHeight: 1.7,
   },
   advicePanel: {
     background: "#ffffff",

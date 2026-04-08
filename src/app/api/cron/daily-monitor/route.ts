@@ -30,7 +30,10 @@ export async function GET(req: Request) {
         industry: item.industry || "未分类",
         businessSummary: item.businessSummary || `${item.brandName} 的品牌信息监控`,
         query: item.keyword,
+        platform: (item.selectedModels?.length || 0) === 1 ? String(item.selectedModels?.[0]) : "multi-model",
         selectedModels: item.selectedModels as ModelName[],
+        locale: "zh-CN",
+        competitors: [],
       };
 
       const report = hasRealProviderConfig(input.selectedModels)

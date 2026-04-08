@@ -26,9 +26,20 @@ function getRecommendationSummary(signal: DetectReport["results"][number]["recom
   return "暂无推荐信号";
 }
 
+function getConfidenceLabel(level?: DetectReport["confidence"]["level"]) {
+  if (level === "high") return "高";
+  if (level === "medium") return "中";
+  return "低";
+}
+
 export function generateReportHtml(report: DetectReport, taskId: string) {
+  const effectiveScores = report.scores || report.score;
+  const effectiveLevel = report.score.level;
+  const effectiveSummary = report.structuredSummary?.headline || report.summary;
+  const effectiveNextAction = report.structuredSummary?.nextAction || "";
+  const executedAt = report.meta?.executedAt;
   const mentionedCount = report.results.filter((item) => item.mentioned).length;
-  const adviceItems = generateAdvice(report.score);
+  const adviceItems = generateAdvice(effectiveScores);
   const industryAverageMap: Record<string, number> = {
     新茶饮: 68,
     餐饮连锁: 72,
@@ -38,11 +49,11 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
     企业服务: 63,
   };
   const benchmark = industryAverageMap[report.input.industry] ?? 64;
-  const benchmarkDiff = report.score.total - benchmark;
+  const benchmarkDiff = effectiveScores.total - benchmark;
   const scoreCards = [
-    { key: "Consistency", label: "一致性", value: report.score.consistency, desc: "品牌定位与描述一致性" },
-    { key: "Coverage", label: "覆盖度", value: report.score.coverage, desc: "模型提及覆盖度" },
-    { key: "Authority", label: "权威性", value: report.score.authority, desc: "品牌权威支撑表现" },
+    { key: "Consistency", label: "一致性", value: effectiveScores.consistency, desc: "品牌定位与描述一致性" },
+    { key: "Coverage", label: "覆盖度", value: effectiveScores.coverage, desc: "模型提及覆盖度" },
+    { key: "Authority", label: "权威性", value: effectiveScores.authority, desc: "品牌权威支撑表现" },
   ]
     .map((item) => {
       const style = getScoreStyle(item.value);
@@ -73,7 +84,7 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
             <span class="sub-badge">${item.authoritySignal ? "权威性较好" : "权威性偏弱"}</span>
             <span class="sub-badge">${getRecommendationSummary(item.recommendationSignal)}</span>
           </div>
-          <div class="raw-box">${escapeHtml(item.rawText || "暂无返回内容")}</div>
+          <div class="raw-box">${escapeHtml(item.raw?.coverageResponse || item.rawText || "暂无返回内容")}</div>
         </div>
       `;
     })
@@ -197,18 +208,21 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
       <div>
         <div class="brand">董逻辑MGEO</div>
         <h1>${escapeHtml(report.input.brandName)} 的 MGEO 检测报告</h1>
-        <p class="summary">${escapeHtml(report.summary)}</p>
+        <p class="summary">${escapeHtml(effectiveSummary)}</p>
         <div class="tag-row">
           <span class="tag">检测报告</span>
           <span class="tag">行业：${escapeHtml(report.input.industry)}</span>
+          <span class="tag">平台：${escapeHtml(report.input.platform || "multi-model")}</span>
           <span class="tag">提及模型：${mentionedCount} / ${report.results.length}</span>
-          <span class="tag">等级：${escapeHtml(report.score.level)} ${getLevelText(report.score.level)}</span>
+          <span class="tag">等级：${escapeHtml(effectiveLevel)} ${getLevelText(effectiveLevel)}</span>
+          <span class="tag">置信度：${getConfidenceLabel(report.confidence?.level)}</span>
+          ${executedAt ? `<span class="tag">执行时间：${escapeHtml(executedAt)}</span>` : ""}
         </div>
       </div>
       <div class="score-card">
-        <div class="score-value">${report.score.total}</div>
+        <div class="score-value">${effectiveScores.total}</div>
         <div class="score-label">MGEO Score</div>
-        <div class="score-level">${report.score.level} · ${getLevelText(report.score.level)}</div>
+        <div class="score-level">${effectiveLevel} · ${getLevelText(effectiveLevel)}</div>
         <div class="score-benchmark">
           <div class="score-benchmark-line">行业均分：${benchmark}</div>
           <div class="score-benchmark-diff ${benchmarkDiff >= 0 ? "up" : "down"}">
@@ -224,11 +238,26 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
     </section>
 
     <section class="panel">
+      <h2 class="section-title">结果说明</h2>
+      <div class="raw-box">${escapeHtml(report.disclaimer || "本次评分为启发式评分，不代表平台官方排名或官方权威判断。")}</div>
+      ${effectiveNextAction ? `<div style="margin-top:14px;color:#0f8b7f;font-size:14px;font-weight:700">下一步建议：${escapeHtml(effectiveNextAction)}</div>` : ""}
+      ${
+        report.confidence?.reasons?.length
+          ? `<div class="badge-row" style="margin-top:14px">${report.confidence.reasons
+              .map((item) => `<span class="sub-badge">${escapeHtml(item)}</span>`)
+              .join("")}</div>`
+          : ""
+      }
+    </section>
+
+    <section class="panel">
       <h2 class="section-title">检测输入</h2>
       <div class="info-list">
         <div class="info-item"><span class="info-label">品牌名</span><span class="info-value">${escapeHtml(report.input.brandName)}</span></div>
         <div class="info-item"><span class="info-label">核心业务</span><span class="info-value">${escapeHtml(report.input.businessSummary)}</span></div>
+        <div class="info-item"><span class="info-label">品牌叙事</span><span class="info-value">${escapeHtml(report.input.brandNarrative?.oneLiner || report.input.businessSummary)}</span></div>
         <div class="info-item"><span class="info-label">检测问题</span><span class="info-value">${escapeHtml(report.input.query)}</span></div>
+        <div class="info-item"><span class="info-label">竞品参考</span><span class="info-value">${escapeHtml(report.input.competitors?.length ? report.input.competitors.join("、") : "未提供")}</span></div>
       </div>
     </section>
 
