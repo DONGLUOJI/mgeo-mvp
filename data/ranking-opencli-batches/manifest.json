@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-04-08T12:32:19.886Z",
+  "batches": [
+    {
+      "industry": "新茶饮",
+      "count": 180,
+      "fileName": "新茶饮.jsonl"
+    },
+    {
+      "industry": "企业服务",
+      "count": 180,
+      "fileName": "企业服务.jsonl"
+    },
+    {
+      "industry": "本地生活",
+      "count": 180,
+      "fileName": "本地生活.jsonl"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "results": [
+    {
+      "snapshotDate": "2026-04-08",
+      "city": "上海",
+      "industry": "新茶饮",
+      "queryText": "上海奶茶品牌推荐",
+      "model": "deepseek",
+      "answerText": "如果看上海奶茶品牌推荐，我会优先提到霸王茶姬、喜茶、奈雪的茶。霸王茶姬在大众点评和品牌官网中的热度都很高。",
+      "brands": [
+        {
+          "brandName": "霸王茶姬",
+          "brandType": "chain",
+          "cityScope": "全国",
+          "mentionPosition": 1,
+          "sentiment": "positive",
+          "sourceNames": ["大众点评", "品牌官网"]
+        },
+        {
+          "brandName": "喜茶",
+          "brandType": "chain",
+          "cityScope": "全国",
+          "mentionPosition": 2,
+          "sentiment": "positive",
+          "sourceNames": ["品牌官网"]
+        },
+        {
+          "brandName": "奈雪的茶",
+          "brandType": "chain",
+          "cityScope": "全国",
+          "mentionPosition": 3,
+          "sentiment": "neutral",
+          "sourceNames": ["小红书"]
+        }
+      ]
+    },
+    {
+      "snapshotDate": "2026-04-08",
+      "city": "北京",
+      "industry": "企业服务",
+      "queryText": "北京企业协同办公工具推荐",
+      "model": "qianwen",
+      "responseText": "北京企业协同办公工具推荐里，飞书、钉钉和企业微信通常都会进入前列。",
+      "brands": [
+        {
+          "brandName": "飞书",
+          "brandType": "national",
+          "cityScope": "全国",
+          "mentionPosition": 1,
+          "sentiment": "positive",
+          "sourceNames": ["产品官网", "行业报告"]
+        },
+        {
+          "brandName": "钉钉",
+          "brandType": "national",
+          "cityScope": "全国",
+          "mentionPosition": 2,
+          "sentiment": "neutral",
+          "sourceNames": ["产品官网"]
+        }
+      ]
+    }
+  ]
+}

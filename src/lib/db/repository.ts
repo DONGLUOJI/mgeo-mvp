@@ -1,8 +1,10 @@
+import { createHash } from "node:crypto";
 import type { DetectReport } from "@/lib/detect/types";
 import { getPlanConfig } from "@/lib/auth/plans";
 import { queryPostgres } from "@/lib/db/postgres";
 import { getSqliteDb, sqliteHasColumn } from "@/lib/db/sqlite";
 import { normalizeDetectReport } from "@/lib/detect/report-shape";
+import type { PlatformDetail, PlatformKey } from "@/lib/ranking/shared";
 
 type ScanReportRecord = {
   taskId: string;
@@ -53,6 +55,57 @@ type RankingSnapshotRecord = {
   delta7d: number;
   snapshotDate: string;
   createdAt: string;
+  platformDetail?: Record<PlatformKey, PlatformDetail>;
+  brandType?: "local" | "chain" | "national";
+  cityScope?: string;
+};
+
+type RankingObservationSeed = {
+  snapshotDate: string;
+  city: string;
+  industry: string;
+  queryText: string;
+  brandName: string;
+  brandType?: "local" | "chain" | "national";
+  cityScope?: string;
+  model: PlatformKey;
+  mentioned: boolean;
+  mentionPosition?: number | null;
+  sentiment?: "positive" | "neutral" | "negative" | null;
+  sourceNames?: string[];
+  answerText?: string | null;
+};
+
+type RankingObservationJoinedRow = {
+  snapshotDate: string;
+  city: string;
+  industry: string;
+  queryText: string;
+  brandName: string;
+  brandType: "local" | "chain" | "national";
+  cityScope: string;
+  model: PlatformKey;
+  mentioned: boolean;
+  mentionPosition: number | null;
+  sentiment: "positive" | "neutral" | "negative" | null;
+  sourceNames: string[];
+  answerText: string;
+  createdAt: string;
+};
+
+type RankingTrendingAggregate = {
+  rank: number;
+  queryText: string;
+  industry: string;
+  city: string;
+  heatScore: number;
+  brandCount: number;
+  trendDirection: "up" | "down" | "stable";
+  brandsMentioned: Array<{
+    brand: string;
+    platforms: PlatformKey[];
+    avgPosition: number;
+  }>;
 };
 
 type RankingSeed = {
@@ -381,6 +434,43 @@ function shouldResetUsage(resetAt: string | null, anchor: string) {
 
 function normalizeDetectLookupValue(value: string) {
   return value.trim().toLowerCase();
+}
+
+function buildSlugId(prefix: string, ...parts: Array<string | null | undefined>) {
+  const normalized = parts
+    .filter(Boolean)
+    .map((part) =>
+      String(part)
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+    )
+    .join("|");
+
+  const digest = createHash("sha1").update(normalized || prefix, "utf8").digest("hex").slice(0, 24);
+  return `${prefix}_${digest}`;
+}
+
+function clampRankingScore(value: number) {
+  return Math.max(18, Math.min(98, Math.round(value)));
+}
+
+function average(values: number[]) {
+  if (!values.length) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function sentimentWeight(value: RankingObservationJoinedRow["sentiment"]) {
+  switch (value) {
+    case "positive":
+      return 1;
+    case "neutral":
+      return 0.65;
+    case "negative":
+      return 0.2;
+    default:
+      return 0;
+  }
 }
 
 function normalizeSerializedReport(reportJson: string, createdAt?: string | null) {
@@ -1846,6 +1936,649 @@ export async function getCustomerDetail(
   };
 }
 
+function parseSourceNames(value: unknown) {
+  if (!value) return [] as string[];
+
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  }
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      return parseSourceNames(parsed);
+    } catch {
+      return value
+        .split(/[,\n]/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+  }
+
+  return [];
+}
+
+async function listRankingObservationRows(options?: {
+  industry?: string;
+  city?: string;
+  days?: number;
+}) {
+  const industry = options?.industry?.trim();
+  const city = options?.city?.trim() || "全国";
+  const days = options?.days ?? 30;
+
+  if (usePostgres()) {
+    const values: unknown[] = [];
+    const where: string[] = [];
+
+    values.push(city);
+    where.push(`o.city = $${values.length}`);
+
+    if (industry && industry !== "全部") {
+      values.push(industry);
+      where.push(`o.industry = $${values.length}`);
+    }
+
+    if (days && Number.isFinite(days)) {
+      values.push(String(days));
+      where.push(`o.snapshot_date >= CURRENT_DATE - ($${values.length}::int - 1)`);
+    }
+
+    const result = await queryPostgres<{
+      snapshot_date: string;
+      city: string;
+      industry: string;
+      query_text: string;
+      brand_name: string;
+      brand_type: string;
+      city_scope: string;
+      model: string;
+      mentioned: boolean;
+      mention_position: number | null;
+      sentiment: string | null;
+      source_names_json: string | null;
+      answer_text: string | null;
+      created_at: string;
+    }>(
+      `
+        SELECT
+          o.snapshot_date::text AS snapshot_date,
+          o.city,
+          o.industry,
+          q.query_text,
+          b.brand_name,
+          b.brand_type,
+          b.city_scope,
+          o.model,
+          o.mentioned,
+          o.mention_position,
+          o.sentiment,
+          o.source_names_json,
+          o.answer_text,
+          o.created_at::text AS created_at
+        FROM ranking_observations o
+        INNER JOIN ranking_queries q ON q.id = o.query_id
+        INNER JOIN ranking_brands b ON b.id = o.brand_id
+        ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
+        ORDER BY o.snapshot_date DESC, o.created_at DESC
+      `,
+      values
+    );
+
+    return result.rows.map((row) => ({
+      snapshotDate: row.snapshot_date,
+      city: row.city,
+      industry: row.industry,
+      queryText: row.query_text,
+      brandName: row.brand_name,
+      brandType: (row.brand_type || "national") as RankingObservationJoinedRow["brandType"],
+      cityScope: row.city_scope || "全国",
+      model: row.model as PlatformKey,
+      mentioned: Boolean(row.mentioned),
+      mentionPosition: row.mention_position ?? null,
+      sentiment: (row.sentiment || null) as RankingObservationJoinedRow["sentiment"],
+      sourceNames: parseSourceNames(row.source_names_json),
+      answerText: row.answer_text || "",
+      createdAt: row.created_at,
+    })) as RankingObservationJoinedRow[];
+  }
+
+  const stmt = sqlite().prepare(`
+    SELECT
+      o.snapshot_date,
+      o.city,
+      o.industry,
+      q.query_text,
+      b.brand_name,
+      b.brand_type,
+      b.city_scope,
+      o.model,
+      o.mentioned,
+      o.mention_position,
+      o.sentiment,
+      o.source_names_json,
+      o.answer_text,
+      o.created_at
+    FROM ranking_observations o
+    INNER JOIN ranking_queries q ON q.id = o.query_id
+    INNER JOIN ranking_brands b ON b.id = o.brand_id
+    WHERE o.city = ?
+      ${industry && industry !== "全部" ? "AND o.industry = ?" : ""}
+      ${days && Number.isFinite(days) ? "AND o.snapshot_date >= ?" : ""}
+    ORDER BY o.snapshot_date DESC, o.created_at DESC
+  `);
+
+  const anchor = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const rows = stmt.all(
+    ...(industry && industry !== "全部"
+      ? days && Number.isFinite(days)
+        ? [city, industry, anchor]
+        : [city, industry]
+      : days && Number.isFinite(days)
+        ? [city, anchor]
+        : [city])
+  ) as Array<{
+    snapshot_date: string;
+    city: string;
+    industry: string;
+    query_text: string;
+    brand_name: string;
+    brand_type: string;
+    city_scope: string;
+    model: string;
+    mentioned: number;
+    mention_position: number | null;
+    sentiment: string | null;
+    source_names_json: string | null;
+    answer_text: string | null;
+    created_at: string;
+  }>;
+
+  return rows.map((row) => ({
+    snapshotDate: row.snapshot_date,
+    city: row.city,
+    industry: row.industry,
+    queryText: row.query_text,
+    brandName: row.brand_name,
+    brandType: (row.brand_type || "national") as RankingObservationJoinedRow["brandType"],
+    cityScope: row.city_scope || "全国",
+    model: row.model as PlatformKey,
+    mentioned: Boolean(row.mentioned),
+    mentionPosition: row.mention_position ?? null,
+    sentiment: (row.sentiment || null) as RankingObservationJoinedRow["sentiment"],
+    sourceNames: parseSourceNames(row.source_names_json),
+    answerText: row.answer_text || "",
+    createdAt: row.created_at,
+  })) as RankingObservationJoinedRow[];
+}
+
+function buildPlatformDetailFromRows(rows: RankingObservationJoinedRow[]) {
+  const details = {} as Record<PlatformKey, PlatformDetail>;
+
+  (["doubao", "deepseek", "kimi", "qianwen", "yuanbao", "wenxin"] as PlatformKey[]).forEach((platform) => {
+    const matched = rows.filter((row) => row.model === platform);
+    const mentionedRows = matched.filter((row) => row.mentioned);
+    const position = mentionedRows.length
+      ? Math.round(average(mentionedRows.map((row) => row.mentionPosition || 10)))
+      : null;
+    const sentimentScore = average(mentionedRows.map((row) => sentimentWeight(row.sentiment)));
+    const sentiment: PlatformDetail["sentiment"] =
+      !mentionedRows.length
+        ? null
+        : sentimentScore >= 0.84
+          ? "positive"
+          : sentimentScore >= 0.45
+            ? "neutral"
+            : "negative";
+
+    details[platform] = {
+      mentioned: mentionedRows.length > 0,
+      position,
+      sentiment,
+    };
+  });
+
+  return details;
+}
+
+function scoreObservationGroup(rows: RankingObservationJoinedRow[]) {
+  const totalPlatforms = 6;
+  const mentionedRows = rows.filter((row) => row.mentioned);
+  const mentionedPlatforms = new Set(mentionedRows.map((row) => row.model));
+  const distinctQueries = new Set(rows.map((row) => row.queryText)).size || 1;
+  const coveredQueries = new Set(mentionedRows.map((row) => row.queryText)).size;
+  const sourceHits = mentionedRows.filter((row) => row.sourceNames.length > 0).length;
+  const positiveRatio = average(mentionedRows.map((row) => (row.sentiment === "positive" ? 1 : 0)));
+  const negativeRatio = average(mentionedRows.map((row) => (row.sentiment === "negative" ? 1 : 0)));
+  const coverageRate = mentionedPlatforms.size / totalPlatforms;
+  const queryCoverageRate = coveredQueries / distinctQueries;
+  const sourceRate = mentionedRows.length ? sourceHits / mentionedRows.length : 0;
+  const avgPosition = average(mentionedRows.map((row) => row.mentionPosition || 10));
+  const topPositionBonus = !mentionedRows.length ? 0 : avgPosition <= 2.5 ? 12 : avgPosition <= 4.5 ? 7 : 2;
+
+  const tcaCoverage = clampRankingScore(coverageRate * 100);
+  const tcaConsistency = clampRankingScore(
+    34 + coverageRate * 24 + queryCoverageRate * 24 + positiveRatio * 16 - negativeRatio * 20
+  );
+  const tcaAuthority = clampRankingScore(28 + sourceRate * 50 + topPositionBonus);
+  const tcaTotal = clampRankingScore(tcaConsistency * 0.4 + tcaCoverage * 0.3 + tcaAuthority * 0.3);
+
+  return {
+    tcaTotal,
+    tcaConsistency,
+    tcaCoverage,
+    tcaAuthority,
+    platformCoverage: mentionedPlatforms.size,
+  };
+}
+
+function aggregateRankingSnapshots(rows: RankingObservationJoinedRow[]) {
+  if (!rows.length) {
+    return [] as RankingSnapshotRecord[];
+  }
+
+  const snapshotDates = Array.from(new Set(rows.map((row) => row.snapshotDate))).sort().reverse();
+  const latestDate = snapshotDates[0];
+  const previousDate = snapshotDates[1] || null;
+  const currentRows = rows.filter((row) => row.snapshotDate === latestDate);
+  const previousRows = previousDate ? rows.filter((row) => row.snapshotDate === previousDate) : [];
+  const previousByBrand = new Map<string, ReturnType<typeof scoreObservationGroup>>();
+
+  previousRows.forEach((row) => {
+    const key = `${row.city}-${row.industry}-${row.brandName}`;
+    const bucket = previousByBrand.get(key);
+    if (!bucket) {
+      const groupRows = previousRows.filter(
+        (item) => item.city === row.city && item.industry === row.industry && item.brandName === row.brandName
+      );
+      previousByBrand.set(key, scoreObservationGroup(groupRows));
+    }
+  });
+
+  const groups = new Map<string, RankingObservationJoinedRow[]>();
+  currentRows.forEach((row) => {
+    const key = `${row.city}-${row.industry}-${row.brandName}`;
+    const bucket = groups.get(key) || [];
+    bucket.push(row);
+    groups.set(key, bucket);
+  });
+
+  return Array.from(groups.entries())
+    .map(([key, groupRows]) => {
+      const sample = groupRows[0];
+      const currentScore = scoreObservationGroup(groupRows);
+      const previousScore = previousByBrand.get(key);
+
+      return {
+        id: buildSlugId("ranksnap", sample.city, sample.industry, sample.brandName, latestDate),
+        industry: sample.industry,
+        city: sample.city,
+        brandName: sample.brandName,
+        tcaTotal: currentScore.tcaTotal,
+        tcaConsistency: currentScore.tcaConsistency,
+        tcaCoverage: currentScore.tcaCoverage,
+        tcaAuthority: currentScore.tcaAuthority,
+        platformCoverage: currentScore.platformCoverage,
+        delta7d: Number((currentScore.tcaTotal - (previousScore?.tcaTotal || currentScore.tcaTotal)).toFixed(1)),
+        snapshotDate: latestDate,
+        createdAt: sample.createdAt,
+        platformDetail: buildPlatformDetailFromRows(groupRows),
+        brandType: sample.brandType,
+        cityScope: sample.cityScope,
+      };
+    })
+    .sort((left, right) => right.tcaTotal - left.tcaTotal);
+}
+
+export async function listRankingObservationAggregates(options?: {
+  industry?: string;
+  city?: string;
+  limit?: number;
+  days?: number;
+}) {
+  const rows = await listRankingObservationRows(options);
+  const aggregates = aggregateRankingSnapshots(rows);
+  const limit = options?.limit ?? 20;
+  return aggregates.slice(0, limit);
+}
+
+export async function listRankingObservationTrending(options?: {
+  industry?: string;
+  city?: string;
+  days?: number;
+  limit?: number;
+}) {
+  const rows = await listRankingObservationRows(options);
+  if (!rows.length) {
+    return [] as RankingTrendingAggregate[];
+  }
+
+  const snapshotDates = Array.from(new Set(rows.map((row) => row.snapshotDate))).sort().reverse();
+  const latestDate = snapshotDates[0];
+  const previousDate = snapshotDates[1] || null;
+  const currentRows = rows.filter((row) => row.snapshotDate === latestDate);
+  const previousRows = previousDate ? rows.filter((row) => row.snapshotDate === previousDate) : [];
+  const previousMentioned = new Map<string, number>();
+
+  previousRows.forEach((row) => {
+    if (!row.mentioned) return;
+    const key = `${row.industry}-${row.queryText}`;
+    previousMentioned.set(key, (previousMentioned.get(key) || 0) + 1);
+  });
+
+  const grouped = new Map<string, RankingObservationJoinedRow[]>();
+  currentRows.forEach((row) => {
+    const key = `${row.industry}-${row.queryText}`;
+    const bucket = grouped.get(key) || [];
+    bucket.push(row);
+    grouped.set(key, bucket);
+  });
+
+  const limit = options?.limit ?? 20;
+
+  return Array.from(grouped.entries())
+    .map(([key, groupRows], index) => {
+      const mentioned = groupRows.filter((row) => row.mentioned);
+      const brandGroups = new Map<string, RankingObservationJoinedRow[]>();
+      mentioned.forEach((row) => {
+        const bucket = brandGroups.get(row.brandName) || [];
+        bucket.push(row);
+        brandGroups.set(row.brandName, bucket);
+      });
+
+      const brandsMentioned = Array.from(brandGroups.entries())
+        .map(([brand, brandRows]) => ({
+          brand,
+          platforms: Array.from(new Set(brandRows.map((row) => row.model))),
+          avgPosition: Number(average(brandRows.map((row) => row.mentionPosition || 10)).toFixed(1)),
+        }))
+        .sort((left, right) => left.avgPosition - right.avgPosition)
+        .slice(0, 8);
+
+      const previousCount = previousMentioned.get(key) || 0;
+      const delta = brandsMentioned.length - previousCount;
+      const trendDirection = delta > 0 ? "up" : delta < 0 ? "down" : "stable";
+      const heatScore = Math.min(99, 40 + brandsMentioned.length * 8 + mentioned.length * 3);
+      const sample = groupRows[0];
+
+      return {
+        rank: index + 1,
+        queryText: sample.queryText,
+        industry: sample.industry,
+        city: sample.city,
+        heatScore,
+        brandCount: brandsMentioned.length,
+        trendDirection,
+        brandsMentioned,
+      } satisfies RankingTrendingAggregate;
+    })
+    .sort((left, right) => right.heatScore - left.heatScore)
+    .slice(0, limit)
+    .map((row, index) => ({ ...row, rank: index + 1 }));
+}
+
+export async function saveRankingObservations(observations: RankingObservationSeed[]) {
+  if (!observations.length) {
+    return { inserted: 0 };
+  }
+
+  if (usePostgres()) {
+    for (const observation of observations) {
+      const nextQueryId = buildSlugId("rq", observation.city, observation.industry, observation.queryText);
+      const existingQuery = await queryPostgres<{ id: string }>(
+        `SELECT id FROM ranking_queries WHERE city = $1 AND industry = $2 AND query_text = $3 LIMIT 1`,
+        [observation.city, observation.industry, observation.queryText]
+      );
+      const queryId = existingQuery.rows[0]?.id || nextQueryId;
+
+      const cityScope = observation.cityScope || observation.city;
+      const nextBrandId = buildSlugId("rb", cityScope, observation.industry, observation.brandName);
+      const existingBrand = await queryPostgres<{ id: string }>(
+        `SELECT id FROM ranking_brands WHERE brand_name = $1 AND industry = $2 AND city_scope = $3 LIMIT 1`,
+        [observation.brandName, observation.industry, cityScope]
+      );
+      const brandId = existingBrand.rows[0]?.id || nextBrandId;
+
+      const nextObservationId = buildSlugId(
+        "ro",
+        observation.snapshotDate,
+        observation.city,
+        observation.industry,
+        observation.model,
+        observation.queryText,
+        observation.brandName
+      );
+      const existingObservation = await queryPostgres<{ id: string }>(
+        `
+          SELECT id
+          FROM ranking_observations
+          WHERE snapshot_date = $1
+            AND city = $2
+            AND industry = $3
+            AND model = $4
+            AND query_id = $5
+            AND brand_id = $6
+          LIMIT 1
+        `,
+        [observation.snapshotDate, observation.city, observation.industry, observation.model, queryId, brandId]
+      );
+      const observationId = existingObservation.rows[0]?.id || nextObservationId;
+
+      await queryPostgres(
+        `
+          INSERT INTO ranking_queries (id, industry, city, query_text, is_active, updated_at)
+          VALUES ($1, $2, $3, $4, TRUE, CURRENT_TIMESTAMP)
+          ON CONFLICT (id) DO UPDATE
+          SET industry = EXCLUDED.industry,
+              city = EXCLUDED.city,
+              query_text = EXCLUDED.query_text,
+              is_active = TRUE,
+              updated_at = CURRENT_TIMESTAMP
+        `,
+        [queryId, observation.industry, observation.city, observation.queryText]
+      );
+
+      await queryPostgres(
+        `
+          INSERT INTO ranking_brands (id, brand_name, industry, city_scope, brand_type, is_active, updated_at)
+          VALUES ($1, $2, $3, $4, $5, TRUE, CURRENT_TIMESTAMP)
+          ON CONFLICT (id) DO UPDATE
+          SET brand_name = EXCLUDED.brand_name,
+              industry = EXCLUDED.industry,
+              city_scope = EXCLUDED.city_scope,
+              brand_type = EXCLUDED.brand_type,
+              is_active = TRUE,
+              updated_at = CURRENT_TIMESTAMP
+        `,
+        [brandId, observation.brandName, observation.industry, cityScope, observation.brandType || "national"]
+      );
+
+      await queryPostgres(
+        `
+          INSERT INTO ranking_observations (
+            id, snapshot_date, query_id, brand_id, model, mentioned, mention_position,
+            sentiment, source_names_json, answer_text, city, industry
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          ON CONFLICT (id) DO UPDATE
+          SET mentioned = EXCLUDED.mentioned,
+              mention_position = EXCLUDED.mention_position,
+              sentiment = EXCLUDED.sentiment,
+              source_names_json = EXCLUDED.source_names_json,
+              answer_text = EXCLUDED.answer_text,
+              city = EXCLUDED.city,
+              industry = EXCLUDED.industry
+        `,
+        [
+          observationId,
+          observation.snapshotDate,
+          queryId,
+          brandId,
+          observation.model,
+          observation.mentioned,
+          observation.mentionPosition ?? null,
+          observation.sentiment ?? null,
+          JSON.stringify(observation.sourceNames || []),
+          observation.answerText || "",
+          observation.city,
+          observation.industry,
+        ]
+      );
+    }
+
+    return { inserted: observations.length };
+  }
+
+  const db = sqlite();
+  const upsertQuery = db.prepare(`
+    INSERT INTO ranking_queries (id, industry, city, query_text, is_active, created_at, updated_at)
+    VALUES (@id, @industry, @city, @queryText, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(id) DO UPDATE SET
+      industry = excluded.industry,
+      city = excluded.city,
+      query_text = excluded.query_text,
+      is_active = 1,
+      updated_at = CURRENT_TIMESTAMP
+  `);
+  const upsertBrand = db.prepare(`
+    INSERT INTO ranking_brands (id, brand_name, industry, city_scope, brand_type, is_active, created_at, updated_at)
+    VALUES (@id, @brandName, @industry, @cityScope, @brandType, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(id) DO UPDATE SET
+      brand_name = excluded.brand_name,
+      industry = excluded.industry,
+      city_scope = excluded.city_scope,
+      brand_type = excluded.brand_type,
+      is_active = 1,
+      updated_at = CURRENT_TIMESTAMP
+  `);
+  const upsertObservation = db.prepare(`
+    INSERT INTO ranking_observations (
+      id, snapshot_date, query_id, brand_id, model, mentioned, mention_position,
+      sentiment, source_names_json, answer_text, city, industry, created_at
+    )
+    VALUES (
+      @id, @snapshotDate, @queryId, @brandId, @model, @mentioned, @mentionPosition,
+      @sentiment, @sourceNamesJson, @answerText, @city, @industry, CURRENT_TIMESTAMP
+    )
+    ON CONFLICT(id) DO UPDATE SET
+      mentioned = excluded.mentioned,
+      mention_position = excluded.mention_position,
+      sentiment = excluded.sentiment,
+      source_names_json = excluded.source_names_json,
+      answer_text = excluded.answer_text,
+      city = excluded.city,
+      industry = excluded.industry
+  `);
+  const selectQueryId = db.prepare<[{
+    city: string;
+    industry: string;
+    queryText: string;
+  }], { id: string }>(`
+    SELECT id FROM ranking_queries
+    WHERE city = @city AND industry = @industry AND query_text = @queryText
+    LIMIT 1
+  `);
+  const selectBrandId = db.prepare<[{
+    brandName: string;
+    industry: string;
+    cityScope: string;
+  }], { id: string }>(`
+    SELECT id FROM ranking_brands
+    WHERE brand_name = @brandName AND industry = @industry AND city_scope = @cityScope
+    LIMIT 1
+  `);
+  const selectObservationId = db.prepare<[{
+    snapshotDate: string;
+    city: string;
+    industry: string;
+    model: string;
+    queryId: string;
+    brandId: string;
+  }], { id: string }>(`
+    SELECT id FROM ranking_observations
+    WHERE snapshot_date = @snapshotDate
+      AND city = @city
+      AND industry = @industry
+      AND model = @model
+      AND query_id = @queryId
+      AND brand_id = @brandId
+    LIMIT 1
+  `);
+
+  const insertMany = db.transaction((items: RankingObservationSeed[]) => {
+    items.forEach((observation) => {
+      const nextQueryId = buildSlugId("rq", observation.city, observation.industry, observation.queryText);
+      const queryId =
+        selectQueryId.get({
+          city: observation.city,
+          industry: observation.industry,
+          queryText: observation.queryText,
+        })?.id || nextQueryId;
+
+      const cityScope = observation.cityScope || observation.city;
+      const nextBrandId = buildSlugId("rb", cityScope, observation.industry, observation.brandName);
+      const brandId =
+        selectBrandId.get({
+          brandName: observation.brandName,
+          industry: observation.industry,
+          cityScope,
+        })?.id || nextBrandId;
+
+      const nextObservationId = buildSlugId(
+        "ro",
+        observation.snapshotDate,
+        observation.city,
+        observation.industry,
+        observation.model,
+        observation.queryText,
+        observation.brandName
+      );
+      const observationId =
+        selectObservationId.get({
+          snapshotDate: observation.snapshotDate,
+          city: observation.city,
+          industry: observation.industry,
+          model: observation.model,
+          queryId,
+          brandId,
+        })?.id || nextObservationId;
+
+      upsertQuery.run({
+        id: queryId,
+        industry: observation.industry,
+        city: observation.city,
+        queryText: observation.queryText,
+      });
+
+      upsertBrand.run({
+        id: brandId,
+        brandName: observation.brandName,
+        industry: observation.industry,
+        cityScope,
+        brandType: observation.brandType || "national",
+      });
+
+      upsertObservation.run({
+        id: observationId,
+        snapshotDate: observation.snapshotDate,
+        queryId,
+        brandId,
+        model: observation.model,
+        mentioned: observation.mentioned ? 1 : 0,
+        mentionPosition: observation.mentionPosition ?? null,
+        sentiment: observation.sentiment ?? null,
+        sourceNamesJson: JSON.stringify(observation.sourceNames || []),
+        answerText: observation.answerText || "",
+        city: observation.city,
+        industry: observation.industry,
+      });
+    });
+  });
+
+  insertMany(observations);
+  return { inserted: observations.length };
+}
+
 export async function listRankingSnapshots(options?: {
   industry?: string;
   city?: string;
@@ -1856,6 +2589,11 @@ export async function listRankingSnapshots(options?: {
   const city = options?.city?.trim();
   const limit = options?.limit ?? 20;
   const days = options?.days;
+  const observationRows = await listRankingObservationAggregates(options);
+
+  if (observationRows.length) {
+    return observationRows;
+  }
 
   if (usePostgres()) {
     const values: unknown[] = [];

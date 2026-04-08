@@ -6,7 +6,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "plan:ranking": "node scripts/build-ranking-collection-plan.mjs",
+    "export:ranking-opencli": "node scripts/export-ranking-opencli-jsonl.mjs",
+    "prioritize:ranking-opencli": "node scripts/build-priority-ranking-batch.mjs",
+    "split:ranking-opencli": "node scripts/split-ranking-opencli-jsonl.mjs",
+    "collect:ranking": "node scripts/collect-ranking-real-data.mjs",
+    "import:ranking": "node scripts/import-ranking-observations.mjs",
+    "normalize:ranking": "node scripts/normalize-ranking-opencli-output.mjs",
+    "repair:ranking-real": "node scripts/repair-ranking-real-data.mjs",
+    "validate:ranking": "node scripts/validate-ranking-observations.mjs",
+    "status:ranking-real": "node scripts/status-ranking-real-data.mjs",
+    "article:wechat": "node scripts/generate-wechat-article.mjs"
   },
   "dependencies": {
     "@auth/core": "^0.34.3",

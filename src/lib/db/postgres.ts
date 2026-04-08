@@ -129,6 +129,69 @@ export async function ensurePostgresSchema() {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS ranking_queries (
+        id TEXT PRIMARY KEY,
+        industry TEXT NOT NULL,
+        city TEXT NOT NULL DEFAULT '全国',
+        query_text TEXT NOT NULL,
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_ranking_queries_city_industry_text
+      ON ranking_queries(city, industry, query_text);
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ranking_brands (
+        id TEXT PRIMARY KEY,
+        brand_name TEXT NOT NULL,
+        industry TEXT NOT NULL,
+        city_scope TEXT NOT NULL DEFAULT '全国',
+        brand_type TEXT NOT NULL DEFAULT 'national',
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_ranking_brands_name_industry_scope
+      ON ranking_brands(brand_name, industry, city_scope);
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ranking_observations (
+        id TEXT PRIMARY KEY,
+        snapshot_date DATE NOT NULL,
+        query_id TEXT NOT NULL REFERENCES ranking_queries(id),
+        brand_id TEXT NOT NULL REFERENCES ranking_brands(id),
+        model TEXT NOT NULL,
+        mentioned BOOLEAN NOT NULL DEFAULT FALSE,
+        mention_position INTEGER,
+        sentiment TEXT,
+        source_names_json TEXT,
+        answer_text TEXT,
+        city TEXT NOT NULL DEFAULT '全国',
+        industry TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_ranking_observations_unique
+      ON ranking_observations(snapshot_date, city, industry, model, query_id, brand_id);
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_ranking_observations_city_date
+      ON ranking_observations(city, industry, snapshot_date);
+    `);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS trending_queries (
         id TEXT PRIMARY KEY,
         industry TEXT NOT NULL,

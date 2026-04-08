@@ -1,0 +1,82 @@
+{
+  "industries": [
+    {
+      "industry": "新茶饮",
+      "cities": ["全国", "上海", "北京"],
+      "brands": [
+        { "brandName": "霸王茶姬", "brandType": "chain", "cityScope": "全国" },
+        { "brandName": "喜茶", "brandType": "chain", "cityScope": "全国" },
+        { "brandName": "奈雪的茶", "brandType": "chain", "cityScope": "全国" },
+        { "brandName": "茶百道", "brandType": "chain", "cityScope": "全国" },
+        { "brandName": "沪上阿姨", "brandType": "chain", "cityScope": "全国" },
+        { "brandName": "古茗", "brandType": "chain", "cityScope": "全国" },
+        { "brandName": "蜜雪冰城", "brandType": "chain", "cityScope": "全国" },
+        { "brandName": "益禾堂", "brandType": "chain", "cityScope": "全国" },
+        { "brandName": "书亦烧仙草", "brandType": "chain", "cityScope": "全国" },
+        { "brandName": "CoCo都可", "brandType": "chain", "cityScope": "全国" },
+        { "brandName": "茉酸奶", "brandType": "chain", "cityScope": "全国" },
+        { "brandName": "爷爷不泡茶", "brandType": "chain", "cityScope": "全国" },
+        { "brandName": "阿嬷手作", "brandType": "chain", "cityScope": "全国" },
+        { "brandName": "7分甜", "brandType": "chain", "cityScope": "全国" },
+        { "brandName": "乐乐茶", "brandType": "chain", "cityScope": "全国" },
+        { "brandName": "沪咖", "brandType": "local", "cityScope": "上海" },
+        { "brandName": "山缓缓茶", "brandType": "local", "cityScope": "上海" },
+        { "brandName": "京茶坊", "brandType": "local", "cityScope": "北京" },
+        { "brandName": "北平果茶", "brandType": "local", "cityScope": "北京" },
+        { "brandName": "茶话弄", "brandType": "chain", "cityScope": "全国" }
+      ]
+    },
+    {
+      "industry": "企业服务",
+      "cities": ["全国", "上海", "北京"],
+      "brands": [
+        { "brandName": "飞书", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "钉钉", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "企业微信", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "腾讯会议", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "石墨文档", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "金山文档", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "语雀", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "纷享销客", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "销售易", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "北森", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "明道云", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "简道云", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "金蝶云之家", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "用友BIP", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "Teambition", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "Worktile", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "上海协作云", "brandType": "local", "cityScope": "上海" },
+        { "brandName": "申城CRM", "brandType": "local", "cityScope": "上海" },
+        { "brandName": "京企协同", "brandType": "local", "cityScope": "北京" },
+        { "brandName": "首都办公云", "brandType": "local", "cityScope": "北京" }
+      ]
+    },
+    {
+      "industry": "本地生活",
+      "cities": ["全国", "上海", "北京"],
+      "brands": [
+        { "brandName": "美团", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "饿了么", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "大众点评", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "58到家", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "天鹅到家", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "京东到家", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "河狸家", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "闪送", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "达达", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "货拉拉", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "哈啰出行", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "曹操出行", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "T3出行", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "神州租车", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "瓜子养车", "brandType": "national", "cityScope": "全国" },
+        { "brandName": "沪尚到家", "brandType": "local", "cityScope": "上海" },
+        { "brandName": "申城阿姨", "brandType": "local", "cityScope": "上海" },
+        { "brandName": "京城到家", "brandType": "local", "cityScope": "北京" },
+        { "brandName": "首护家政", "brandType": "local", "cityScope": "北京" },
+        { "brandName": "小象超市", "brandType": "national", "cityScope": "全国" }
+      ]
+    }
+  ]
+}

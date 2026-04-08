@@ -1,4 +1,4 @@
-import { listRankingSnapshots } from "@/lib/db/repository";
+import { listRankingObservationTrending, listRankingSnapshots } from "@/lib/db/repository";
 import {
   FEATURED_CITY_NAMES,
   INDUSTRY_OPTIONS,
@@ -263,6 +263,10 @@ function getPositionRange(score: number) {
 }
 
 function buildPlatformDetail(row: RankingSnapshotBase) {
+  if (row.platformDetail) {
+    return row.platformDetail;
+  }
+
   const hash = brandHash(`${row.industry}-${row.brandName}`);
   const preferences = PLATFORM_PREFERENCES[row.industry] || PLATFORM_OPTIONS.map((item) => item.key);
   const orderedPlatforms = rotateValues(preferences, hash % preferences.length);
@@ -322,7 +326,12 @@ function enrichRankingRows(rows: RankingSnapshotBase[], nationalBrandNames: Set<
       brandName: row.brandName,
       industry: row.industry,
       city: row.city,
-      marketScope: row.city !== "全国" && !nationalBrandNames.has(row.brandName) ? ("local" as const) : ("national" as const),
+      marketScope:
+        row.brandType === "local"
+          ? ("local" as const)
+          : row.city !== "全国" && !nationalBrandNames.has(row.brandName)
+            ? ("local" as const)
+            : ("national" as const),
       tcaTotal: row.tcaTotal,
       tcaConsistency: row.tcaConsistency,
       tcaCoverage: row.tcaCoverage,
@@ -452,7 +461,15 @@ export async function getTrendingQueriesData(options?: {
   limit?: number;
   offset?: number;
 }) {
-  const { industry, city = "全国", limit = 20, offset = 0 } = options || {};
+  const { industry, city = "全国", days = 30, limit = 20, offset = 0 } = options || {};
+  const realRows = await listRankingObservationTrending({ industry, city, days, limit: limit + offset });
+
+  if (realRows.length) {
+    return {
+      queries: realRows.slice(offset, offset + limit),
+    };
+  }
+
   const cityHasData = SUPPORTED_CITIES.find((item) => item.name === city)?.hasData ?? city === "全国";
   const availableCityIndustries = new Set(
     city === "全国"
