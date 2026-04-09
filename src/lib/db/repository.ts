@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { DetectReport } from "@/lib/detect/types";
 import { getPlanConfig } from "@/lib/auth/plans";
 import { queryPostgres } from "@/lib/db/postgres";
@@ -208,6 +208,30 @@ export type LeadRequestRecord = {
   userId: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type SystemAlertSeverity = "warning" | "critical";
+
+export type SystemAlertStatus = "active" | "resolved";
+
+export type SystemAlertRecord = {
+  id: string;
+  alertKey: string;
+  severity: SystemAlertSeverity;
+  status: SystemAlertStatus;
+  title: string;
+  message: string;
+  detail: string | null;
+  occurrenceCount: number;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  lastNotifiedAt: string | null;
+  resolvedAt: string | null;
+};
+
+export type MonitoringHealthSnapshot = {
+  activeKeywordCount: number;
+  latestCheckedAt: string | null;
 };
 
 const rankingSeedCatalog = [
@@ -888,6 +912,36 @@ function mapLeadRequestRow(row: {
   };
 }
 
+function mapSystemAlertRow(row: {
+  id: string;
+  alert_key: string;
+  severity: string;
+  status: string;
+  title: string;
+  message: string;
+  detail: string | null;
+  occurrence_count: number | string;
+  first_seen_at: string;
+  last_seen_at: string;
+  last_notified_at: string | null;
+  resolved_at: string | null;
+}): SystemAlertRecord {
+  return {
+    id: row.id,
+    alertKey: row.alert_key,
+    severity: row.severity as SystemAlertSeverity,
+    status: row.status as SystemAlertStatus,
+    title: row.title,
+    message: row.message,
+    detail: row.detail,
+    occurrenceCount: Number(row.occurrence_count || 0),
+    firstSeenAt: row.first_seen_at,
+    lastSeenAt: row.last_seen_at,
+    lastNotifiedAt: row.last_notified_at,
+    resolvedAt: row.resolved_at,
+  };
+}
+
 export async function getUserByEmail(email: string): Promise<UserRecord | null> {
   const normalizedEmail = email.trim().toLowerCase();
 
@@ -1283,6 +1337,363 @@ export async function updateLeadRequest(input: {
   }
 
   return mapLeadRequestRow(updated);
+}
+
+export async function listRecentSystemAlerts(limit = 20): Promise<SystemAlertRecord[]> {
+  if (usePostgres()) {
+    const result = await queryPostgres<{
+      id: string;
+      alert_key: string;
+      severity: string;
+      status: string;
+      title: string;
+      message: string;
+      detail: string | null;
+      occurrence_count: string | number;
+      first_seen_at: string;
+      last_seen_at: string;
+      last_notified_at: string | null;
+      resolved_at: string | null;
+    }>(
+      `
+        SELECT id, alert_key, severity, status, title, message, detail, occurrence_count, first_seen_at, last_seen_at, last_notified_at, resolved_at
+        FROM system_alert_events
+        ORDER BY last_seen_at DESC
+        LIMIT $1
+      `,
+      [limit]
+    );
+    return result.rows.map(mapSystemAlertRow);
+  }
+
+  const rows = sqlite()
+    .prepare(
+      `
+        SELECT id, alert_key, severity, status, title, message, detail, occurrence_count, first_seen_at, last_seen_at, last_notified_at, resolved_at
+        FROM system_alert_events
+        ORDER BY datetime(last_seen_at) DESC
+        LIMIT ?
+      `
+    )
+    .all(limit) as Array<{
+    id: string;
+    alert_key: string;
+    severity: string;
+    status: string;
+    title: string;
+    message: string;
+    detail: string | null;
+    occurrence_count: number | string;
+    first_seen_at: string;
+    last_seen_at: string;
+    last_notified_at: string | null;
+    resolved_at: string | null;
+  }>;
+
+  return rows.map(mapSystemAlertRow);
+}
+
+export async function listActiveSystemAlerts(): Promise<SystemAlertRecord[]> {
+  if (usePostgres()) {
+    const result = await queryPostgres<{
+      id: string;
+      alert_key: string;
+      severity: string;
+      status: string;
+      title: string;
+      message: string;
+      detail: string | null;
+      occurrence_count: string | number;
+      first_seen_at: string;
+      last_seen_at: string;
+      last_notified_at: string | null;
+      resolved_at: string | null;
+    }>(
+      `
+        SELECT id, alert_key, severity, status, title, message, detail, occurrence_count, first_seen_at, last_seen_at, last_notified_at, resolved_at
+        FROM system_alert_events
+        WHERE status = 'active'
+        ORDER BY last_seen_at DESC
+      `
+    );
+    return result.rows.map(mapSystemAlertRow);
+  }
+
+  const rows = sqlite()
+    .prepare(
+      `
+        SELECT id, alert_key, severity, status, title, message, detail, occurrence_count, first_seen_at, last_seen_at, last_notified_at, resolved_at
+        FROM system_alert_events
+        WHERE status = 'active'
+        ORDER BY datetime(last_seen_at) DESC
+      `
+    )
+    .all() as Array<{
+    id: string;
+    alert_key: string;
+    severity: string;
+    status: string;
+    title: string;
+    message: string;
+    detail: string | null;
+    occurrence_count: number | string;
+    first_seen_at: string;
+    last_seen_at: string;
+    last_notified_at: string | null;
+    resolved_at: string | null;
+  }>;
+
+  return rows.map(mapSystemAlertRow);
+}
+
+export async function recordSystemAlert(input: {
+  alertKey: string;
+  severity: SystemAlertSeverity;
+  title: string;
+  message: string;
+  detail?: string | null;
+  renotifyAfterHours?: number;
+}): Promise<{
+  alert: SystemAlertRecord;
+  shouldNotify: boolean;
+  state: "created" | "updated" | "unchanged";
+}> {
+  const existing = (await listActiveSystemAlerts()).find((item) => item.alertKey === input.alertKey);
+  const now = new Date().toISOString();
+  const renotifyAfterMs = (input.renotifyAfterHours ?? 6) * 60 * 60 * 1000;
+
+  if (!existing) {
+    const created: SystemAlertRecord = {
+      id: `alert_${randomUUID().replaceAll("-", "").slice(0, 18)}`,
+      alertKey: input.alertKey,
+      severity: input.severity,
+      status: "active",
+      title: input.title,
+      message: input.message,
+      detail: input.detail?.trim() || null,
+      occurrenceCount: 1,
+      firstSeenAt: now,
+      lastSeenAt: now,
+      lastNotifiedAt: now,
+      resolvedAt: null,
+    };
+
+    if (usePostgres()) {
+      await queryPostgres(
+        `
+          INSERT INTO system_alert_events (
+            id, alert_key, severity, status, title, message, detail, occurrence_count, first_seen_at, last_seen_at, last_notified_at, resolved_at
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        `,
+        [
+          created.id,
+          created.alertKey,
+          created.severity,
+          created.status,
+          created.title,
+          created.message,
+          created.detail,
+          created.occurrenceCount,
+          created.firstSeenAt,
+          created.lastSeenAt,
+          created.lastNotifiedAt,
+          created.resolvedAt,
+        ]
+      );
+    } else {
+      sqlite()
+        .prepare(
+          `
+            INSERT INTO system_alert_events (
+              id, alert_key, severity, status, title, message, detail, occurrence_count, first_seen_at, last_seen_at, last_notified_at, resolved_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `
+        )
+        .run(
+          created.id,
+          created.alertKey,
+          created.severity,
+          created.status,
+          created.title,
+          created.message,
+          created.detail,
+          created.occurrenceCount,
+          created.firstSeenAt,
+          created.lastSeenAt,
+          created.lastNotifiedAt,
+          created.resolvedAt
+        );
+    }
+
+    return {
+      alert: created,
+      shouldNotify: true,
+      state: "created",
+    };
+  }
+
+  const changed =
+    existing.severity !== input.severity ||
+    existing.title !== input.title ||
+    existing.message !== input.message ||
+    (existing.detail || null) !== (input.detail?.trim() || null);
+  const lastNotifiedAt = existing.lastNotifiedAt ? Date.parse(existing.lastNotifiedAt) : 0;
+  const shouldNotify =
+    changed || !existing.lastNotifiedAt || Date.now() - lastNotifiedAt >= renotifyAfterMs;
+
+  const updated: SystemAlertRecord = {
+    ...existing,
+    severity: input.severity,
+    title: input.title,
+    message: input.message,
+    detail: input.detail?.trim() || null,
+    occurrenceCount: existing.occurrenceCount + 1,
+    lastSeenAt: now,
+    lastNotifiedAt: shouldNotify ? now : existing.lastNotifiedAt,
+  };
+
+  if (usePostgres()) {
+    await queryPostgres(
+      `
+        UPDATE system_alert_events
+        SET severity = $2,
+            title = $3,
+            message = $4,
+            detail = $5,
+            occurrence_count = $6,
+            last_seen_at = $7,
+            last_notified_at = $8,
+            status = 'active',
+            resolved_at = NULL
+        WHERE id = $1
+      `,
+      [
+        updated.id,
+        updated.severity,
+        updated.title,
+        updated.message,
+        updated.detail,
+        updated.occurrenceCount,
+        updated.lastSeenAt,
+        updated.lastNotifiedAt,
+      ]
+    );
+  } else {
+    sqlite()
+      .prepare(
+        `
+          UPDATE system_alert_events
+          SET severity = ?, title = ?, message = ?, detail = ?, occurrence_count = ?, last_seen_at = ?, last_notified_at = ?, status = 'active', resolved_at = NULL
+          WHERE id = ?
+        `
+      )
+      .run(
+        updated.severity,
+        updated.title,
+        updated.message,
+        updated.detail,
+        updated.occurrenceCount,
+        updated.lastSeenAt,
+        updated.lastNotifiedAt,
+        updated.id
+      );
+  }
+
+  return {
+    alert: updated,
+    shouldNotify,
+    state: changed ? "updated" : "unchanged",
+  };
+}
+
+export async function resolveSystemAlerts(activeAlertKeys: string[]): Promise<SystemAlertRecord[]> {
+  const existing = await listActiveSystemAlerts();
+  const toResolve = existing.filter((item) => !activeAlertKeys.includes(item.alertKey));
+
+  if (!toResolve.length) {
+    return [];
+  }
+
+  const resolvedAt = new Date().toISOString();
+
+  for (const item of toResolve) {
+    if (usePostgres()) {
+      await queryPostgres(
+        `
+          UPDATE system_alert_events
+          SET status = 'resolved', resolved_at = $2
+          WHERE id = $1
+        `,
+        [item.id, resolvedAt]
+      );
+    } else {
+      sqlite()
+        .prepare(
+          `
+            UPDATE system_alert_events
+            SET status = 'resolved', resolved_at = ?
+            WHERE id = ?
+          `
+        )
+        .run(resolvedAt, item.id);
+    }
+  }
+
+  return toResolve.map((item) => ({
+    ...item,
+    status: "resolved",
+    resolvedAt,
+  }));
+}
+
+export async function getMonitoringHealthSnapshot(): Promise<MonitoringHealthSnapshot> {
+  if (usePostgres()) {
+    const [activeKeywords, latestResult] = await Promise.all([
+      queryPostgres<{ total: string | number }>(
+        `
+          SELECT COUNT(*)::text AS total
+          FROM monitored_keywords
+          WHERE is_active = TRUE
+        `
+      ),
+      queryPostgres<{ latest_checked_at: string | null }>(
+        `
+          SELECT MAX(checked_at) AS latest_checked_at
+          FROM monitor_results
+        `
+      ),
+    ]);
+
+    return {
+      activeKeywordCount: Number(activeKeywords.rows[0]?.total || 0),
+      latestCheckedAt: latestResult.rows[0]?.latest_checked_at || null,
+    };
+  }
+
+  const activeKeywords = sqlite()
+    .prepare(
+      `
+        SELECT COUNT(*) AS total
+        FROM monitored_keywords
+        WHERE is_active = 1
+      `
+    )
+    .get() as { total: number };
+
+  const latestResult = sqlite()
+    .prepare(
+      `
+        SELECT MAX(checked_at) AS latest_checked_at
+        FROM monitor_results
+      `
+    )
+    .get() as { latest_checked_at: string | null };
+
+  return {
+    activeKeywordCount: Number(activeKeywords?.total || 0),
+    latestCheckedAt: latestResult?.latest_checked_at || null,
+  };
 }
 
 export async function consumeDetectQuota(userId: string): Promise<DetectQuotaRecord> {

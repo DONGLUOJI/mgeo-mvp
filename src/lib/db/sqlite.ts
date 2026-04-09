@@ -256,6 +256,27 @@ function initializeSqlite(db: Database.Database, allowWrites: boolean) {
 
     CREATE INDEX IF NOT EXISTS idx_detect_request_events_user_created
     ON detect_request_events(user_id, created_at);
+
+    CREATE TABLE IF NOT EXISTS system_alert_events (
+      id TEXT PRIMARY KEY,
+      alert_key TEXT NOT NULL,
+      severity TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      title TEXT NOT NULL,
+      message TEXT NOT NULL,
+      detail TEXT,
+      occurrence_count INTEGER NOT NULL DEFAULT 1,
+      first_seen_at TEXT NOT NULL,
+      last_seen_at TEXT NOT NULL,
+      last_notified_at TEXT,
+      resolved_at TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_system_alert_events_status_seen
+    ON system_alert_events(status, last_seen_at);
+
+    CREATE INDEX IF NOT EXISTS idx_system_alert_events_key_status
+    ON system_alert_events(alert_key, status);
   `);
   }
 

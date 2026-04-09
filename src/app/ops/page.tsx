@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
 import { authOptions } from "@/lib/auth/auth-options";
+import { listRecentSystemAlerts } from "@/lib/db/repository";
 import { getEnvCheckSummary } from "@/lib/system/env-check";
 import { getReleaseReadinessSummary } from "@/lib/system/release-readiness";
 import { getRuntimeHealthSummary } from "@/lib/system/runtime-health";
@@ -13,10 +14,11 @@ export default async function OpsPage() {
     redirect("/login");
   }
 
-  const [env, health, release] = await Promise.all([
+  const [env, health, release, alerts] = await Promise.all([
     Promise.resolve(getEnvCheckSummary()),
     getRuntimeHealthSummary(),
     getReleaseReadinessSummary(),
+    listRecentSystemAlerts(12),
   ]);
 
   return (
@@ -108,6 +110,56 @@ export default async function OpsPage() {
           <HealthCard title="模型 Provider" status={health.providers.status} detail={health.providers.detail} />
         </section>
 
+        <section style={styles.alertSection}>
+          <div style={styles.alertSectionHead}>
+            <div style={styles.alertSectionTitle}>最近告警与恢复</div>
+            <div style={styles.alertSectionHint}>只显示最近 12 条系统告警事件，方便值班和排障复盘。</div>
+          </div>
+          {alerts.length ? (
+            <div style={styles.alertList}>
+              {alerts.map((alert) => (
+                <article key={alert.id} style={styles.alertCard}>
+                  <div style={styles.alertCardHead}>
+                    <div style={styles.alertCardTitle}>{alert.title}</div>
+                    <div style={styles.alertBadges}>
+                      <span
+                        style={{
+                          ...styles.alertBadge,
+                          background:
+                            alert.severity === "critical" ? "rgba(180,35,24,0.12)" : "rgba(181,71,8,0.12)",
+                          color: alert.severity === "critical" ? "#b42318" : "#b54708",
+                        }}
+                      >
+                        {alert.severity === "critical" ? "严重" : "提醒"}
+                      </span>
+                      <span
+                        style={{
+                          ...styles.alertBadge,
+                          background:
+                            alert.status === "active" ? "rgba(17,24,39,0.08)" : "rgba(15,139,127,0.1)",
+                          color: alert.status === "active" ? "#111827" : "#0f8b7f",
+                        }}
+                      >
+                        {alert.status === "active" ? "处理中" : "已恢复"}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={styles.alertMessage}>{alert.message}</div>
+                  {alert.detail ? <div style={styles.alertDetail}>{alert.detail}</div> : null}
+                  <div style={styles.alertMeta}>
+                    <span>首次发现：{formatTime(alert.firstSeenAt)}</span>
+                    <span>最近出现：{formatTime(alert.lastSeenAt)}</span>
+                    {alert.resolvedAt ? <span>恢复：{formatTime(alert.resolvedAt)}</span> : null}
+                    <span>出现次数：{alert.occurrenceCount}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div style={styles.alertEmpty}>最近没有新的系统告警，当前可以继续按既定节奏运营和巡检。</div>
+          )}
+        </section>
+
         <section style={styles.linkGrid}>
           <OpsCard
             title="上线结论"
@@ -187,6 +239,15 @@ export default async function OpsPage() {
       </div>
     </main>
   );
+}
+
+function formatTime(value: string) {
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
 function HealthCard({
@@ -402,6 +463,92 @@ const styles: Record<string, React.CSSProperties> = {
     display: "grid",
     gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
     gap: 16,
+  },
+  alertSection: {
+    background: "#ffffff",
+    border: "1px solid #e7ebf0",
+    borderRadius: 24,
+    padding: 24,
+    display: "grid",
+    gap: 18,
+  },
+  alertSectionHead: {
+    display: "grid",
+    gap: 8,
+  },
+  alertSectionTitle: {
+    fontSize: 24,
+    fontWeight: 800,
+    color: "#111827",
+  },
+  alertSectionHint: {
+    fontSize: 15,
+    lineHeight: 1.75,
+    color: "#667085",
+  },
+  alertList: {
+    display: "grid",
+    gap: 14,
+  },
+  alertCard: {
+    border: "1px solid #e7ebf0",
+    borderRadius: 18,
+    padding: 18,
+    display: "grid",
+    gap: 10,
+    background: "#fcfdff",
+  },
+  alertCardHead: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  alertCardTitle: {
+    fontSize: 18,
+    lineHeight: 1.35,
+    fontWeight: 800,
+    color: "#111827",
+  },
+  alertBadges: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  alertBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "6px 10px",
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 800,
+  },
+  alertMessage: {
+    fontSize: 15,
+    lineHeight: 1.8,
+    color: "#344054",
+  },
+  alertDetail: {
+    fontSize: 14,
+    lineHeight: 1.8,
+    color: "#667085",
+  },
+  alertMeta: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 14,
+    fontSize: 13,
+    color: "#98a2b3",
+  },
+  alertEmpty: {
+    fontSize: 15,
+    lineHeight: 1.8,
+    color: "#667085",
+    padding: "16px 18px",
+    borderRadius: 18,
+    background: "#f8fafc",
+    border: "1px dashed #d8dee6",
   },
   healthCard: {
     background: "#ffffff",

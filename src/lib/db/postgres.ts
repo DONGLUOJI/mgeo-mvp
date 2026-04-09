@@ -304,6 +304,33 @@ export async function ensurePostgresSchema() {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS system_alert_events (
+        id TEXT PRIMARY KEY,
+        alert_key TEXT NOT NULL,
+        severity TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        detail TEXT,
+        occurrence_count INTEGER NOT NULL DEFAULT 1,
+        first_seen_at TIMESTAMPTZ NOT NULL,
+        last_seen_at TIMESTAMPTZ NOT NULL,
+        last_notified_at TIMESTAMPTZ,
+        resolved_at TIMESTAMPTZ
+      );
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_system_alert_events_status_seen
+      ON system_alert_events(status, last_seen_at);
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_system_alert_events_key_status
+      ON system_alert_events(alert_key, status);
+    `);
+
+    await client.query(`
       ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS brand_logo_url TEXT;
       ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS city TEXT DEFAULT '全国';
       ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS rank_position INTEGER;
