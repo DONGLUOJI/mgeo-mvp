@@ -15,6 +15,9 @@ import type {
   Score,
 } from "@/lib/detect/types";
 
+export const DEFAULT_DETECTION_DISCLAIMER =
+  "本次评分为启发式评分，不代表平台官方排名或官方权威判断。";
+
 function average(values: number[]) {
   if (!values.length) return 0;
   return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
@@ -31,20 +34,21 @@ function pickBestResult(results: ResultItem[], predicate?: (item: ResultItem) =>
 
 export function buildSummaryText(input: DetectInput, score: DetectionScores, results: ResultItem[]) {
   const mentionCount = results.filter((item) => item.mentioned).length;
+  const weakestDimension = getWeakestDimension(score);
 
   if (score.total < 40) {
-    return `当前 ${input.brandName} 在多模型场景中的自然提及和品牌认知仍偏弱，建议优先补基础覆盖与标准表达。`;
+    return `当前 ${input.brandName} 在目标 AI 场景中的可见性较弱，尚未形成稳定提及与可信来源。`;
   }
 
   if (score.total < 60) {
-    return `当前 ${input.brandName} 已被部分模型识别，但品牌叙事、提及位置和可信来源仍不够稳定。`;
+    return `当前 ${input.brandName} 已在部分 AI 场景中被提及，但描述稳定性、覆盖度或来源可信度仍需加强。`;
   }
 
   if (mentionCount >= Math.ceil(results.length * 0.8)) {
-    return `当前 ${input.brandName} 在主流模型中已具备较强识别基础，下一步应继续补强外部可信来源和推荐稳定性。`;
+    return `当前 ${input.brandName} 已在多数目标 AI 场景中形成稳定露出，下一步应继续补齐${weakestDimension === "authority" ? "可信来源" : weakestDimension === "consistency" ? "品牌表述一致性" : "高价值问题覆盖"}。`;
   }
 
-  return `当前 ${input.brandName} 已具备一定模型识别基础，但在一致性、覆盖度和权威性上仍有继续优化空间。`;
+  return `当前 ${input.brandName} 在部分 AI 场景中的可见性仍有提升空间，建议优先补强${weakestDimension === "authority" ? "来源信号" : weakestDimension === "consistency" ? "品牌叙事一致性" : "问题覆盖范围"}。`;
 }
 
 export function getScoreLevel(total: number): Score["level"] {
@@ -140,7 +144,8 @@ export function normalizeDetectReport(
     weakestDimension,
     raw: source.raw || buildRawModelOutputs(results),
     meta,
-    disclaimer: source.disclaimer || "本次评分为启发式评分，不代表平台官方排名或官方权威判断。",
+    disclaimer: source.disclaimer || DEFAULT_DETECTION_DISCLAIMER,
+    evidence: source.evidence,
     debug: source.debug,
   };
 }
@@ -189,9 +194,9 @@ export function buildAggregateDescription(results: ResultItem[]): BrandDescripti
 
   return {
     knowsBrand: results.some((item) => item.description.knowsBrand),
-    businessSummary: bestKnown?.description.businessSummary || "我不了解该品牌",
-    positioningSummary: bestKnown?.description.positioningSummary || "我不了解该品牌",
-    rawResponse: bestKnown?.description.rawResponse || "我不了解该品牌",
+    businessSummary: bestKnown?.description.businessSummary || "当前没有足够公开资料说明该样本",
+    positioningSummary: bestKnown?.description.positioningSummary || "当前没有足够公开资料说明该样本",
+    rawResponse: bestKnown?.description.rawResponse || "当前没有足够公开资料说明该样本",
   };
 }
 
@@ -206,6 +211,8 @@ export function buildAggregateAuthority(results: ResultItem[]): AuthorityResult 
     hasVerifiableSource: results.some((item) => item.authority.hasVerifiableSource),
     sourceNames: dedupe(results.flatMap((item) => item.authority.sourceNames)).slice(0, 12),
     sourceTypes: dedupe(results.flatMap((item) => item.authority.sourceTypes)).slice(0, 8),
+    strongSourceCount: Math.max(...results.map((item) => item.authority.strongSourceCount || 0), 0),
+    datedSourceCount: Math.max(...results.map((item) => item.authority.datedSourceCount || 0), 0),
     rawResponse: bestAuthority?.authority.rawResponse || "未发现明确可核验来源。",
   };
 }
@@ -216,7 +223,7 @@ export function buildAggregateConsistency(results: ResultItem[]): ConsistencyAss
       knowsBrand: false,
       hitsCoreNarrative: false,
       hasMajorConflict: false,
-      notes: "模型未形成稳定品牌认知",
+      notes: "公开线索尚未形成稳定的资料认知",
     };
   }
 
@@ -235,7 +242,7 @@ export function buildAggregateConsistency(results: ResultItem[]): ConsistencyAss
       knowsBrand: true,
       hitsCoreNarrative: false,
       hasMajorConflict: false,
-      notes: "模型知道品牌，但未命中核心叙事关键词",
+      notes: "公开线索已命中样本，但未命中核心场景关键词",
     };
   }
 
@@ -243,7 +250,7 @@ export function buildAggregateConsistency(results: ResultItem[]): ConsistencyAss
     knowsBrand: true,
     hitsCoreNarrative: true,
     hasMajorConflict: false,
-    notes: "模型对品牌的核心方向理解基本正确",
+    notes: "公开线索对该样本的核心展示方向理解基本正确",
   };
 }
 
@@ -285,9 +292,9 @@ export function buildStructuredSummary(
   results: ResultItem[]
 ): DetectionSummary {
   const nextActionMap: Record<DetectionSummary["weakestDimension"], string> = {
-    consistency: `优先统一 ${input.brandName} 的品牌叙事与核心关键词表达。`,
-    coverage: `优先补足 ${input.brandName} 在关键问答与推荐场景中的自然提及覆盖。`,
-    authority: `优先补充 ${input.brandName} 的官网、媒体与高可信外部来源。`,
+    consistency: `优先统一 ${input.brandName} 的品牌主叙事、定位表达与关键描述。`,
+    coverage: `优先补足 ${input.brandName} 在核心搜索问题中的自然提及与推荐覆盖。`,
+    authority: `优先补充 ${input.brandName} 的官网、媒体、百科等外部可信来源。`,
   };
 
   return {

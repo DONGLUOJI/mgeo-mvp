@@ -20,16 +20,26 @@ function getLevelText(level: DetectReport["score"]["level"]) {
 }
 
 function getRecommendationSummary(signal: DetectReport["results"][number]["recommendationSignal"]) {
-  if (signal === "high") return "推荐信号强";
-  if (signal === "medium") return "有一定推荐倾向";
-  if (signal === "low") return "仅基础提及";
-  return "暂无推荐信号";
+  if (signal === "high") return "强匹配";
+  if (signal === "medium") return "中等匹配";
+  if (signal === "low") return "弱匹配";
+  return "暂无强匹配";
 }
 
 function getConfidenceLabel(level?: DetectReport["confidence"]["level"]) {
   if (level === "high") return "高";
   if (level === "medium") return "中";
   return "低";
+}
+
+function formatEvidenceDate(value?: string) {
+  if (!value) return "未提取到";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function generateReportHtml(report: DetectReport, taskId: string) {
@@ -51,9 +61,9 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
   const benchmark = industryAverageMap[report.input.industry] ?? 64;
   const benchmarkDiff = effectiveScores.total - benchmark;
   const scoreCards = [
-    { key: "Consistency", label: "一致性", value: effectiveScores.consistency, desc: "品牌定位与描述一致性" },
-    { key: "Coverage", label: "覆盖度", value: effectiveScores.coverage, desc: "模型提及覆盖度" },
-    { key: "Authority", label: "权威性", value: effectiveScores.authority, desc: "品牌权威支撑表现" },
+    { key: "Consistency", label: "资料一致性", value: effectiveScores.consistency, desc: "昵称、定位、资料叙事是否前后一致" },
+    { key: "Coverage", label: "图源复用度", value: effectiveScores.coverage, desc: "相似图、撞图和搬运线索覆盖度" },
+    { key: "Authority", label: "证据强度", value: effectiveScores.authority, desc: "命中来源是否可复核、可追溯" },
   ]
     .map((item) => {
       const style = getScoreStyle(item.value);
@@ -76,12 +86,12 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
         <div class="result-card">
           <div class="result-head">
             <h3>${escapeHtml(label)}</h3>
-            <span class="badge ${item.mentioned ? "ok" : "weak"}">${item.mentioned ? "已提及" : "未提及"}</span>
+            <span class="badge ${item.mentioned ? "ok" : "weak"}">${item.mentioned ? "已命中" : "未命中"}</span>
           </div>
           <div class="badge-row">
-            <span class="sub-badge">${item.positioningMatch ? "定位匹配" : "定位偏差"}</span>
-            <span class="sub-badge">${item.descriptionConsistent ? "描述一致" : "描述不稳"}</span>
-            <span class="sub-badge">${item.authoritySignal ? "权威性较好" : "权威性偏弱"}</span>
+            <span class="sub-badge">${item.positioningMatch ? "资料一致" : "资料冲突"}</span>
+            <span class="sub-badge">${item.descriptionConsistent ? "叙事稳定" : "叙事不稳"}</span>
+            <span class="sub-badge">${item.authoritySignal ? "证据较强" : "证据偏弱"}</span>
             <span class="sub-badge">${getRecommendationSummary(item.recommendationSignal)}</span>
           </div>
           <div class="raw-box">${escapeHtml(item.raw?.coverageResponse || item.rawText || "暂无返回内容")}</div>
@@ -107,13 +117,62 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
       `;
     })
     .join("");
+  const evidenceHtml = report.evidence
+    ? `
+    <section class="panel">
+      <h2 class="section-title">图源证据面板</h2>
+      <div class="raw-box">${escapeHtml(report.evidence.summary)}</div>
+      ${
+        report.evidence.riskSignals.length
+          ? `<div class="badge-row" style="margin-top:14px">${report.evidence.riskSignals
+              .map((item) => `<span class="sub-badge">${escapeHtml(item)}</span>`)
+              .join("")}</div>`
+          : ""
+      }
+      ${
+        report.evidence.bestGuessLabels.length
+          ? `<div class="badge-row" style="margin-top:14px">${report.evidence.bestGuessLabels
+              .map((item) => `<span class="sub-badge">标签：${escapeHtml(item)}</span>`)
+              .join("")}</div>`
+          : ""
+      }
+      ${
+        report.evidence.extractedText
+          ? `<div style="margin-top:14px" class="raw-box">${escapeHtml(report.evidence.extractedText)}</div>`
+          : ""
+      }
+      <div class="badge-row" style="margin-top:14px">
+        <span class="sub-badge">可提取发布时间：${report.evidence.datedPageCount}</span>
+        <span class="sub-badge">低风险域名：${report.evidence.lowRiskPageCount}</span>
+        <span class="sub-badge">最早时间：${escapeHtml(formatEvidenceDate(report.evidence.earliestPublishedAt))}</span>
+      </div>
+      ${
+        report.evidence.matchingPages.length
+          ? report.evidence.matchingPages
+              .map(
+                (page) => `
+            <div class="result-card">
+              <div class="result-head">
+                <h3>${escapeHtml(page.title || page.url)}</h3>
+                <span class="badge ${page.riskTier === "low" ? "ok" : page.riskTier === "medium" ? "mid" : "weak"}">${escapeHtml(page.riskLabel)}</span>
+              </div>
+              <div class="raw-box">${escapeHtml(page.domain || page.url)}<br/>完整匹配 ${page.fullMatchCount} · 局部匹配 ${page.partialMatchCount}${page.publishedAt ? ` · 发布时间 ${escapeHtml(formatEvidenceDate(page.publishedAt))}` : ""}<br/>${escapeHtml(page.riskReason)}<br/>${escapeHtml(page.url)}</div>
+            </div>
+          `
+              )
+              .join("")
+          : ""
+      }
+    </section>
+  `
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${escapeHtml(report.input.brandName)}-MGEO检测报告</title>
+  <title>${escapeHtml(report.input.brandName)}-FakeCheck交友资料核验报告</title>
   <style>
     body{margin:0;background:#f6f8fb;color:#111827;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
     .page{max-width:1080px;margin:0 auto;padding:36px 20px 60px}
@@ -162,6 +221,7 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
     .badge,.sub-badge{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-size:13px;font-weight:700}
     .badge{padding:6px 12px}
     .badge.ok{background:#edf8f6;color:#0f8b7f}
+    .badge.mid{background:#fff2df;color:#8a4b08}
     .badge.weak{background:#f5f5f5;color:#707784}
     .sub-badge{padding:6px 12px;background:#f4f6f8;color:#596273}
     .raw-box{padding:14px;border-radius:14px;background:#f8fafc;color:#2c3440;font-size:14px;line-height:1.8;white-space:pre-wrap}
@@ -191,9 +251,9 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
     <section class="panel">
       <div class="topbar">
         <div class="logo-wrap">
-          <div class="logo-mark">MGEO REPORT</div>
-          <div class="logo-name">董逻辑MGEO</div>
-          <div class="logo-sub">品牌在 AI 搜索中的检测、诊断与增长系统</div>
+          <div class="logo-mark">FAKECHECK REPORT</div>
+          <div class="logo-name">FakeCheck</div>
+          <div class="logo-sub">公开图源、资料一致性与证据强度核验报告</div>
         </div>
         <div class="contact-box">
           <div class="contact-title">服务联系信息</div>
@@ -206,14 +266,14 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
 
     <section class="panel hero">
       <div>
-        <div class="brand">董逻辑MGEO</div>
-        <h1>${escapeHtml(report.input.brandName)} 的 MGEO 检测报告</h1>
+        <div class="brand">FakeCheck</div>
+        <h1>${escapeHtml(report.input.brandName)} 的交友资料核验报告</h1>
         <p class="summary">${escapeHtml(effectiveSummary)}</p>
         <div class="tag-row">
-          <span class="tag">检测报告</span>
-          <span class="tag">行业：${escapeHtml(report.input.industry)}</span>
-          <span class="tag">平台：${escapeHtml(report.input.platform || "multi-model")}</span>
-          <span class="tag">提及模型：${mentionedCount} / ${report.results.length}</span>
+          <span class="tag">核验报告</span>
+          <span class="tag">场景：${escapeHtml(report.input.industry)}</span>
+          <span class="tag">引擎：${escapeHtml(report.input.platform || "multi-model")}</span>
+          <span class="tag">命中引擎：${mentionedCount} / ${report.results.length}</span>
           <span class="tag">等级：${escapeHtml(effectiveLevel)} ${getLevelText(effectiveLevel)}</span>
           <span class="tag">置信度：${getConfidenceLabel(report.confidence?.level)}</span>
           ${executedAt ? `<span class="tag">执行时间：${escapeHtml(executedAt)}</span>` : ""}
@@ -221,19 +281,19 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
       </div>
       <div class="score-card">
         <div class="score-value">${effectiveScores.total}</div>
-        <div class="score-label">MGEO Score</div>
+        <div class="score-label">资料可信度评分</div>
         <div class="score-level">${effectiveLevel} · ${getLevelText(effectiveLevel)}</div>
         <div class="score-benchmark">
-          <div class="score-benchmark-line">行业均分：${benchmark}</div>
+          <div class="score-benchmark-line">场景均分：${benchmark}</div>
           <div class="score-benchmark-diff ${benchmarkDiff >= 0 ? "up" : "down"}">
-            ${benchmarkDiff >= 0 ? `高于行业均分 ${benchmarkDiff} 分` : `低于行业均分 ${Math.abs(benchmarkDiff)} 分`}
+            ${benchmarkDiff >= 0 ? `高于场景均分 ${benchmarkDiff} 分` : `低于场景均分 ${Math.abs(benchmarkDiff)} 分`}
           </div>
         </div>
       </div>
     </section>
 
     <section class="panel">
-      <h2 class="section-title">TCA 评分</h2>
+      <h2 class="section-title">维度评分</h2>
       <div class="grid-three">${scoreCards}</div>
     </section>
 
@@ -250,19 +310,21 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
       }
     </section>
 
+    ${evidenceHtml}
+
     <section class="panel">
-      <h2 class="section-title">检测输入</h2>
+      <h2 class="section-title">核验输入</h2>
       <div class="info-list">
-        <div class="info-item"><span class="info-label">品牌名</span><span class="info-value">${escapeHtml(report.input.brandName)}</span></div>
-        <div class="info-item"><span class="info-label">核心业务</span><span class="info-value">${escapeHtml(report.input.businessSummary)}</span></div>
-        <div class="info-item"><span class="info-label">品牌叙事</span><span class="info-value">${escapeHtml(report.input.brandNarrative?.oneLiner || report.input.businessSummary)}</span></div>
-        <div class="info-item"><span class="info-label">检测问题</span><span class="info-value">${escapeHtml(report.input.query)}</span></div>
-        <div class="info-item"><span class="info-label">竞品参考</span><span class="info-value">${escapeHtml(report.input.competitors?.length ? report.input.competitors.join("、") : "未提供")}</span></div>
+        <div class="info-item"><span class="info-label">对方昵称</span><span class="info-value">${escapeHtml(report.input.brandName)}</span></div>
+        <div class="info-item"><span class="info-label">样本描述</span><span class="info-value">${escapeHtml(report.input.businessSummary)}</span></div>
+        <div class="info-item"><span class="info-label">资料摘要</span><span class="info-value">${escapeHtml(report.input.brandNarrative?.oneLiner || report.input.businessSummary)}</span></div>
+        <div class="info-item"><span class="info-label">关注问题</span><span class="info-value">${escapeHtml(report.input.query)}</span></div>
+        <div class="info-item"><span class="info-label">辅助样本</span><span class="info-value">${escapeHtml(report.input.competitors?.length ? report.input.competitors.join("、") : "未提供")}</span></div>
       </div>
     </section>
 
     <section class="panel">
-      <h2 class="section-title">模型结果明细</h2>
+      <h2 class="section-title">引擎结果明细</h2>
       ${rows}
     </section>
 
@@ -270,13 +332,13 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
       <div>
         <h2 class="cta-title">下一步建议</h2>
         <p class="cta-text">
-          如果您希望进一步理解这份报告，或希望把检测结果转成具体服务动作，建议进入服务沟通环节。我们会根据品牌当前阶段，为您提供对应的增长建议。
+          如果你希望进一步理解这份报告，建议继续补充样本、截更多局部细节，或把最强命中页整理成完整证据链后再做人工复核。
         </p>
         <div class="advice-wrap">${adviceHtml}</div>
       </div>
       <div class="cta-card">
-        <h3 class="cta-card-title">继续服务沟通</h3>
-        <div class="cta-card-line">建议操作：预约解读 / 获取服务方案 / 进入一轮优化</div>
+        <h3 class="cta-card-title">继续推进</h3>
+        <div class="cta-card-line">建议操作：补充样本 / 复查时间线 / 整理证据包</div>
         <div class="cta-card-line">微信：19925969089</div>
         <div class="cta-card-line">小红书：董逻辑</div>
         <div class="cta-card-line">邮箱：dongluoji2026@163.com</div>
@@ -284,7 +346,7 @@ export function generateReportHtml(report: DetectReport, taskId: string) {
       </div>
     </section>
 
-    <div class="foot">董逻辑MGEO · 品牌在 AI 搜索中的可见性检测报告</div>
+    <div class="foot">FakeCheck · 公开图源与交友资料核验报告</div>
   </div>
 </body>
 </html>`;
