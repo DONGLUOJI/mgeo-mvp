@@ -172,6 +172,30 @@ type DetectQuotaRecord = {
   periodLabel: "本周" | "本月";
 };
 
+export type LeadRequestStatus = "new" | "contacted" | "in_progress" | "won" | "invalid";
+
+export type LeadRequestType = "contact" | "city_request";
+
+export type LeadRequestRecord = {
+  id: string;
+  type: LeadRequestType;
+  source: string;
+  status: LeadRequestStatus;
+  owner: string | null;
+  name: string | null;
+  company: string | null;
+  brand: string | null;
+  phone: string | null;
+  contact: string | null;
+  industry: string | null;
+  region: string | null;
+  message: string | null;
+  note: string | null;
+  userId: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 const rankingSeedCatalog = [
   {
     industry: "新茶饮",
@@ -656,6 +680,46 @@ function mapMonitorResultRow(row: {
   };
 }
 
+function mapLeadRequestRow(row: {
+  id: string;
+  type: string;
+  source: string;
+  status: string;
+  owner: string | null;
+  name: string | null;
+  company: string | null;
+  brand: string | null;
+  phone: string | null;
+  contact: string | null;
+  industry: string | null;
+  region: string | null;
+  message: string | null;
+  note: string | null;
+  user_id: string | null;
+  created_at: string;
+  updated_at: string;
+}): LeadRequestRecord {
+  return {
+    id: row.id,
+    type: row.type as LeadRequestType,
+    source: row.source,
+    status: row.status as LeadRequestStatus,
+    owner: row.owner,
+    name: row.name,
+    company: row.company,
+    brand: row.brand,
+    phone: row.phone,
+    contact: row.contact,
+    industry: row.industry,
+    region: row.region,
+    message: row.message,
+    note: row.note,
+    userId: row.user_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 export async function getUserByEmail(email: string): Promise<UserRecord | null> {
   const normalizedEmail = email.trim().toLowerCase();
 
@@ -773,6 +837,284 @@ export async function createUserIfMissing(email: string, name?: string | null): 
   }
 
   return (await getUserByEmail(normalizedEmail)) as UserRecord;
+}
+
+export async function createLeadRequest(input: {
+  type: LeadRequestType;
+  source: string;
+  status?: LeadRequestStatus;
+  owner?: string | null;
+  name?: string | null;
+  company?: string | null;
+  brand?: string | null;
+  phone?: string | null;
+  contact?: string | null;
+  industry?: string | null;
+  region?: string | null;
+  message?: string | null;
+  note?: string | null;
+  userId?: string | null;
+}): Promise<LeadRequestRecord> {
+  const now = new Date().toISOString();
+  const row = {
+    id: buildSlugId(
+      "lead",
+      input.type,
+      input.source,
+      input.name,
+      input.company,
+      input.brand,
+      input.phone,
+      input.contact,
+      input.industry,
+      input.region,
+      input.message,
+      input.note,
+      now
+    ),
+    type: input.type,
+    source: input.source.trim(),
+    status: input.status || "new",
+    owner: input.owner?.trim() || null,
+    name: input.name?.trim() || null,
+    company: input.company?.trim() || null,
+    brand: input.brand?.trim() || null,
+    phone: input.phone?.trim() || null,
+    contact: input.contact?.trim() || null,
+    industry: input.industry?.trim() || null,
+    region: input.region?.trim() || null,
+    message: input.message?.trim() || null,
+    note: input.note?.trim() || null,
+    user_id: input.userId || null,
+    created_at: now,
+    updated_at: now,
+  };
+
+  if (usePostgres()) {
+    await queryPostgres(
+      `
+        INSERT INTO lead_requests (
+          id, type, source, status, owner, name, company, brand, phone, contact, industry, region, message, note, user_id, created_at, updated_at
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+        )
+      `,
+      [
+        row.id,
+        row.type,
+        row.source,
+        row.status,
+        row.owner,
+        row.name,
+        row.company,
+        row.brand,
+        row.phone,
+        row.contact,
+        row.industry,
+        row.region,
+        row.message,
+        row.note,
+        row.user_id,
+        row.created_at,
+        row.updated_at,
+      ]
+    );
+  } else {
+    sqlite()
+      .prepare(
+        `
+          INSERT INTO lead_requests (
+            id, type, source, status, owner, name, company, brand, phone, contact, industry, region, message, note, user_id, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `
+      )
+      .run(
+        row.id,
+        row.type,
+        row.source,
+        row.status,
+        row.owner,
+        row.name,
+        row.company,
+        row.brand,
+        row.phone,
+        row.contact,
+        row.industry,
+        row.region,
+        row.message,
+        row.note,
+        row.user_id,
+        row.created_at,
+        row.updated_at
+      );
+  }
+
+  return mapLeadRequestRow(row);
+}
+
+export async function listLeadRequests(limit = 100): Promise<LeadRequestRecord[]> {
+  if (usePostgres()) {
+    const result = await queryPostgres<{
+      id: string;
+      type: string;
+      source: string;
+      status: string;
+      owner: string | null;
+      name: string | null;
+      company: string | null;
+      brand: string | null;
+      phone: string | null;
+      contact: string | null;
+      industry: string | null;
+      region: string | null;
+      message: string | null;
+      note: string | null;
+      user_id: string | null;
+      created_at: string;
+      updated_at: string;
+    }>(
+      `
+        SELECT id, type, source, status, owner, name, company, brand, phone, contact, industry, region, message, note, user_id, created_at, updated_at
+        FROM lead_requests
+        ORDER BY updated_at DESC
+        LIMIT $1
+      `,
+      [limit]
+    );
+    return result.rows.map(mapLeadRequestRow);
+  }
+
+  const rows = sqlite()
+    .prepare(
+      `
+        SELECT id, type, source, status, owner, name, company, brand, phone, contact, industry, region, message, note, user_id, created_at, updated_at
+        FROM lead_requests
+        ORDER BY datetime(updated_at) DESC
+        LIMIT ?
+      `
+    )
+    .all(limit) as Array<{
+    id: string;
+    type: string;
+    source: string;
+    status: string;
+    owner: string | null;
+    name: string | null;
+    company: string | null;
+    brand: string | null;
+    phone: string | null;
+    contact: string | null;
+    industry: string | null;
+    region: string | null;
+    message: string | null;
+    note: string | null;
+    user_id: string | null;
+    created_at: string;
+    updated_at: string;
+  }>;
+
+  return rows.map(mapLeadRequestRow);
+}
+
+export async function updateLeadRequest(input: {
+  id: string;
+  status?: LeadRequestStatus;
+  owner?: string | null;
+  note?: string | null;
+}) {
+  const current = usePostgres()
+    ? (
+        await queryPostgres<{
+          id: string;
+          type: string;
+          source: string;
+          status: string;
+          owner: string | null;
+          name: string | null;
+          company: string | null;
+          brand: string | null;
+          phone: string | null;
+          contact: string | null;
+          industry: string | null;
+          region: string | null;
+          message: string | null;
+          note: string | null;
+          user_id: string | null;
+          created_at: string;
+          updated_at: string;
+        }>(
+          `
+            SELECT id, type, source, status, owner, name, company, brand, phone, contact, industry, region, message, note, user_id, created_at, updated_at
+            FROM lead_requests
+            WHERE id = $1
+          `,
+          [input.id]
+        )
+      ).rows[0]
+    : (sqlite()
+        .prepare(
+          `
+            SELECT id, type, source, status, owner, name, company, brand, phone, contact, industry, region, message, note, user_id, created_at, updated_at
+            FROM lead_requests
+            WHERE id = ?
+          `
+        )
+        .get(input.id) as
+        | {
+            id: string;
+            type: string;
+            source: string;
+            status: string;
+            owner: string | null;
+            name: string | null;
+            company: string | null;
+            brand: string | null;
+            phone: string | null;
+            contact: string | null;
+            industry: string | null;
+            region: string | null;
+            message: string | null;
+            note: string | null;
+            user_id: string | null;
+            created_at: string;
+            updated_at: string;
+          }
+        | undefined);
+
+  if (!current) {
+    return null;
+  }
+
+  const updated = {
+    ...current,
+    status: input.status || current.status,
+    owner: input.owner !== undefined ? input.owner?.trim() || null : current.owner,
+    note: input.note !== undefined ? input.note?.trim() || null : current.note,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (usePostgres()) {
+    await queryPostgres(
+      `
+        UPDATE lead_requests
+        SET status = $2, owner = $3, note = $4, updated_at = $5
+        WHERE id = $1
+      `,
+      [updated.id, updated.status, updated.owner, updated.note, updated.updated_at]
+    );
+  } else {
+    sqlite()
+      .prepare(
+        `
+          UPDATE lead_requests
+          SET status = ?, owner = ?, note = ?, updated_at = ?
+          WHERE id = ?
+        `
+      )
+      .run(updated.status, updated.owner, updated.note, updated.updated_at, updated.id);
+  }
+
+  return mapLeadRequestRow(updated);
 }
 
 export async function consumeDetectQuota(userId: string): Promise<DetectQuotaRecord> {

@@ -214,6 +214,32 @@ function initializeSqlite(db: Database.Database, allowWrites: boolean) {
 
     CREATE INDEX IF NOT EXISTS idx_monitor_results_keyword_checked
     ON monitor_results(keyword_id, checked_at);
+
+    CREATE TABLE IF NOT EXISTS lead_requests (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      source TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'new',
+      owner TEXT,
+      name TEXT,
+      company TEXT,
+      brand TEXT,
+      phone TEXT,
+      contact TEXT,
+      industry TEXT,
+      region TEXT,
+      message TEXT,
+      note TEXT,
+      user_id TEXT REFERENCES users(id),
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_lead_requests_status_created
+    ON lead_requests(status, created_at);
+
+    CREATE INDEX IF NOT EXISTS idx_lead_requests_type_created
+    ON lead_requests(type, created_at);
   `);
   }
 

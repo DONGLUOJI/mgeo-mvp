@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 
+import { authOptions } from "@/lib/auth/auth-options";
 import { sendCityRequestEmail } from "@/lib/contact/send-city-request-email";
+import { createLeadRequest } from "@/lib/db/repository";
 
 type CityRequestBody = {
   region?: string;
@@ -11,6 +14,7 @@ type CityRequestBody = {
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
     const body = (await request.json()) as CityRequestBody;
 
     const payload = {
@@ -23,6 +27,16 @@ export async function POST(request: Request) {
     if (!payload.region || !payload.brand || !payload.contact) {
       return NextResponse.json({ error: "请完整填写地区、品牌/公司和联系方式。" }, { status: 400 });
     }
+
+    await createLeadRequest({
+      type: "city_request",
+      source: "ranking_city_request",
+      brand: payload.brand,
+      contact: payload.contact,
+      region: payload.region,
+      note: payload.note,
+      userId: session?.user?.id || null,
+    });
 
     await sendCityRequestEmail(payload);
 

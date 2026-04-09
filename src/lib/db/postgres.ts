@@ -250,6 +250,38 @@ export async function ensurePostgresSchema() {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS lead_requests (
+        id TEXT PRIMARY KEY,
+        type TEXT NOT NULL,
+        source TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'new',
+        owner TEXT,
+        name TEXT,
+        company TEXT,
+        brand TEXT,
+        phone TEXT,
+        contact TEXT,
+        industry TEXT,
+        region TEXT,
+        message TEXT,
+        note TEXT,
+        user_id TEXT REFERENCES users(id),
+        created_at TIMESTAMPTZ NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL
+      );
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_lead_requests_status_created
+      ON lead_requests(status, created_at);
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_lead_requests_type_created
+      ON lead_requests(type, created_at);
+    `);
+
+    await client.query(`
       ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS brand_logo_url TEXT;
       ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS city TEXT DEFAULT '全国';
       ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS rank_position INTEGER;
