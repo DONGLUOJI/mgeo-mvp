@@ -282,6 +282,28 @@ export async function ensurePostgresSchema() {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS detect_request_events (
+        id TEXT PRIMARY KEY,
+        user_id TEXT REFERENCES users(id),
+        ip_hash TEXT NOT NULL,
+        detect_signature TEXT NOT NULL,
+        status TEXT NOT NULL,
+        task_id TEXT,
+        created_at TIMESTAMPTZ NOT NULL
+      );
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_detect_request_events_ip_created
+      ON detect_request_events(ip_hash, created_at);
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_detect_request_events_user_created
+      ON detect_request_events(user_id, created_at);
+    `);
+
+    await client.query(`
       ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS brand_logo_url TEXT;
       ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS city TEXT DEFAULT '全国';
       ALTER TABLE ranking_snapshots ADD COLUMN IF NOT EXISTS rank_position INTEGER;

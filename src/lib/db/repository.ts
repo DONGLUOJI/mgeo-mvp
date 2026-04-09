@@ -172,6 +172,20 @@ type DetectQuotaRecord = {
   periodLabel: "本周" | "本月";
 };
 
+type DetectRequestEventStatus =
+  | "allowed"
+  | "reused"
+  | "blocked_rate_limit"
+  | "blocked_guest_limit"
+  | "blocked_guest_cookie_limit";
+
+export type DetectRateLimitRecord = {
+  allowed: boolean;
+  code: "IP_RATE_LIMITED" | "GUEST_IP_LIMIT_EXCEEDED" | null;
+  message: string | null;
+  retryAfterSeconds: number | null;
+};
+
 export type LeadRequestStatus = "new" | "contacted" | "in_progress" | "won" | "invalid";
 
 export type LeadRequestType = "contact" | "city_request";
@@ -475,6 +489,16 @@ function buildSlugId(prefix: string, ...parts: Array<string | null | undefined>)
   return `${prefix}_${digest}`;
 }
 
+function hashDetectIp(ipAddress?: string | null) {
+  const normalized = (ipAddress || "unknown").trim().toLowerCase();
+  return createHash("sha1").update(normalized, "utf8").digest("hex");
+}
+
+const DETECT_RATE_LIMIT_WINDOW_MINUTES = 10;
+const DETECT_RATE_LIMIT_MAX_REQUESTS = 6;
+const GUEST_DETECT_DAILY_LIMIT = 2;
+const GUEST_DETECT_WINDOW_HOURS = 24;
+
 function clampRankingScore(value: number) {
   return Math.max(18, Math.min(98, Math.round(value)));
 }
@@ -507,6 +531,150 @@ function normalizeSerializedReport(reportJson: string, createdAt?: string | null
     report,
     normalizedJson,
     needsBackfill: normalizedJson !== reportJson,
+  };
+}
+
+export async function recordDetectRequestEvent(input: {
+  userId?: string | null;
+  clientIp?: string | null;
+  signature: string;
+  status: DetectRequestEventStatus;
+  taskId?: string | null;
+}) {
+  const id = buildSlugId(
+    "dre",
+    input.userId || "guest",
+    input.clientIp || "unknown",
+    input.signature,
+    input.status,
+    `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+  );
+  const createdAt = new Date().toISOString();
+  const ipHash = hashDetectIp(input.clientIp);
+
+  if (usePostgres()) {
+    await queryPostgres(
+      `
+        INSERT INTO detect_request_events (
+          id, user_id, ip_hash, detect_signature, status, task_id, created_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `,
+      [id, input.userId || null, ipHash, input.signature, input.status, input.taskId || null, createdAt],
+    );
+    return;
+  }
+
+  sqlite()
+    .prepare(
+      `
+        INSERT INTO detect_request_events (
+          id, user_id, ip_hash, detect_signature, status, task_id, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      `,
+    )
+    .run(id, input.userId || null, ipHash, input.signature, input.status, input.taskId || null, createdAt);
+}
+
+async function countDetectRequestEvents(input: {
+  clientIp?: string | null;
+  since: string;
+  guestOnly?: boolean;
+  status?: DetectRequestEventStatus;
+}) {
+  const ipHash = hashDetectIp(input.clientIp);
+
+  if (usePostgres()) {
+    const clauses = ["ip_hash = $1", "created_at >= $2"];
+    const values: unknown[] = [ipHash, input.since];
+
+    if (input.guestOnly) {
+      clauses.push("user_id IS NULL");
+    }
+
+    if (input.status) {
+      values.push(input.status);
+      clauses.push(`status = $${values.length}`);
+    }
+
+    const result = await queryPostgres<{ total: string }>(
+      `SELECT COUNT(*)::text AS total FROM detect_request_events WHERE ${clauses.join(" AND ")}`,
+      values,
+    );
+    return Number(result.rows[0]?.total || 0);
+  }
+
+  const clauses = ["ip_hash = ?", "datetime(created_at) >= datetime(?)"];
+  const values: unknown[] = [ipHash, input.since];
+
+  if (input.guestOnly) {
+    clauses.push("user_id IS NULL");
+  }
+
+  if (input.status) {
+    clauses.push("status = ?");
+    values.push(input.status);
+  }
+
+  const row = sqlite()
+    .prepare(`SELECT COUNT(*) AS total FROM detect_request_events WHERE ${clauses.join(" AND ")}`)
+    .get(...values) as { total: number } | undefined;
+
+  return Number(row?.total || 0);
+}
+
+export async function checkDetectRateLimits(input: {
+  clientIp?: string | null;
+  guest: boolean;
+}): Promise<DetectRateLimitRecord> {
+  const burstSince = new Date(
+    Date.now() - DETECT_RATE_LIMIT_WINDOW_MINUTES * 60 * 1000,
+  ).toISOString();
+  const recentRequestCount = await countDetectRequestEvents({
+    clientIp: input.clientIp,
+    since: burstSince,
+  });
+
+  if (recentRequestCount >= DETECT_RATE_LIMIT_MAX_REQUESTS) {
+    return {
+      allowed: false,
+      code: "IP_RATE_LIMITED",
+      message: "当前请求过于频繁，请 10 分钟后再试。",
+      retryAfterSeconds: DETECT_RATE_LIMIT_WINDOW_MINUTES * 60,
+    };
+  }
+
+  if (!input.guest) {
+    return {
+      allowed: true,
+      code: null,
+      message: null,
+      retryAfterSeconds: null,
+    };
+  }
+
+  const guestSince = new Date(Date.now() - GUEST_DETECT_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
+  const guestCount = await countDetectRequestEvents({
+    clientIp: input.clientIp,
+    since: guestSince,
+    guestOnly: true,
+    status: "allowed",
+  });
+
+  if (guestCount >= GUEST_DETECT_DAILY_LIMIT) {
+    return {
+      allowed: false,
+      code: "GUEST_IP_LIMIT_EXCEEDED",
+      message: "当前网络今天的免费体验次数已用完，请登录后继续使用或提交企业接入需求。",
+      retryAfterSeconds: GUEST_DETECT_WINDOW_HOURS * 60 * 60,
+    };
+  }
+
+  return {
+    allowed: true,
+    code: null,
+    message: null,
+    retryAfterSeconds: null,
   };
 }
 

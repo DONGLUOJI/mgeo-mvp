@@ -240,6 +240,22 @@ function initializeSqlite(db: Database.Database, allowWrites: boolean) {
 
     CREATE INDEX IF NOT EXISTS idx_lead_requests_type_created
     ON lead_requests(type, created_at);
+
+    CREATE TABLE IF NOT EXISTS detect_request_events (
+      id TEXT PRIMARY KEY,
+      user_id TEXT REFERENCES users(id),
+      ip_hash TEXT NOT NULL,
+      detect_signature TEXT NOT NULL,
+      status TEXT NOT NULL,
+      task_id TEXT,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_detect_request_events_ip_created
+    ON detect_request_events(ip_hash, created_at);
+
+    CREATE INDEX IF NOT EXISTS idx_detect_request_events_user_created
+    ON detect_request_events(user_id, created_at);
   `);
   }
 

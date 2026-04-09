@@ -4,7 +4,15 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth-options";
 import { runDetect } from "@/lib/detect/run-detect";
 import type { DetectInput, DetectReport, ModelName } from "@/lib/detect/types";
-import { consumeDetectQuota, findRecentDetectTask, getDetectQuotaStatus, saveReport } from "@/lib/db/repository";
+import {
+  checkDetectRateLimits,
+  consumeDetectQuota,
+  findRecentDetectTask,
+  getDetectQuotaStatus,
+  recordDetectRequestEvent,
+  saveReport,
+} from "@/lib/db/repository";
+import { hasGoogleVisionConfig, parseImageDataUrl } from "@/lib/evidence/google-vision";
 import { buildMockReport, createMockTaskId, saveMockReport } from "@/lib/mock/report-data";
 import { hasRealProviderConfig } from "@/lib/providers";
 
@@ -22,6 +30,8 @@ type DetectPayload = {
   locale?: string;
   brandNarrative?: DetectInput["brandNarrative"];
   competitors?: string[];
+  sampleImageDataUrl?: string;
+  sampleImageName?: string;
 };
 
 type GuestDetectCookieState = {
@@ -43,11 +53,11 @@ function pickModels(body: DetectPayload) {
 }
 
 function validatePayload(body: DetectPayload) {
-  if (!pickFirst(body.brandName, body.companyName)) return "请输入品牌名";
-  if (!body.industry?.trim()) return "请输入所属行业";
-  if (!pickFirst(body.businessSummary, body.businessDescription)) return "请输入核心业务描述";
-  if (!pickFirst(body.query, body.searchQuery)) return "请输入检测问题";
-  if (!pickModels(body).length) return "请至少选择一个模型";
+  if (!pickFirst(body.brandName, body.companyName)) return "请输入账号昵称或目标名称";
+  if (!body.industry?.trim()) return "请选择内容场景";
+  if (!pickFirst(body.businessSummary, body.businessDescription)) return "请输入样本描述";
+  if (!pickFirst(body.query, body.searchQuery)) return "请输入核验问题";
+  if (!pickModels(body).length) return "请至少选择一个核验引擎";
   return "";
 }
 
@@ -84,6 +94,15 @@ function isReusableGuestDetect(state: GuestDetectCookieState, signature: string)
   return Date.now() - usedAtMs <= SAME_DETECT_REUSE_HOURS * 60 * 60 * 1000;
 }
 
+function getClientIp(req: Request) {
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0]?.trim() || null;
+  }
+
+  return req.headers.get("x-real-ip")?.trim() || req.headers.get("cf-connecting-ip")?.trim() || null;
+}
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -106,6 +125,33 @@ export async function POST(req: Request) {
     const normalizedQuery = pickFirst(body.query, body.searchQuery);
     const normalizedModels = pickModels(body);
     const detectSignature = buildDetectSignature(normalizedBrandName, normalizedQuery);
+    const clientIp = getClientIp(req);
+    let parsedSampleImage: ReturnType<typeof parseImageDataUrl> | null = null;
+
+    if (body.sampleImageDataUrl) {
+      try {
+        parsedSampleImage = parseImageDataUrl(body.sampleImageDataUrl);
+      } catch (error) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: error instanceof Error ? error.message : "图片格式无效，请重新上传",
+          },
+          { status: 400 }
+        );
+      }
+
+      if (!hasGoogleVisionConfig()) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "已上传图片，但服务端尚未配置 GOOGLE_VISION_API_KEY 或 GOOGLE_VISION_BEARER_TOKEN。",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     const input: DetectInput = {
       brandName: normalizedBrandName,
       industry: body.industry!.trim(),
@@ -116,6 +162,9 @@ export async function POST(req: Request) {
       locale: body.locale || "zh-CN",
       brandNarrative: body.brandNarrative,
       competitors: body.competitors || [],
+      sampleImageName: body.sampleImageName?.trim() || undefined,
+      sampleImageMimeType: parsedSampleImage?.mimeType,
+      hasSampleImage: Boolean(parsedSampleImage),
     };
 
     if (session?.user?.id) {
@@ -126,6 +175,13 @@ export async function POST(req: Request) {
         hours: SAME_DETECT_REUSE_HOURS,
       });
       if (recentTask) {
+        await recordDetectRequestEvent({
+          userId: session.user.id,
+          clientIp,
+          signature: detectSignature,
+          status: "reused",
+          taskId: recentTask.taskId,
+        });
         const quota = await getDetectQuotaStatus(session.user.id);
         return NextResponse.json({
           success: true,
@@ -139,6 +195,12 @@ export async function POST(req: Request) {
     } else {
       const guestDetectState = readGuestDetectState(req);
       if (guestDetectState && isReusableGuestDetect(guestDetectState, detectSignature)) {
+        await recordDetectRequestEvent({
+          clientIp,
+          signature: detectSignature,
+          status: "reused",
+          taskId: guestDetectState.taskId,
+        });
         return NextResponse.json({
           success: true,
           data: {
@@ -150,15 +212,43 @@ export async function POST(req: Request) {
       }
 
       if (guestDetectState) {
+        await recordDetectRequestEvent({
+          clientIp,
+          signature: detectSignature,
+          status: "blocked_guest_cookie_limit",
+        });
         return NextResponse.json(
           {
             success: false,
             code: "GUEST_LIMIT_EXCEEDED",
-            message: "未登录用户仅可体验 1 次，请登录后每周可检测 3 次，或提交咨询 / 企业诊断。",
+            message: "未登录用户仅可体验 1 次，请登录后每周可核验 3 次，或提交企业接入需求。",
           },
           { status: 403 }
         );
       }
+    }
+
+    const rateLimit = await checkDetectRateLimits({
+      clientIp,
+      guest: !session?.user?.id,
+    });
+    if (!rateLimit.allowed) {
+      await recordDetectRequestEvent({
+        userId: session?.user?.id || null,
+        clientIp,
+        signature: detectSignature,
+        status: rateLimit.code === "IP_RATE_LIMITED" ? "blocked_rate_limit" : "blocked_guest_limit",
+      });
+
+      return NextResponse.json(
+        {
+          success: false,
+          code: rateLimit.code,
+          message: rateLimit.message,
+          retryAfterSeconds: rateLimit.retryAfterSeconds,
+        },
+        { status: rateLimit.code === "IP_RATE_LIMITED" ? 429 : 403 },
+      );
     }
 
     let quota: Awaited<ReturnType<typeof consumeDetectQuota>> | null = null;
@@ -170,8 +260,8 @@ export async function POST(req: Request) {
             success: false,
             message:
               quota.plan === "free"
-                ? `当前免费版${quota.periodLabel}检测额度已用完，请提交咨询或申请企业诊断。`
-                : `当前 ${quota.plan} 套餐${quota.periodLabel}检测额度已用完，请升级后继续使用。`,
+                ? `当前免费版${quota.periodLabel}核验额度已用完，请稍后重试或提交企业接入需求。`
+                : `当前 ${quota.plan} 套餐${quota.periodLabel}核验额度已用完，请升级后继续使用。`,
             code: "QUOTA_EXCEEDED",
             quota,
           },
@@ -180,8 +270,26 @@ export async function POST(req: Request) {
       }
     }
 
-    const report: DetectReport = hasRealProviderConfig(input.selectedModels)
-      ? await runDetect(input)
+    await recordDetectRequestEvent({
+      userId: session?.user?.id || null,
+      clientIp,
+      signature: detectSignature,
+      status: "allowed",
+      taskId,
+    });
+
+    const runtimeImage = parsedSampleImage
+      ? (() => {
+          return {
+            base64: parsedSampleImage.base64,
+            mimeType: parsedSampleImage.mimeType,
+            name: body.sampleImageName?.trim() || undefined,
+          };
+        })()
+      : null;
+
+    const report: DetectReport = hasRealProviderConfig(input.selectedModels) || runtimeImage
+      ? await runDetect(input, { sampleImage: runtimeImage })
       : buildMockReport(input);
 
     saveMockReport(taskId, report);
