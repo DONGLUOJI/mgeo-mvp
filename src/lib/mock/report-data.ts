@@ -81,6 +81,8 @@ function buildMockResult(input: DetectInput, model: string, index: number): Resu
       hasVerifiableSource,
       sourceNames: hasVerifiableSource ? ["官网", "微信公众号"] : [],
       sourceTypes: hasVerifiableSource ? ["official", "community"] : [],
+      strongSourceCount: hasVerifiableSource ? 1 : 0,
+      datedSourceCount: 0,
       rawResponse: hasVerifiableSource
         ? `参考来源：官网、微信公众号。${input.brandName} 在公开信息中被描述为 ${input.businessSummary}。`
         : `未发现明确可核验来源。`,
