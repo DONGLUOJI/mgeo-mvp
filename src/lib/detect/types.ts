@@ -27,6 +27,9 @@ export type DetectInput = DetectionInput & {
   industry: string;
   businessSummary: string;
   selectedModels: ModelName[];
+  sampleImageName?: string;
+  sampleImageMimeType?: string;
+  hasSampleImage?: boolean;
 };
 
 export type Score = {
@@ -63,6 +66,8 @@ export type AuthorityInsight = {
   hasVerifiableSource: boolean;
   sourceNames: string[];
   sourceTypes: string[];
+  strongSourceCount: number;
+  datedSourceCount: number;
   rawResponse: string;
 };
 export type AuthorityResult = AuthorityInsight;
@@ -156,6 +161,7 @@ export type DetectReport = {
   raw: RawModelOutputs;
   meta: DetectionMeta;
   disclaimer: string;
+  evidence?: ImageEvidence;
   debug?: {
     mode: "real" | "mock" | "hybrid";
     providers: ProviderDebugItem[];
@@ -174,4 +180,36 @@ export type DetectPromptSet = {
   coverage: string;
   description: string;
   source: string;
+};
+
+export type EvidencePage = {
+  url: string;
+  title: string;
+  domain: string;
+  fullMatchCount: number;
+  partialMatchCount: number;
+  publishedAt?: string;
+  riskTier: "low" | "medium" | "high";
+  riskLabel: string;
+  riskReason: string;
+};
+
+export type ImageEvidence = {
+  provider: "google-vision";
+  summary: string;
+  matchedPageCount: number;
+  fullMatchingImageCount: number;
+  partialMatchingImageCount: number;
+  visuallySimilarImageCount: number;
+  bestGuessLabels: string[];
+  webEntities: string[];
+  extractedText: string;
+  riskSignals: string[];
+  earliestPublishedAt?: string;
+  datedPageCount: number;
+  lowRiskPageCount: number;
+  matchingPages: EvidencePage[];
+  fullMatchingImageUrls: string[];
+  partialMatchingImageUrls: string[];
+  visuallySimilarImageUrls: string[];
 };
