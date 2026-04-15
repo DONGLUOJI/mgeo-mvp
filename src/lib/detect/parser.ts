@@ -173,6 +173,8 @@ export function parseAuthority(rawText: string): AuthorityInsight {
     hasVerifiableSource: sourceNames.length > 0,
     sourceNames,
     sourceTypes: dedupe(sourceNames.map((item) => classifySourceType(item))),
+    strongSourceCount: 0,
+    datedSourceCount: 0,
     rawResponse: text,
   };
 }
