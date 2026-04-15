@@ -2,20 +2,22 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 export const MARKETING_NAV_ITEMS = [
-  { href: "/#detector", label: "免费检测" },
-  { href: "/ranking", label: "排名" },
-  { href: "/pricing", label: "服务方案" },
-  { href: "/cases", label: "方法案例" },
+  { href: "/#detector", label: "免费检查" },
+  { href: "/pricing", label: "定价" },
   { href: "/#contact", label: "联系我们" },
-  { href: "/whitepaper", label: "MGEO白皮书" },
 ];
 
 type SiteShellProps = {
   children: ReactNode;
   current?: string;
-  navItems?: Array<{ href: string; label: string }>;
+  navItems?: ReadonlyArray<{ href: string; label: string }>;
   ctaHref?: string;
   ctaLabel?: string;
+  brandLabel?: string;
+  brandHref?: string;
+  footerBrand?: string;
+  footerText?: string;
+  footerLinks?: ReadonlyArray<{ href: string; label: string }>;
   hideFooter?: boolean;
 };
 
@@ -23,16 +25,25 @@ export function SiteShell({
   children,
   current,
   navItems = MARKETING_NAV_ITEMS,
-  ctaHref = "/register",
-  ctaLabel = "注册",
+  ctaHref = "/detect",
+  ctaLabel = "开始检查",
+  brandLabel = "FakeCheck",
+  brandHref = "/",
+  footerBrand = "FakeCheck",
+  footerText = "面向 C 端交友安全的公开资料核验工具，帮助快速判断图片复用、资料冲突、发布时间与证据强度。",
+  footerLinks = [
+    { href: "/detect", label: "开始检查" },
+    { href: "/pricing", label: "定价" },
+    { href: "/#detector", label: "免费检查" },
+  ],
   hideFooter = false,
 }: SiteShellProps) {
   return (
     <div style={styles.page}>
       <header style={styles.header}>
         <div style={styles.navWrap}>
-          <Link href="/" style={styles.brand}>
-            董逻辑MGEO
+          <Link href={brandHref} style={styles.brand}>
+            {brandLabel}
           </Link>
 
           <nav style={styles.nav}>
@@ -71,24 +82,15 @@ export function SiteShell({
         <footer style={styles.footer}>
           <div style={styles.footerInner}>
             <div>
-              <div style={styles.footerBrand}>董逻辑MGEO</div>
-              <p style={styles.footerText}>
-                面向 AI 搜索场景的多模型品牌可见性检测与增长系统。
-              </p>
+              <div style={styles.footerBrand}>{footerBrand}</div>
+              <p style={styles.footerText}>{footerText}</p>
             </div>
             <div style={styles.footerLinks}>
-              <Link href="/pricing" style={styles.footerLink}>
-                服务方案
-              </Link>
-              <Link href="/cases" style={styles.footerLink}>
-                方法案例
-              </Link>
-              <Link href="/ranking" style={styles.footerLink}>
-                排名
-              </Link>
-              <Link href="/#detector" style={styles.footerLink}>
-                免费检测
-              </Link>
+              {footerLinks.map((item) => (
+                <Link key={item.href} href={item.href} style={styles.footerLink}>
+                  {item.label}
+                </Link>
+              ))}
             </div>
           </div>
         </footer>
@@ -100,21 +102,21 @@ export function SiteShell({
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: "#f5f5f7",
+    background: "var(--bg)",
   },
   header: {
     position: "sticky",
     top: 0,
     zIndex: 20,
     backdropFilter: "saturate(180%) blur(20px)",
-    background: "rgba(255,255,255,0.72)",
-    borderBottom: "1px solid rgba(0,0,0,0.05)",
+    background: "rgba(245, 244, 237, 0.88)",
+    borderBottom: "1px solid var(--line)",
   },
   navWrap: {
-    maxWidth: "none",
-    margin: 0,
-    padding: "0 24px 0 96px",
-    height: 52,
+    maxWidth: 1240,
+    margin: "0 auto",
+    padding: "0 24px",
+    minHeight: 68,
     display: "grid",
     gridTemplateColumns: "auto 1fr auto",
     alignItems: "center",
@@ -122,11 +124,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   brand: {
     textDecoration: "none",
-    fontSize: 26,
-    fontWeight: 600,
-    letterSpacing: "-0.021em",
-    color: "#1d1d1f",
+    fontSize: 28,
+    fontWeight: 500,
+    letterSpacing: "-0.03em",
+    color: "var(--text)",
     whiteSpace: "nowrap",
+    fontFamily: "var(--font-serif)",
+    textTransform: "none",
   },
   nav: {
     display: "flex",
@@ -137,13 +141,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   navLink: {
     textDecoration: "none",
-    color: "#1d1d1f",
-    fontSize: 18,
+    color: "var(--text-soft)",
+    fontSize: 16,
     fontWeight: 500,
-    opacity: 0.8,
+    opacity: 0.82,
   },
   navLinkActive: {
-    color: "#0a7c66",
+    color: "var(--text)",
     opacity: 1,
   },
   auth: {
@@ -154,9 +158,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   login: {
     textDecoration: "none",
-    color: "#1d1d1f",
-    fontSize: 16,
-    fontWeight: 600,
+    color: "var(--text-soft)",
+    fontSize: 15,
+    fontWeight: 500,
     padding: "8px 10px",
     opacity: 0.82,
   },
@@ -165,18 +169,19 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     justifyContent: "center",
     minWidth: 0,
-    padding: "8px 20px",
-    borderRadius: 8,
-    background: "#0fbc8c",
-    color: "#fff",
+    padding: "10px 18px",
+    borderRadius: 12,
+    background: "var(--brand)",
+    color: "var(--surface)",
     textDecoration: "none",
-    fontWeight: 600,
-    fontSize: 16,
+    fontWeight: 700,
+    fontSize: 15,
+    boxShadow: "0 0 0 1px var(--brand)",
   },
   footer: {
-    borderTop: "1px solid #e7ebf0",
+    borderTop: "1px solid var(--line)",
     marginTop: 80,
-    background: "#fff",
+    background: "var(--surface)",
   },
   footerInner: {
     maxWidth: 1240,
@@ -188,15 +193,16 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: "wrap",
   },
   footerBrand: {
-    fontSize: 20,
-    fontWeight: 800,
-    color: "#101828",
+    fontSize: 28,
+    fontWeight: 500,
+    color: "var(--text)",
+    fontFamily: "var(--font-serif)",
   },
   footerText: {
     margin: "10px 0 0",
     fontSize: 15,
     lineHeight: 1.8,
-    color: "#667085",
+    color: "var(--muted)",
     maxWidth: 560,
   },
   footerLinks: {
@@ -206,8 +212,8 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: "wrap",
   },
   footerLink: {
-    color: "#475467",
+    color: "var(--text-soft)",
     textDecoration: "none",
-    fontWeight: 600,
+    fontWeight: 500,
   },
 };
